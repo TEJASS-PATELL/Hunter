@@ -1,17 +1,18 @@
 @import url("https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Google+Sans+Code:wght@400..600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap");
 
 /* ==========================================================================
-   COMEBACK 90 — SINGLE-FILE THEME  ·  Antigravity design language
+   COMEBACK 90 — SINGLE-FILE THEME  ·  Antigravity design language (v2)
    --------------------------------------------------------------------------
-   One file, no second stylesheet. Same class names as before.
-   Direction: white canvas, large tight Google Sans Flex headlines, flat gray
-   panels with white inner rows, dark pill buttons, multicolour dot-field hero,
-   blue → violet → pink spectrum used sparingly.
+   One file, same class names as before — drop-in replacement.
+   Direction: white canvas · huge tight Google Sans Flex headlines · flat gray
+   panels with white inner rows · dark pill buttons · multicolour drifting
+   dot-field hero (the one bold moment) · blue → violet → pink used sparingly.
+   Phone-first responsive tuned for Poco X7 Pro 5G (see section 18).
    Sections:  1 Tokens · 2 Base · 3 Header · 4 Buttons · 5 Layout · 6 Hero
               7 Tabs & forms · 8 Stats · 9 Habits/tasks · 10 Records/mood
               11 Workout/nutrition · 12 Overlays/timer · 13 Charts/history
               14 Footer/mobile · 15 Yoga · 16 Habits pages · 17 Motion
-              18 Responsive · 19 Accessibility
+              18 Responsive · 19 Accessibility · 20 Tracker layout
    ========================================================================== */
 
 /* 1 · TOKENS ============================================================== */
@@ -59,7 +60,18 @@
   --l-bg: #f3e8fd;
   --l-tx: #7627bb;
 
+  /* hero dot-field colours */
+  --dot-blue: #4285f4;
+  --dot-violet: #8b5cf6;
+  --dot-pink: #ea4c89;
+  --dot-orange: #f9812a;
+
   --spectrum: linear-gradient(90deg, #4285f4 0%, #8b5cf6 55%, #ea4c89 100%);
+  --spectrum-text: linear-gradient(100deg, #1a73e8 8%, #8b5cf6 58%, #d946ef 100%);
+
+  /* depth: used only on floating things (header, modal, toast) */
+  --shadow-float: 0 12px 32px rgb(20 22 27 / 16%);
+  --shadow-modal: 0 40px 100px rgb(20 22 27 / 26%);
 
   /* radius scale by hierarchy: panel → row → control */
   --r: 28px;
@@ -104,6 +116,17 @@
   --l-bg: #2b1e43;
   --l-tx: #d7aefb;
 
+  --dot-blue: #7aa7ff;
+  --dot-violet: #b394ff;
+  --dot-pink: #ff7fb0;
+  --dot-orange: #ffa95c;
+
+  --spectrum: linear-gradient(90deg, #7aa7ff 0%, #b394ff 55%, #ff7fb0 100%);
+  --spectrum-text: linear-gradient(100deg, #8ab4f8 8%, #c3a6ff 58%, #ff9ccb 100%);
+
+  --shadow-float: 0 14px 36px rgb(0 0 0 / 46%);
+  --shadow-modal: 0 40px 110px rgb(0 0 0 / 62%);
+
   color-scheme: dark;
 }
 
@@ -123,6 +146,12 @@ html {
 body {
   margin: 0;
   background: var(--bg);
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
 }
 
 body:has(.modal-backdrop) {
@@ -147,6 +176,7 @@ body:has(.app-shell.theme-dark) {
 
 .app-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: clip;
   background: var(--bg);
   color: var(--tx);
@@ -165,6 +195,22 @@ body:has(.app-shell.theme-dark) {
 .app-shell * {
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
+}
+
+.app-shell ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.app-shell ::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: var(--line-strong);
+  background-clip: padding-box;
+}
+
+.app-shell ::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 h1,
@@ -247,7 +293,6 @@ button {
 :focus-visible {
   outline: 2px solid var(--ac);
   outline-offset: 3px;
-  border-radius: 8px;
 }
 
 /* 3 · HEADER & NAV ======================================================== */
@@ -260,10 +305,10 @@ button {
   gap: clamp(12px, 2vw, 28px);
   min-height: 68px;
   padding: 10px clamp(16px, 3.2vw, 44px);
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
   border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
-  -webkit-backdrop-filter: saturate(1.6) blur(24px);
-  backdrop-filter: saturate(1.6) blur(24px);
+  -webkit-backdrop-filter: saturate(1.8) blur(26px);
+  backdrop-filter: saturate(1.8) blur(26px);
 }
 
 .logo {
@@ -288,7 +333,9 @@ button {
   font-size: 15px;
   font-weight: 600;
   background: linear-gradient(135deg, #4285f4 0%, #8b5cf6 55%, #ea4c89 100%);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--ac2) 26%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 34%),
+    0 6px 20px color-mix(in srgb, var(--ac2) 28%, transparent);
 }
 
 .logo-text {
@@ -427,12 +474,16 @@ button {
   border: 1px solid var(--line);
   border-radius: 50%;
   background: var(--paper);
-  transition: background .2s var(--ease), border-color .2s var(--ease);
+  transition: background .2s var(--ease), border-color .2s var(--ease), transform .18s var(--ease);
 }
 
 .icon-button:hover {
   background: var(--hover);
   border-color: var(--line-strong);
+}
+
+.icon-button:active {
+  transform: scale(.94);
 }
 
 /* 5 · LAYOUT ============================================================== */
@@ -463,14 +514,14 @@ button {
   align-items: flex-end;
   flex-wrap: wrap;
   gap: 22px;
-  margin: clamp(28px, 4.5vw, 64px) 0 8px;
+  margin: clamp(30px, 5vw, 72px) 0 8px;
 }
 
 .page-heading h1 {
-  font-size: clamp(2.4rem, 5.2vw, 4.6rem);
+  font-size: clamp(2.4rem, 5.4vw, 4.9rem);
   font-weight: 430;
-  letter-spacing: -.065em;
-  line-height: 1.01;
+  letter-spacing: -.068em;
+  line-height: 1;
 }
 
 .page-heading p {
@@ -499,8 +550,10 @@ button {
   transition: border-color .22s var(--ease);
 }
 
-.card:hover {
-  border-color: color-mix(in srgb, var(--line) 55%, var(--ac));
+@media (hover: hover) {
+  .card:hover {
+    border-color: color-mix(in srgb, var(--line) 55%, var(--ac));
+  }
 }
 
 .stack-col {
@@ -582,7 +635,7 @@ button {
 }
 
 .section-head h2 {
-  font-size: clamp(1.35rem, 2vw, 1.72rem);
+  font-size: clamp(1.35rem, 2vw, 1.75rem);
   font-weight: 470;
   font-variation-settings: "opsz" 54, "wght" 470;
   letter-spacing: -.045em;
@@ -807,16 +860,18 @@ button {
   padding: clamp(24px, 3vw, 38px);
   border: 1px solid var(--line);
   border-radius: var(--r);
-  background: radial-gradient(70% 120% at 100% 0%, color-mix(in srgb, var(--ac2) 8%, transparent), transparent 70%), var(--card);
+  background:
+    radial-gradient(70% 120% at 100% 0%, color-mix(in srgb, var(--ac2) 9%, transparent), transparent 70%),
+    var(--card);
 }
 
 .lifestyle-banner h2,
 .reset-banner h2 {
-  font-size: clamp(1.8rem, 3.6vw, 2.9rem);
+  font-size: clamp(1.8rem, 3.6vw, 2.95rem);
   font-weight: 430;
   font-variation-settings: "opsz" 90, "wght" 430;
-  letter-spacing: -.06em;
-  line-height: 1.07;
+  letter-spacing: -.062em;
+  line-height: 1.06;
 }
 
 .lifestyle-banner p,
@@ -1131,10 +1186,10 @@ input[type="checkbox"] {
 
 .stat-value,
 .mini-stat-number {
-  font-size: clamp(1.9rem, 3vw, 2.65rem);
+  font-size: clamp(1.9rem, 3vw, 2.7rem);
   font-weight: 430;
   font-variation-settings: "opsz" 72, "wght" 430;
-  letter-spacing: -.065em;
+  letter-spacing: -.068em;
   line-height: 1.06;
   color: var(--tx);
   font-variant-numeric: tabular-nums;
@@ -1172,7 +1227,7 @@ input[type="checkbox"] {
 .goals-summary span {
   font-size: 2.25rem;
   font-weight: 430;
-  letter-spacing: -.06em;
+  letter-spacing: -.062em;
   color: var(--tx);
   font-variant-numeric: tabular-nums;
 }
@@ -1200,7 +1255,7 @@ input[type="checkbox"] {
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   background: var(--paper);
-  transition: border-color .18s var(--ease), background .18s var(--ease);
+  transition: border-color .18s var(--ease), background .18s var(--ease), opacity .18s var(--ease);
 }
 
 .habit-row:hover,
@@ -1271,6 +1326,12 @@ input[type="checkbox"] {
 .task-check.on {
   background: var(--ac);
   border-color: var(--ac);
+  animation: check-pop .32s var(--ease);
+}
+
+.theme-dark .habit-row.checked .check-circle,
+.theme-dark .task-check.on {
+  color: #0f1117;
 }
 
 .routine-step-box,
@@ -1329,11 +1390,15 @@ input[type="checkbox"] {
   background: var(--btn);
   color: var(--btn-tx);
   font-size: 1.25rem;
-  transition: opacity .2s;
+  transition: opacity .2s, transform .18s var(--ease);
 }
 
 .add-round:hover {
   opacity: .86;
+}
+
+.add-round:active {
+  transform: scale(.93);
 }
 
 .priority {
@@ -1513,7 +1578,7 @@ input[type="checkbox"] {
 .big-number,
 .mood-average strong {
   font-weight: 430;
-  letter-spacing: -.06em;
+  letter-spacing: -.064em;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1663,12 +1728,21 @@ input[type="checkbox"] {
   padding: 6px 16px;
   font-size: .875rem;
   font-weight: 530;
+  transition: background .18s var(--ease), border-color .18s var(--ease), transform .18s var(--ease);
+}
+
+.set-check-btn:active {
+  transform: scale(.96);
 }
 
 .set-check-btn.done {
   border-color: var(--ac);
   background: var(--ac);
   color: #fff;
+}
+
+.theme-dark .set-check-btn.done {
+  color: #0f1117;
 }
 
 .reps-stepper {
@@ -1793,20 +1867,21 @@ input[type="checkbox"] {
   place-items: center;
   padding: 16px;
   background: rgb(9 13 22 / 42%);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   animation: fade .2s var(--ease);
 }
 
 .modal {
   width: min(680px, 100%);
   max-height: 92vh;
+  max-height: 92dvh;
   overflow: auto;
   padding: 30px;
   border: 1px solid var(--line);
   border-radius: 32px;
   background: var(--paper);
-  box-shadow: 0 32px 90px rgb(0 0 0 / 22%);
+  box-shadow: var(--shadow-modal);
   animation: rise .35s var(--ease);
 }
 
@@ -1819,9 +1894,9 @@ input[type="checkbox"] {
 }
 
 .modal-head h2 {
-  font-size: clamp(1.45rem, 3vw, 1.8rem);
+  font-size: clamp(1.45rem, 3vw, 1.85rem);
   font-weight: 430;
-  letter-spacing: -.05em;
+  letter-spacing: -.052em;
 }
 
 .record-form {
@@ -1847,7 +1922,7 @@ input[type="checkbox"] {
   color: var(--btn-tx);
   font-size: .875rem;
   font-weight: 530;
-  box-shadow: 0 12px 32px rgb(0 0 0 / 20%);
+  box-shadow: var(--shadow-float);
   animation: toastin .3s var(--ease);
 }
 
@@ -1887,7 +1962,10 @@ input[type="checkbox"] {
   color: #fff;
   text-align: center;
   background: radial-gradient(circle at 30% 28%, #ea4c89 0%, #8b5cf6 48%, #4285f4 100%);
-  box-shadow: 0 18px 60px color-mix(in srgb, var(--ac2) 32%, transparent);
+  box-shadow:
+    0 18px 60px color-mix(in srgb, var(--ac2) 34%, transparent),
+    0 0 0 14px color-mix(in srgb, var(--ac2) 9%, transparent),
+    0 0 0 30px color-mix(in srgb, var(--ac2) 5%, transparent);
   animation: breathe 14s ease-in-out infinite;
 }
 
@@ -2085,7 +2163,7 @@ input[type="checkbox"] {
   color: var(--btn-tx);
   font-size: .75rem;
   pointer-events: none;
-  box-shadow: 0 4px 18px rgb(20 25 35 / 10%);
+  box-shadow: var(--shadow-float);
 }
 
 .modern-chart-tooltip strong,
@@ -2407,6 +2485,7 @@ input[type="checkbox"] {
   padding: 5px 12px;
   font-family: var(--font-mono);
   font-size: .75rem;
+  transition: background .18s var(--ease), border-color .18s var(--ease), color .18s var(--ease);
 }
 
 .preset-chip.active {
@@ -2706,11 +2785,11 @@ input[type="checkbox"] {
   min-width: 0;
 }
 
-/* Habits tracker layout */
+/* Habits tracker layout (grid blocks) */
 .tracker-layout {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   width: 100%;
   min-width: 0;
 }
@@ -2847,7 +2926,8 @@ input[type="checkbox"] {
 }
 
 /* 17 · MOTION ============================================================= */
-/* one orchestrated page-load reveal; interactions get their own small transitions above */
+/* one orchestrated page-load reveal + one drifting hero; everything else
+   only reacts to a tap, a check, a scroll past the header, or opening a modal */
 .content-wrap>*:not(.toast):not(.modal-backdrop) {
   animation: rise .7s var(--ease) backwards;
 }
@@ -2866,6 +2946,23 @@ input[type="checkbox"] {
 
 .content-wrap> :nth-child(n+5) {
   animation-delay: .28s;
+}
+
+/* header starts clear and settles into a hairline + soft shadow on scroll */
+@supports (animation-timeline: scroll()) {
+  .site-header {
+    border-bottom-color: transparent;
+    animation: header-settle linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 120px;
+  }
+}
+
+@keyframes header-settle {
+  to {
+    border-bottom-color: var(--line);
+    box-shadow: 0 14px 40px -22px rgb(20 22 27 / 30%);
+  }
 }
 
 @keyframes breathe {
@@ -2901,17 +2998,59 @@ input[type="checkbox"] {
   }
 }
 
-@keyframes comeback-dot-drift {
+@keyframes check-pop {
+  0% {
+    transform: scale(.78);
+  }
+
+  60% {
+    transform: scale(1.12);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes aurora {
   from {
-    background-position: 0 0, 16px 0, 0 16px, 16px 16px;
+    transform: translateX(-57%) scale(.92);
   }
 
   to {
-    background-position: 32px 32px, 48px 32px, 32px 48px, 48px 48px;
+    transform: translateX(-43%) scale(1.08);
+  }
+}
+
+/* seamless loop: every layer shifts by a whole number of its own tiles (6 × --dot) */
+@keyframes comeback-dot-drift {
+  from {
+    background-position:
+      0 0,
+      calc(var(--dot) * .5) calc(var(--dot) * .5),
+      var(--dot) 0,
+      calc(var(--dot) * 1.5) var(--dot);
+  }
+
+  to {
+    background-position:
+      calc(var(--dot) * 6) calc(var(--dot) * 6),
+      calc(var(--dot) * 6.5) calc(var(--dot) * 6.5),
+      calc(var(--dot) * 7) calc(var(--dot) * 6),
+      calc(var(--dot) * 7.5) calc(var(--dot) * 7);
   }
 }
 
 /* 18 · RESPONSIVE ========================================================= */
+/* Breakpoints
+   ≥1500 / ≥1700  wide desktop
+   ≤1200 / ≤1040  laptop / tablet landscape
+   ≤900           phone + tablet UI: floating dock nav, no top nav, single column
+   ≤700           habits pages tighten
+   ≤560           PHONE — tuned for 360–430px wide screens (Poco X7 Pro 5G)
+   ≤380           small phones
+   landscape phone, touch devices, no-hover devices at the end              */
+
 @media (min-width: 1500px) {
   .content-wrap {
     width: min(100% - 48px, 1380px);
@@ -2959,10 +3098,17 @@ input[type="checkbox"] {
   }
 }
 
+/* ---------- ≤900 · phone + small tablet ---------------------------------- */
 @media (max-width: 900px) {
+  html {
+    scroll-padding-top: calc(76px + env(safe-area-inset-top));
+  }
+
   .site-header {
-    min-height: 60px;
-    padding: 8px 16px;
+    min-height: calc(60px + env(safe-area-inset-top));
+    padding: calc(8px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left));
+    -webkit-backdrop-filter: saturate(1.6) blur(16px);
+    backdrop-filter: saturate(1.6) blur(16px);
   }
 
   .site-nav,
@@ -2973,16 +3119,17 @@ input[type="checkbox"] {
   .content-wrap {
     width: 100%;
     max-width: none;
-    padding: 8px 16px calc(124px + env(safe-area-inset-bottom));
+    padding: 6px max(16px, env(safe-area-inset-right)) calc(112px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
     gap: 16px;
   }
 
   .page-heading {
-    margin: 25px 0 5px;
+    margin: 22px 0 4px;
+    gap: 16px;
   }
 
   .page-heading h1 {
-    font-size: clamp(2.15rem, 6vw, 3.15rem);
+    font-size: clamp(2.1rem, 6vw, 3.1rem);
   }
 
   .heading-btn-group {
@@ -2993,14 +3140,28 @@ input[type="checkbox"] {
     flex: 1;
   }
 
+  /* hero: keep the dot field but stop animating it (battery + no repaint) */
   .hero-banner {
+    --dot: 19px;
     min-height: 0;
     padding: 56px 18px 48px;
-    border-radius: 28px;
+    border-radius: 30px;
+  }
+
+  .hero-banner::before {
+    animation: none;
+  }
+
+  .hero-banner::after {
+    top: -110px;
+    height: 170px;
+    filter: blur(56px);
+    opacity: .12;
+    animation: none;
   }
 
   .hero-copy h2 {
-    font-size: clamp(2.55rem, 8.4vw, 4.3rem);
+    font-size: clamp(2.55rem, 8.6vw, 4.5rem);
   }
 
   .hero-cta-row {
@@ -3022,7 +3183,12 @@ input[type="checkbox"] {
 
   .card {
     padding: 18px;
-    border-radius: 22px;
+    border-radius: 24px;
+  }
+
+  .modal-backdrop {
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
   }
 
   .modal {
@@ -3030,75 +3196,97 @@ input[type="checkbox"] {
     border-radius: 28px;
   }
 
+  /* floating dock navigation */
   .mobile-nav {
     display: flex;
+    align-items: stretch;
+    gap: 4px;
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
     z-index: 50;
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    padding: 5px;
     overflow-x: auto;
-    padding: 7px 5px calc(7px + env(safe-area-inset-bottom));
-    border-top: 1px solid var(--line);
-    background: color-mix(in srgb, var(--bg) 90%, transparent);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    border: 1px solid var(--line);
+    border-radius: 26px;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    -webkit-backdrop-filter: blur(16px) saturate(1.6);
+    backdrop-filter: blur(16px) saturate(1.6);
+    box-shadow: var(--shadow-float);
+  }
+
+  .mobile-nav::-webkit-scrollbar {
+    display: none;
   }
 
   .mobile-nav button {
     display: grid;
     justify-items: center;
-    flex: 1;
-    min-width: 60px;
-    min-height: 48px;
-    gap: 0;
-    padding: 6px 4px;
+    align-content: center;
+    flex: 1 0 62px;
+    min-height: 54px;
+    gap: 1px;
+    padding: 6px;
     border: 0;
-    border-radius: 14px;
+    border-radius: 21px;
     background: none;
     color: var(--mu);
+    scroll-snap-align: center;
+    transition: background .2s var(--ease), color .2s var(--ease), transform .15s var(--ease);
   }
 
   .mobile-nav button.active {
-    background: var(--hover);
-    color: var(--tx);
+    background: var(--btn);
+    color: var(--btn-tx);
   }
 
   .mobile-nav small {
     color: inherit;
     font-size: .625rem;
+    font-weight: 550;
+    line-height: 1.2;
+    white-space: nowrap;
   }
 
   .sos-fab {
     display: grid;
     place-items: center;
     position: fixed;
-    right: 16px;
-    bottom: calc(86px + env(safe-area-inset-bottom));
+    right: max(14px, env(safe-area-inset-right));
+    bottom: calc(88px + env(safe-area-inset-bottom));
     z-index: 55;
-    width: 54px;
-    height: 54px;
+    width: 56px;
+    height: 56px;
     border: 0;
     border-radius: 50%;
     background: var(--danger);
     color: #fff;
     font-size: .8125rem;
     font-weight: 550;
-    box-shadow: 0 8px 22px rgb(217 48 37 / 30%);
+    box-shadow: 0 8px 22px rgb(217 48 37 / 32%);
+    transition: transform .15s var(--ease);
+  }
+
+  .sos-fab:active {
+    transform: scale(.93);
   }
 
   .toast {
-    bottom: calc(150px + env(safe-area-inset-bottom));
+    bottom: calc(92px + env(safe-area-inset-bottom));
     max-width: calc(100vw - 32px);
   }
 
   .heatmap-grid {
     grid-template-columns: repeat(10, minmax(0, 1fr));
-    gap: 4px;
+    gap: 5px;
   }
 
   .heat-cell {
-    border-radius: 6px;
+    border-radius: 7px;
   }
 
   .weekday-selector-grid {
@@ -3116,12 +3304,7 @@ input[type="checkbox"] {
   }
 
   .chart-axis-text {
-    font-size: 17px;
-  }
-
-  .tabs:not(.large-tabs) button {
-    white-space: normal;
-    text-align: center;
+    font-size: 16px;
   }
 
   .yoga-anatomy-grid,
@@ -3132,8 +3315,30 @@ input[type="checkbox"] {
   .yoga-pose-card {
     padding: 18px;
   }
+
+  .table-wrap {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .clean-table {
+    min-width: max-content;
+  }
+
+  .clean-table th:first-child,
+  .clean-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--paper);
+  }
+
+  .clean-table th:first-child {
+    background: var(--card);
+  }
 }
 
+/* ---------- ≤700 · habits pages ------------------------------------------ */
 @media (max-width: 700px) {
   .habits-track-page {
     gap: 16px;
@@ -3187,79 +3392,142 @@ input[type="checkbox"] {
   }
 }
 
-@media (max-width: 600px) {
-  .tracker-layout {
-    gap: 10px;
-  }
-
-  .tracker-layout .tracker-metrics,
-  .tracker-habits-grid,
-  .tracker-bottom-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  .tracker-layout .section-head {
-    margin-bottom: 12px;
-  }
-
-  .tracker-habits-grid .habit-row {
-    padding: 10px;
-  }
-
-  .tracker-bottom-grid .inline-add-row {
-    flex-direction: column;
-  }
-
-  .tracker-bottom-grid .inline-add-row button {
-    width: 100%;
-    min-height: 42px;
-  }
-}
-
+/* ---------- ≤560 · PHONE (Poco X7 Pro 5G and similar) -------------------- */
 @media (max-width: 560px) {
+  .app-shell {
+    line-height: 1.55;
+  }
+
+  /* layout rhythm */
   .content-wrap {
-    padding-inline: 12px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    gap: 14px;
+  }
+
+  .page-heading {
+    margin: 18px 0 2px;
+    gap: 14px;
   }
 
   .page-heading h1 {
-    font-size: 2.2rem;
+    font-size: clamp(2rem, 9.4vw, 2.6rem);
+    letter-spacing: -.06em;
+    line-height: 1.02;
   }
 
   .page-heading p {
-    font-size: .96rem;
+    margin-top: 10px;
+    font-size: .95rem;
+    line-height: 1.55;
   }
 
+  .section-head {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .section-head h2 {
+    font-size: 1.32rem;
+    letter-spacing: -.04em;
+  }
+
+  .section-head p {
+    font-size: .875rem;
+  }
+
+  .card,
+  .card h2,
+  .card h3,
+  .card p {
+    overflow-wrap: anywhere;
+  }
+
+  .card {
+    padding: 16px;
+    gap: 14px;
+    border-radius: 22px;
+  }
+
+  /* hero */
   .hero-banner {
-    padding: 43px 15px 38px;
-    gap: 20px;
+    --dot: 17px;
+    gap: 18px;
+    padding: 44px 16px 38px;
+    border-radius: 28px;
+  }
+
+  .hero-kicker {
+    padding: 6px 12px;
+    font-size: .75rem;
   }
 
   .hero-copy {
-    gap: 18px;
+    gap: 16px;
   }
 
   .hero-copy h2 {
-    font-size: clamp(2.15rem, 10vw, 3.05rem);
-    letter-spacing: -.065em;
+    font-size: clamp(2.3rem, 11vw, 3.2rem);
+    letter-spacing: -.062em;
+    line-height: 1;
   }
 
   .hero-copy>p {
     font-size: .98rem;
+    line-height: 1.6;
   }
 
+  .hero-link,
+  .hero-cta-row .btn {
+    min-height: 52px;
+    white-space: normal;
+  }
+
+  .lifestyle-banner,
+  .reset-banner,
+  .intro-callout {
+    padding: 20px;
+    gap: 14px;
+    border-radius: 22px;
+  }
+
+  .lifestyle-banner h2,
+  .reset-banner h2 {
+    font-size: clamp(1.6rem, 7.6vw, 2.1rem);
+  }
+
+  /* buttons wrap instead of overflowing */
+  .btn,
+  .pill-outline,
+  .pill-solid {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;
+    padding: 10px 18px;
+  }
+
+  .site-header .pill-solid {
+    padding: 8px 14px;
+    white-space: nowrap;
+  }
+
+  /* stat cards: 2 × 2 */
   .stats-grid {
-    gap: 9px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .stat-card {
+    gap: 8px;
     padding: 14px;
-    border-radius: 18px;
+    border-radius: 20px;
   }
 
   .stat-top {
     align-items: flex-start;
-    font-size: .8rem;
+    gap: 8px;
+    font-size: .78rem;
+    line-height: 1.3;
   }
 
   .stat-icon {
@@ -3269,49 +3537,226 @@ input[type="checkbox"] {
   }
 
   .stat-value {
-    font-size: 1.7rem;
+    font-size: 1.75rem;
   }
 
   .stat-detail {
-    font-size: .76rem;
+    font-size: .75rem;
   }
 
-  .form-grid,
-  .form-grid.four-col-grid {
-    grid-template-columns: minmax(0, 1fr);
+  .mini-stat-row,
+  .goals-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 12px;
+    padding: 18px;
+    border-radius: 22px;
   }
 
-  .card {
-    padding: 16px;
-    border-radius: 20px;
+  .mini-stat-number,
+  .goals-summary span {
+    font-size: 1.8rem;
   }
 
+  .big-number {
+    font-size: 3.4rem;
+  }
+
+  /* segmented tabs: swipeable pill rows */
+  .tabs,
+  .content-wrap>.tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-self: stretch;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabs button {
+    flex: 1 0 auto;
+    min-height: 42px;
+    padding: 8px 16px;
+    scroll-snap-align: center;
+    white-space: nowrap;
+  }
+
+  .category-pills {
+    gap: 8px;
+  }
+
+  .category-pills button {
+    min-height: 42px;
+    padding: 8px 15px;
+  }
+
+  /* rows: roomy, thumb-sized */
   .habit-row,
   .task-row {
-    padding: 12px 13px;
-    gap: 11px;
+    min-height: 58px;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 18px;
   }
 
   .habit-row>.status-pill {
     align-self: flex-start;
   }
 
+  .habit-info strong,
+  .task-main strong {
+    font-size: .95rem;
+  }
+
+  .check-circle,
+  .task-check {
+    width: 30px;
+    height: 30px;
+  }
+
+  .row-actions button,
+  .dots-button {
+    min-height: 40px;
+    padding: 8px 12px;
+  }
+
+  .text-link,
+  .panel-bottom-link {
+    min-height: 44px;
+    padding: 10px 0;
+  }
+
+  .add-round,
+  .icon-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* forms */
+  .form-grid,
+  .form-grid.four-col-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .toolbar {
+    align-items: stretch;
+  }
+
+  .toolbar-right {
+    width: 100%;
+  }
+
+  .toolbar-right>* {
+    flex: 1 1 100%;
+  }
+
+  .inline-add-row .clean-input {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .inline-add-row .btn {
+    flex: 1 1 100%;
+  }
+
+  .form-actions {
+    flex-wrap: nowrap;
+  }
+
+  .form-actions .btn {
+    flex: 1 1 0;
+  }
+
+  .archive-toggle {
+    min-height: 44px;
+  }
+
+  input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+  }
+
+  input[type="range"] {
+    min-height: 32px;
+  }
+
+  /* mood + weekly strips */
   .mood-options {
     gap: 6px;
   }
 
   .mood-option {
-    padding: 11px 2px;
-    border-radius: 15px;
-    font-size: 1.25rem;
+    padding: 12px 2px;
+    border-radius: 16px;
+    font-size: 1.4rem;
   }
 
+  .mood-option small {
+    font-size: .68rem;
+  }
+
+  .weekday-selector-grid {
+    gap: 8px;
+  }
+
+  .weekday-pill {
+    padding: 12px 6px;
+    border-radius: 18px;
+  }
+
+  .quest-week-row {
+    gap: 5px;
+  }
+
+  .quest-day-pill {
+    padding: 9px 2px;
+    border-radius: 14px;
+  }
+
+  /* exercise + nutrition */
   .home-ex-controls {
-    align-items: flex-start;
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .set-chips-row {
     flex-wrap: wrap;
+  }
+
+  .set-check-btn {
+    flex: 1 1 0;
+    min-height: 44px;
+  }
+
+  .reps-stepper {
+    width: 100%;
+  }
+
+  .reps-stepper input {
+    flex: 1;
+    width: auto;
+  }
+
+  .macro-progress-grid {
+    gap: 16px;
+  }
+
+  .quick-food-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .quick-food-btn {
+    padding: 12px 13px;
   }
 
   .schedule-edit-row {
@@ -3326,17 +3771,13 @@ input[type="checkbox"] {
     flex-wrap: wrap;
   }
 
+  .reset-log-date {
+    min-width: 0;
+  }
+
   .trigger-row {
     grid-template-columns: 90px minmax(0, 1fr) 24px;
     gap: 9px;
-  }
-
-  .timer-strip {
-    padding: 12px 14px;
-  }
-
-  .timer-readout {
-    font-size: 1.9rem;
   }
 
   .accordion-head {
@@ -3347,10 +3788,127 @@ input[type="checkbox"] {
     padding: 0 17px 17px;
   }
 
-  .site-header .pill-solid {
-    padding: 8px 14px;
+  .avoid-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
+  /* timer + breathing */
+  .timer-strip {
+    display: grid;
+    justify-items: stretch;
+    gap: 12px;
+    padding: 14px;
+    text-align: center;
+  }
+
+  .timer-readout {
+    font-size: 2.2rem;
+  }
+
+  .timer-btns .btn {
+    flex: 1 1 0;
+  }
+
+  .breath-orb {
+    width: min(170px, 52vw);
+    height: min(170px, 52vw);
+  }
+
+  /* yoga */
+  .yoga-pose-card {
+    gap: 14px;
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .yoga-pose-header {
+    gap: 10px;
+  }
+
+  .yoga-title-group h3 {
+    font-size: 1.1rem;
+  }
+
+  .prescription-bar {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 14px;
+    padding: 12px 14px;
+    font-size: .82rem;
+  }
+
+  .yoga-steps-box,
+  .yoga-benefits-box {
+    padding: 14px 15px;
+  }
+
+  .yoga-pose-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .yoga-pose-footer .btn {
+    width: 100%;
+  }
+
+  .timer-preset-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .timer-preset-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .preset-chip {
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 6px 14px;
+  }
+
+  /* charts */
+  .chart-axis-text {
+    font-size: 18px;
+  }
+
+  .modern-svg-chart {
+    max-height: 260px;
+  }
+
+  .modern-donut-layout {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .modern-donut-layout>svg {
+    max-width: 240px;
+    margin-inline: auto;
+  }
+
+  .modern-chart-tooltip {
+    padding: 3px 10px;
+    font-size: .7rem;
+  }
+
+  /* footer */
+  .app-footer {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .app-footer button,
+  .import-label {
+    min-height: 40px;
+    padding: 8px 12px;
+  }
+
+  /* bottom-sheet modal with grab handle + sticky title */
   .modal-backdrop {
     place-items: end center;
     padding: 0;
@@ -3358,17 +3916,46 @@ input[type="checkbox"] {
 
   .modal {
     width: 100%;
-    max-height: 94vh;
-    border-radius: 24px 24px 0 0;
-    padding: 21px 17px calc(22px + env(safe-area-inset-bottom));
+    max-height: 92vh;
+    max-height: 92dvh;
+    padding: 0 16px calc(22px + env(safe-area-inset-bottom));
+    border-radius: 28px 28px 0 0;
+    border-bottom: 0;
+    overscroll-behavior: contain;
+    animation: sheet-up .38s var(--ease);
+  }
+
+  .modal-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: 0 -16px 8px;
+    padding: 26px 16px 12px;
+    background: var(--paper);
+  }
+
+  .modal-head::before {
+    content: "";
+    position: absolute;
+    top: 9px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: var(--line-strong);
+  }
+
+  .modal-head h2 {
+    font-size: 1.5rem;
   }
 
   .toast {
-    bottom: calc(146px + env(safe-area-inset-bottom));
-    max-width: calc(100vw - 24px);
     white-space: normal;
+    max-width: calc(100vw - 28px);
   }
 
+  /* habits pages */
   .habits-track-page {
     gap: 14px;
   }
@@ -3395,13 +3982,17 @@ input[type="checkbox"] {
   }
 
   .habits-track-page .habit-row {
-    gap: 10px;
-    padding: 12px;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+
+  .habits-track-page .check-circle {
+    flex-basis: 30px;
   }
 
   .habits-track-page .habit-row>.status-pill {
-    font-size: .68rem;
     padding: 3px 8px;
+    font-size: .68rem;
   }
 
   .habits-track-page .inline-add-row .clean-input {
@@ -3433,9 +4024,194 @@ input[type="checkbox"] {
   .habits-track-page .archive-toggle {
     white-space: normal;
   }
+
+  /* tracker blocks */
+  .tracker-layout {
+    gap: 12px;
+  }
+
+  .tracker-layout .tracker-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .tracker-habits-grid,
+  .tracker-bottom-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .tracker-layout .section-head {
+    margin-bottom: 12px;
+  }
+
+  .tracker-habits-grid .habit-row {
+    padding: 11px 12px;
+  }
+
+  .tracker-habits-grid .check-circle,
+  .tracker-sections .check-circle {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .tracker-bottom-grid .inline-add-row {
+    flex-direction: column;
+  }
+
+  .tracker-bottom-grid .inline-add-row button {
+    width: 100%;
+    min-height: 46px;
+  }
 }
 
+/* ---------- ≤380 · small phones ------------------------------------------ */
+@media (max-width: 380px) {
+
+  .content-wrap {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+
+  .logo-text {
+    font-size: 1rem;
+  }
+
+  .hero-banner {
+    padding: 38px 13px 32px;
+    border-radius: 24px;
+  }
+
+  .hero-copy h2 {
+    font-size: clamp(2.05rem, 10.6vw, 2.5rem);
+  }
+
+  .card {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .mini-stat-number,
+  .goals-summary span,
+  .habits-track-page .mini-stat-number {
+    font-size: 1.55rem;
+  }
+
+  .mood-option {
+    font-size: 1.25rem;
+  }
+
+  .weekday-selector-grid {
+    gap: 6px;
+  }
+
+  .quick-food-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .mobile-nav button {
+    flex-basis: 56px;
+  }
+
+  .trigger-row {
+    grid-template-columns: 76px minmax(0, 1fr) 22px;
+  }
+}
+
+/* ---------- phones held sideways ------------------------------------------ */
+@media (max-height: 520px) and (orientation: landscape) and (max-width: 950px) {
+
+  .content-wrap {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .hero-banner {
+    padding: 30px 18px 28px;
+  }
+
+  .hero-copy h2 {
+    font-size: clamp(2rem, 6vw, 2.8rem);
+  }
+
+  .hero-cta-row {
+    flex-direction: row;
+  }
+
+  .hero-link {
+    width: auto;
+  }
+
+  .mobile-nav button {
+    min-height: 44px;
+  }
+
+  .mobile-nav small {
+    display: none;
+  }
+
+  .sos-fab {
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    width: 48px;
+    height: 48px;
+  }
+
+  .toast {
+    bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .modal-backdrop {
+    place-items: center;
+  }
+
+  .modal {
+    width: min(620px, 100%);
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 22px;
+    border-bottom: 1px solid var(--line);
+    animation: rise .3s var(--ease);
+  }
+
+  .modal-head {
+    padding-top: 18px;
+  }
+
+  .modal-head::before {
+    display: none;
+  }
+}
+
+/* ---------- touch devices ------------------------------------------------- */
 @media (pointer: coarse) {
+
+  html {
+    overscroll-behavior-y: contain;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  label,
+  .tabs,
+  .mobile-nav {
+    touch-action: manipulation;
+  }
+
+  button,
+  .tabs,
+  .mobile-nav,
+  .site-link {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 
   .tabs button,
   .category-pills button,
@@ -3447,6 +4223,20 @@ input[type="checkbox"] {
     min-height: 44px;
   }
 
+  input[type="text"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="search"],
+  input:not([type]),
+  select,
+  textarea,
+  .clean-input,
+  .date-picker-input,
+  .compact-select {
+    min-height: 48px;
+  }
+
   input,
   select,
   textarea {
@@ -3454,7 +4244,7 @@ input[type="checkbox"] {
   }
 }
 
-/* touch screens: undo hover styling so nothing sticks after a tap */
+/* ---------- no-hover devices: no sticky hovers, real pressed states ------- */
 @media (hover: none) {
 
   .btn:hover,
@@ -3472,7 +4262,7 @@ input[type="checkbox"] {
   }
 
   .hero-link:nth-child(2):hover {
-    background: var(--paper);
+    background: color-mix(in srgb, var(--paper) 86%, transparent);
   }
 
   .site-link:hover:not(.active) {
@@ -3503,6 +4293,51 @@ input[type="checkbox"] {
   .heat-cell:hover {
     transform: none;
   }
+
+  /* pressed feedback: it answers the tap, so it is always welcome */
+  .habit-row,
+  .task-row,
+  .quick-food-btn,
+  .mood-option,
+  .weekday-pill,
+  .quest-day-pill,
+  .category-pills button,
+  .tabs button,
+  .mobile-nav button,
+  .accordion-head,
+  .record-card,
+  .goal-card {
+    transition-property: border-color, background, opacity, transform;
+  }
+
+  .habit-row:active,
+  .task-row:active,
+  .quick-food-btn:active,
+  .mood-option:active,
+  .weekday-pill:active,
+  .category-pills button:active,
+  .record-card:active,
+  .goal-card:active {
+    transform: scale(.975);
+    background: var(--surface);
+  }
+
+  .tabs button:active:not(.selected),
+  .mobile-nav button:active:not(.active),
+  .accordion-head:active {
+    background: var(--surface);
+    transform: scale(.97);
+  }
+
+  .heat-cell:active {
+    transform: scale(.92);
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
 }
 
 /* 19 · ACCESSIBILITY ====================================================== */
@@ -3516,19 +4351,30 @@ input[type="checkbox"] {
     transition-duration: .01ms !important;
     scroll-behavior: auto !important;
   }
+
+  .site-header {
+    animation: none !important;
+    border-bottom-color: var(--line);
+  }
 }
 
+@media (forced-colors: active) {
 
-/* ===== TRACKER MAIN LAYOUT ===== */
+  .btn.primary,
+  .pill-solid,
+  .hero-link,
+  .tabs button.selected,
+  .category-pills button.selected {
+    border: 1px solid CanvasText;
+  }
 
-.tracker-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  min-width: 0;
+  .hero-banner::before,
+  .hero-banner::after {
+    display: none;
+  }
 }
 
+/* 20 · TRACKER MAIN LAYOUT ================================================ */
 .tracker-sections {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -3547,14 +4393,14 @@ input[type="checkbox"] {
   min-width: 0;
 }
 
-.tracker-life-column > *,
-.tracker-right-column > * {
+.tracker-life-column>*,
+.tracker-right-column>* {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
 }
 
-/* Right-side Mood and Journal cards */
+/* right-side Mood and Journal cards */
 .tracker-right-column .tracker-bottom-grid {
   display: flex;
   flex-direction: column;
@@ -3564,14 +4410,13 @@ input[type="checkbox"] {
   margin: 0;
 }
 
-.tracker-right-column .tracker-bottom-grid > * {
+.tracker-right-column .tracker-bottom-grid>* {
   width: 100%;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
 }
 
-/* Habit lists */
 .tracker-sections .habit-list {
   display: flex;
   flex-direction: column;
@@ -3607,7 +4452,6 @@ input[type="checkbox"] {
   margin-bottom: 14px;
 }
 
-/* Mood activity buttons */
 .tracker-sections .category-pills {
   display: flex;
   flex-wrap: wrap;
@@ -3630,7 +4474,6 @@ input[type="checkbox"] {
   margin-top: 12px;
 }
 
-/* Inputs must fit inside cards */
 .tracker-sections input,
 .tracker-sections textarea {
   max-width: 100%;
@@ -3643,7 +4486,6 @@ input[type="checkbox"] {
   resize: vertical;
 }
 
-/* Tablet and mobile */
 @media (max-width: 760px) {
   .tracker-sections {
     grid-template-columns: minmax(0, 1fr);
