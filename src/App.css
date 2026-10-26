@@ -1955,3 +1955,352 @@ input[type="range"] {
             transition: none !important;
           }
         }
+
+        
+/* ===== HABITS TRACKER LAYOUT ===== */
+
+.tracker-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tracker-layout > *,
+.tracker-habits-grid > *,
+.tracker-bottom-grid > * {
+  min-width: 0;
+}
+
+.tracker-layout .section-head {
+  margin-bottom: 14px;
+}
+
+.tracker-layout .section-head h2 {
+  margin: 4px 0 6px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.tracker-layout .section-head p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tracker-layout .tracker-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tracker-layout .tracker-metrics > * {
+  min-width: 0;
+}
+
+.tracker-layout input,
+.tracker-layout textarea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.tracker-habits-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 14px;
+  width: 100%;
+}
+
+.tracker-habits-grid .habit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tracker-habits-grid .habit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.tracker-habits-grid .check-circle {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tracker-habits-grid .habit-info {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tracker-habits-grid .habit-info strong,
+.tracker-habits-grid .habit-info small {
+  display: block;
+  line-height: 1.45;
+}
+
+.tracker-habits-grid .status-pill {
+  flex-shrink: 0;
+}
+
+.tracker-bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+  width: 100%;
+}
+
+.tracker-bottom-grid > * {
+  height: 100%;
+}
+
+.tracker-bottom-grid .category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.tracker-bottom-grid .category-pills button {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.tracker-bottom-grid .inline-add-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tracker-bottom-grid .inline-add-row input {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.tracker-bottom-grid .inline-add-row button {
+  flex: 0 0 auto;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.tracker-bottom-grid .tracker-saved-wins {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+.tracker-bottom-grid textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+/* ===== TABLET ===== */
+
+@media (max-width: 900px) {
+  .tracker-layout .tracker-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .tracker-habits-grid,
+  .tracker-bottom-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+/* ===== MOBILE ===== */
+
+@media (max-width: 600px) {
+  .tracker-layout {
+    gap: 10px;
+  }
+
+  .tracker-layout .tracker-metrics,
+  .tracker-habits-grid,
+  .tracker-bottom-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .tracker-layout .section-head {
+    margin-bottom: 12px;
+  }
+
+  .tracker-habits-grid .habit-row {
+    padding: 10px;
+  }
+
+  .tracker-bottom-grid .inline-add-row {
+    flex-direction: column;
+  }
+
+  .tracker-bottom-grid .inline-add-row button {
+    width: 100%;
+    min-height: 42px;
+  }
+}
+
+
+/* ===== TRACKER MAIN LAYOUT ===== */
+
+.tracker-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tracker-sections {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tracker-life-column,
+.tracker-right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tracker-life-column > *,
+.tracker-right-column > * {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Right-side Mood and Journal cards */
+.tracker-right-column .tracker-bottom-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.tracker-right-column .tracker-bottom-grid > * {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Habit lists */
+.tracker-sections .habit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tracker-sections .habit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.tracker-sections .habit-info {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.tracker-sections .habit-info strong,
+.tracker-sections .habit-info small {
+  display: block;
+  line-height: 1.45;
+}
+
+.tracker-sections .check-circle {
+  flex-shrink: 0;
+}
+
+.tracker-sections .section-head {
+  margin-bottom: 14px;
+}
+
+/* Mood activity buttons */
+.tracker-sections .category-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tracker-sections .inline-add-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tracker-sections .inline-add-row input {
+  flex: 1;
+  width: 100%;
+}
+
+.tracker-sections .tracker-saved-wins {
+  margin-top: 12px;
+}
+
+/* Inputs must fit inside cards */
+.tracker-sections input,
+.tracker-sections textarea {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.tracker-sections textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+/* Tablet and mobile */
+@media (max-width: 760px) {
+  .tracker-sections {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .tracker-life-column,
+  .tracker-right-column,
+  .tracker-right-column .tracker-bottom-grid {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tracker-sections .inline-add-row {
+    flex-direction: column;
+  }
+
+  .tracker-sections .inline-add-row button {
+    width: 100%;
+  }
+}
+
+
