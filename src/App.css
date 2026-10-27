@@ -470,6 +470,10 @@ button {
   transform: scale(.98);
 }
 
+.hero-link span{
+  margin-left: 5px;
+}
+
 .btn:disabled {
   opacity: .4;
   cursor: not-allowed;
@@ -4376,3 +4380,26 @@ input[type="checkbox"] {
     display: none;
   }
 }
+
+.danger-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+  padding: 0;
+
+  border: 1px solid rgb(217, 217, 217);
+  border-radius: 10px;
+  background: transparent;
+
+  color: #dc2626;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
