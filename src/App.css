@@ -4502,3 +4502,10 @@ input[type="checkbox"] {
     display: none;
   }
 }
+
+.page-swipe { touch-action: pan-y pinch-zoom; overflow-x: clip; }
+.page-view { animation: page-in-next .28s cubic-bezier(.2, .8, .2, 1) both; }
+.page-view[data-dir="-1"] { animation-name: page-in-prev; }
+@keyframes page-in-next { from { opacity: 0; transform: translateX(28px); }  to { opacity: 1; transform: none; } }
+@keyframes page-in-prev { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .page-view { animation: none; } }

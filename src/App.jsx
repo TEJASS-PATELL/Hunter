@@ -82,6 +82,8 @@ import {
   DAILY_HOME_WORKOUTS,
   QUICK_PROTEIN_FOODS,
 } from "./shared.jsx";
+import { usePageNav } from "./hooks/usePageNav.js";
+import { useSwipeNav } from "./hooks/useSwipeNav.js";
 import { TodayPage } from "./pages/TodayPage.jsx";
 import { HabitsAndTrackPage } from "./pages/HabitsAndTrackPage.jsx";
 import { QuestPage } from "./pages/QuestPage.jsx";
@@ -101,9 +103,25 @@ import {
 
 const THEME_STORAGE_KEY = "day-by-day-comeback90-theme-dark";
 
+/* Every page the app can show. Swipe order = NAV order first, then any extra page. */
+const ALL_PAGES = [
+  "Today",
+  "Habits",
+  "Quest",
+  "Lifestyle",
+  "Looks",
+  "Reset",
+  "Yoga",
+  "Goals",
+  "Reflection",
+  "More",
+];
+const PAGES = [...NAV.map(([name]) => name), ...ALL_PAGES].filter(
+  (n, i, a) => a.indexOf(n) === i
+);
+
 export default function App() {
   const [data, setData] = useState(readUnifiedStore);
-  const [page, setPage] = useState("Today");
   const [modal, setModal] = useState(null);
   const [sosOpen, setSosOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -126,6 +144,16 @@ export default function App() {
     (txt) => discreetText(txt, Boolean(p.discreet)),
     [p.discreet]
   );
+
+  /* Page navigation: real browser history (Back works) + swipe between pages */
+  const { page, direction, navigate } = usePageNav(PAGES, "Today");
+  const setPage = navigate; // every existing setPage("...") call now pushes history
+  useSwipeNav({
+    page,
+    pages: PAGES,
+    navigate,
+    enabled: !modal && !sosOpen && !cmdOpen, // no swiping while a popup is open
+  });
 
   /* Persist unified store */
   useEffect(() => {
@@ -535,17 +563,17 @@ export default function App() {
               a.map((r) =>
                 r.id === item.id
                   ? {
-                      ...r,
-                      steps: [
-                        ...(r.steps || []),
-                        {
-                          id: uid(),
-                          title: v.stepTitle,
-                          instructions: v.instructions || "",
-                          duration: v.duration || "",
-                        },
-                      ],
-                    }
+                    ...r,
+                    steps: [
+                      ...(r.steps || []),
+                      {
+                        id: uid(),
+                        title: v.stepTitle,
+                        instructions: v.instructions || "",
+                        duration: v.duration || "",
+                      },
+                    ],
+                  }
                   : r
               )
             );
@@ -582,18 +610,18 @@ export default function App() {
               ...v,
               ...(type === "habit"
                 ? {
-                    doneDate: item?.doneDate || "",
-                    archived: item?.archived || false,
-                  }
+                  doneDate: item?.doneDate || "",
+                  archived: item?.archived || false,
+                }
                 : {}),
               ...(type === "task"
                 ? { done: item?.done || false, archived: item?.archived || false }
                 : {}),
               ...(type === "goal"
                 ? {
-                    progress: item?.progress || 0,
-                    archived: item?.archived || false,
-                  }
+                  progress: item?.progress || 0,
+                  archived: item?.archived || false,
+                }
                 : {}),
               ...(type === "routine"
                 ? { steps: item?.steps || [], logs: item?.logs || [] }
@@ -795,9 +823,8 @@ export default function App() {
           [
             {
               name: "value",
-              label: `Current measurement${
-                item?.unit ? ` (${item.unit})` : ""
-              }`,
+              label: `Current measurement${item?.unit ? ` (${item.unit})` : ""
+                }`,
               type: "number",
               required: true,
               placeholder: "Enter a number",
@@ -1270,7 +1297,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="main-area">
+      <main className="main-area page-swipe">
         <div className="content-wrap">
           {data.badDayMode && (
             <div
@@ -1291,7 +1318,9 @@ export default function App() {
             </div>
           )}
 
-          {renderPage()}
+          <div key={page} className="page-view" data-dir={direction}>
+            {renderPage()}
+          </div>
 
           <footer className="app-footer">
             <span>
