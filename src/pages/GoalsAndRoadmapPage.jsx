@@ -79,7 +79,7 @@ import {
   Heatmap90,
   NAV,
   DAILY_HOME_WORKOUTS,
-  QUICK_PROTEIN_FOODS
+  QUICK_PROTEIN_FOODS,
 } from "../shared";
 
 function GoalsAndRoadmapPage({
@@ -93,16 +93,21 @@ function GoalsAndRoadmapPage({
   notify,
 }) {
   const [subTab, setSubTab] = useState("goals"); // goals | roadmap | review
+  const [showArchivedGoals, setShowArchivedGoals] = useState(false);
   const [rev, setRev] = useState({ q1: "", q2: "", q3: "" });
 
-  const goals = (data.goals || []).filter((g) => !g.archived);
+  const today = todayISO();
+  const allGoals = data.goals || [];
+  const goals = allGoals.filter((g) => !!g.archived === showArchivedGoals);
   const weeklyReviews = data.weeklyReviews || [];
+  const roadmapProgress = data.roadmapProgress || {};
 
   const handleSaveReview = () => {
     if (!rev.q1.trim() && !rev.q3.trim()) return;
     const entry = {
+      id: `rev-${uid()}`,
       week: weeklyReviews.length + 1,
-      date: todayISO(),
+      date: today,
       ...rev,
     };
     setData((old) => ({
@@ -110,19 +115,64 @@ function GoalsAndRoadmapPage({
       weeklyReviews: [entry, ...(old.weeklyReviews || [])],
     }));
     setRev({ q1: "", q2: "", q3: "" });
-    notify("Weekly review saved");
+    notify("Sunday weekly review saved");
   };
+
+  const handleDeleteReview = (id) => {
+    setData((old) => ({
+      ...old,
+      weeklyReviews: (old.weeklyReviews || []).filter((r) => r.id !== id),
+    }));
+    notify("Weekly review deleted");
+  };
+
+  const toggleRoadmapTask = (phaseId, taskIdx) => {
+    const key = `${phaseId}-${taskIdx}`;
+    setData((old) => ({
+      ...old,
+      roadmapProgress: {
+        ...(old.roadmapProgress || {}),
+        [key]: !((old.roadmapProgress || {})[key]),
+      },
+    }));
+  };
+
+  /* Automated Weekly KPI Snapshot for Sunday Review */
+  const weeklySnapshot = useMemo(() => {
+    const daysMap = data.days || {};
+    let totalScore7d = 0;
+    let workouts7d = 0;
+    let cleanDays7d = 0;
+
+    for (let i = 0; i < 7; i += 1) {
+      const iso = addDaysISO(today, -i);
+      const d = daysMap[iso];
+      if (d) {
+        totalScore7d += calcDailyScore(d, data.profile);
+        if (d.c?.workout) workouts7d += 1;
+        if (d.c?.noPorn && !d.slip) cleanDays7d += 1;
+      }
+    }
+
+    return {
+      avgScore: Math.round(totalScore7d / 7),
+      workouts: workouts7d,
+      cleanDays: cleanDays7d,
+    };
+  }, [data.days, data.profile, today]);
 
   return (
     <>
       <Heading
         eyebrow="DIRECTION, NOT PRESSURE"
         title="Goals & 90-day roadmap"
-        description="Turn what matters to you into milestones, phased 90-day checkpoints, and weekly reviews."
+        description="Turn what matters to you into milestones, phased 90-day checkpoints with interactive task tracking, and Sunday weekly reviews."
         action={
-          <Button kind="primary" onClick={onAdd}>
-            ＋ Create goal
-          </Button>
+          <div className="heading-btn-group">
+            <Button kind="primary" onClick={onAdd}>
+              ＋ Create goal
+            </Button>
+          </div>
         }
       />
 
@@ -132,7 +182,7 @@ function GoalsAndRoadmapPage({
           className={subTab === "goals" ? "selected" : ""}
           onClick={() => setSubTab("goals")}
         >
-          Personal Goals & Milestones <span>{goals.length}</span>
+          Personal Goals &amp; Milestones <span>{goals.length}</span>
         </button>
         <button
           type="button"
@@ -154,7 +204,7 @@ function GoalsAndRoadmapPage({
         <>
           <div className="goals-summary">
             <div>
-              <span>{goals.length}</span>
+              <span>{allGoals.filter((g) => !g.archived).length}</span>
               <small>Active goals</small>
             </div>
             <div>
@@ -170,15 +220,53 @@ function GoalsAndRoadmapPage({
             </div>
           </div>
 
+          <div className="toolbar" style={{ marginBottom: 16 }}>
+            <div className="tabs">
+              <button
+                type="button"
+                className={!showArchivedGoals ? "selected" : ""}
+                onClick={() => setShowArchivedGoals(false)}
+              >
+                Active Goals ({allGoals.filter((g) => !g.archived).length})
+              </button>
+              <button
+                type="button"
+                className={showArchivedGoals ? "selected" : ""}
+                onClick={() => setShowArchivedGoals(true)}
+              >
+                Archived ({allGoals.filter((g) => g.archived).length})
+              </button>
+            </div>
+          </div>
+
           <div className="record-grid goal-grid">
             {goals.map((g) => {
-              const ms = (data.milestones || []).filter((m) => m.goalId === g.id);
+              const ms = (data.milestones || []).filter(
+                (m) => m.goalId === g.id
+              );
               const latest = (data.measurements || [])
                 .filter((m) => m.goalId === g.id)
                 .sort((a, b) => (b.date || "").localeCompare(a.date || ""))[0];
-              const pct = g.target
-                ? percent(Number(latest?.value || g.progress || 0), Number(g.target))
-                : g.progress || 0;
+
+              const currentVal = Number(latest?.value || g.progress || 0);
+              const targetVal = Number(g.target || 100);
+              const pct = g.target ? percent(currentVal, targetVal) : g.progress || 0;
+
+              /* Velocity / Required Daily Pace */
+              let paceText = "";
+              if (g.due && targetVal > 0) {
+                const daysRemaining = dayDiff(today, g.due);
+                const unitsLeft = targetVal - currentVal;
+                if (daysRemaining > 0 && unitsLeft > 0) {
+                  const dailyPace = (unitsLeft / daysRemaining).toFixed(1);
+                  paceText = `Pace needed: ~${dailyPace} ${
+                    g.unit || "units"
+                  }/day (${daysRemaining}d left)`;
+                } else if (daysRemaining <= 0) {
+                  paceText = "Target date reached";
+                }
+              }
+
               return (
                 <Card className="goal-card" key={g.id}>
                   <div className="goal-card-head">
@@ -192,10 +280,17 @@ function GoalsAndRoadmapPage({
                     </button>
                   </div>
                   <span className="eyebrow">
-                    IN PROGRESS{g.due ? ` · DUE ${fmtDate(g.due).toUpperCase()}` : ""}
+                    {g.archived
+                      ? "ARCHIVED"
+                      : `IN PROGRESS${
+                          g.due
+                            ? ` · DUE ${fmtDate(g.due).toUpperCase()}`
+                            : ""
+                        }`}
                   </span>
                   <h3>{g.title}</h3>
                   <p>{g.why || "Keep taking the next useful step."}</p>
+
                   {g.target && (
                     <div className="goal-progress-detail">
                       <div>
@@ -207,14 +302,21 @@ function GoalsAndRoadmapPage({
                         </strong>
                       </div>
                       <Progress value={pct} />
+                      {paceText && (
+                        <small className="muted-text" style={{ marginTop: 4 }}>
+                          {paceText}
+                        </small>
+                      )}
                     </div>
                   )}
+
                   <div className="milestone-head">
                     <strong>Milestones</strong>
                     <span>
                       {ms.filter((m) => m.done).length}/{ms.length}
                     </span>
                   </div>
+
                   {ms.length ? (
                     ms.map((m) => (
                       <label className="milestone-row" key={m.id}>
@@ -223,7 +325,9 @@ function GoalsAndRoadmapPage({
                           checked={!!m.done}
                           onChange={() => onDelete("milestones", m.id, "toggle")}
                         />
-                        <span className={m.done ? "struck" : ""}>{m.title}</span>
+                        <span className={m.done ? "struck" : ""}>
+                          {m.title}
+                        </span>
                         {m.due && <small>{fmtDate(m.due)}</small>}
                       </label>
                     ))
@@ -232,49 +336,139 @@ function GoalsAndRoadmapPage({
                       Add meaningful steps to break this goal down.
                     </p>
                   )}
+
                   <div className="record-actions">
-                    <Button kind="primary" onClick={() => onMilestone(g)}>
-                      ＋ Milestone
-                    </Button>
-                    <Button onClick={() => onMeasure(g)}>Log progress</Button>
+                    {!g.archived && (
+                      <>
+                        <Button kind="primary" onClick={() => onMilestone(g)}>
+                          ＋ Milestone
+                        </Button>
+                        <Button onClick={() => onMeasure(g)}>Log progress</Button>
+                      </>
+                    )}
                     <Button onClick={() => onEdit(g)}>Edit</Button>
-                    <Button onClick={() => onDelete("goals", g.id)}>Archive</Button>
+                    <Button
+                      onClick={() =>
+                        onDelete(
+                          "goals",
+                          g.id,
+                          g.archived ? "restore" : "archive"
+                        )
+                      }
+                    >
+                      {g.archived ? "Restore" : "Archive"}
+                    </Button>
                   </div>
                 </Card>
               );
             })}
           </div>
+
+          {!goals.length && (
+            <Empty
+              icon="⚑"
+              title={
+                showArchivedGoals ? "No archived goals" : "No active goals yet"
+              }
+              description="Define what you want to achieve over the next 90 days."
+              action={
+                !showArchivedGoals && (
+                  <Button kind="primary" onClick={onAdd}>
+                    ＋ Create your first goal
+                  </Button>
+                )
+              }
+            />
+          )}
         </>
       )}
 
       {subTab === "roadmap" && (
         <div className="stack-col">
-          {ROADMAP_PHASES.map((ph) => (
-            <Card key={ph.id}>
-              <div className="eyebrow">{ph.days.toUpperCase()}</div>
-              <h2>{ph.title}</h2>
-              <p style={{ marginBottom: 12 }}>{ph.focus}</p>
-              <div className="habit-list">
-                {ph.tasks.map((t, i) => (
-                  <div className="habit-row" key={i}>
-                    <span className="status-pill complete">0{i + 1}</span>
-                    <div className="habit-info">
-                      <strong>{t}</strong>
-                    </div>
+          {ROADMAP_PHASES.map((ph) => {
+            const completedCount = ph.tasks.filter((_, tIdx) =>
+              Boolean(roadmapProgress[`${ph.id}-${tIdx}`])
+            ).length;
+            const pct = percent(completedCount, ph.tasks.length);
+
+            return (
+              <Card key={ph.id}>
+                <div className="section-head">
+                  <div>
+                    <div className="eyebrow">{ph.days.toUpperCase()}</div>
+                    <h2>{ph.title}</h2>
+                    <p>{ph.focus}</p>
                   </div>
-                ))}
-              </div>
-            </Card>
-          ))}
+                  <span className="status-pill complete">
+                    {completedCount}/{ph.tasks.length} Done ({pct}%)
+                  </span>
+                </div>
+
+                <div style={{ marginBottom: 14 }}>
+                  <Progress value={pct} />
+                </div>
+
+                <div className="habit-list">
+                  {ph.tasks.map((t, i) => {
+                    const taskKey = `${ph.id}-${i}`;
+                    const checked = Boolean(roadmapProgress[taskKey]);
+                    return (
+                      <div
+                        key={i}
+                        className={`habit-row ${checked ? "checked" : ""}`}
+                      >
+                        <button
+                          type="button"
+                          className="check-circle"
+                          onClick={() => toggleRoadmapTask(ph.id, i)}
+                        >
+                          {checked ? "✓" : ""}
+                        </button>
+                        <div className="habit-info">
+                          <strong>{t}</strong>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            );
+          })}
         </div>
       )}
 
       {subTab === "review" && (
         <div className="dashboard-grid">
           <Card>
-            <div className="eyebrow">SUNDAY ACCOUNTABILITY</div>
+            <div className="eyebrow">SUNDAY ACCOUNTABILITY &amp; KPI SNAPSHOT</div>
             <h2>Write this week&apos;s review</h2>
-            <div className="stack-col" style={{ marginTop: 14 }}>
+
+            {/* Automated Weekly Snapshot Box */}
+            <div
+              className="mini-stat-row"
+              style={{ marginTop: 12, marginBottom: 16 }}
+            >
+              <div>
+                <span className="mini-stat-number">
+                  {weeklySnapshot.avgScore}/100
+                </span>
+                <span>7-Day Avg Score</span>
+              </div>
+              <div>
+                <span className="mini-stat-number">
+                  {weeklySnapshot.workouts}/3
+                </span>
+                <span>Workouts Done</span>
+              </div>
+              <div>
+                <span className="mini-stat-number">
+                  {weeklySnapshot.cleanDays}/7
+                </span>
+                <span>Clean Core Days</span>
+              </div>
+            </div>
+
+            <div className="stack-col">
               <Field label="1. Biggest win or lesson from this week">
                 <input
                   type="text"
@@ -307,7 +501,7 @@ function GoalsAndRoadmapPage({
 
           <Card>
             <div className="eyebrow">PAST REVIEWS</div>
-            <h2>Weekly history</h2>
+            <h2>Weekly history ({weeklyReviews.length})</h2>
             {weeklyReviews.length === 0 ? (
               <Empty
                 icon="▤"
@@ -316,20 +510,35 @@ function GoalsAndRoadmapPage({
               />
             ) : (
               <div className="stack-col" style={{ marginTop: 12 }}>
-                {weeklyReviews.map((w, i) => (
-                  <div key={i} className="routine-step-box">
-                    <strong>
-                      Week {w.week} · {fmtDate(w.date)}
-                    </strong>
-                    <p>
-                      <strong>Win:</strong> {w.q1}
-                    </p>
-                    <p>
-                      <strong>Trigger:</strong> {w.q2}
-                    </p>
-                    <p>
-                      <strong>Next Focus:</strong> {w.q3}
-                    </p>
+                {weeklyReviews.map((w) => (
+                  <div key={w.id || w.week} className="routine-step-box">
+                    <div className="row-between">
+                      <strong>
+                        Week {w.week} · {fmtDate(w.date)}
+                      </strong>
+                      <button
+                        type="button"
+                        className="danger-text"
+                        onClick={() => handleDeleteReview(w.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    {w.q1 && (
+                      <p>
+                        <strong>Win:</strong> {w.q1}
+                      </p>
+                    )}
+                    {w.q2 && (
+                      <p>
+                        <strong>Trigger:</strong> {w.q2}
+                      </p>
+                    )}
+                    {w.q3 && (
+                      <p>
+                        <strong>Next Focus:</strong> {w.q3}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>

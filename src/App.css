@@ -1,10 +1,11 @@
 @import url("https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Google+Sans+Code:wght@400..600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap");
 
 /* ==========================================================================
-   COMEBACK 90 — SINGLE-FILE THEME  ·  Antigravity design language (v2.1 Mobile-First)
+   COMEBACK 90 — SINGLE-FILE THEME  ·  Antigravity design language (v2.5 Mobile-First Pro)
    --------------------------------------------------------------------------
    One file, same class names as before — drop-in replacement.
-   Tuned specifically for Poco X7 Pro 5G (393px–412px viewport, 20:9 AMOLED, 120Hz).
+   Tuned specifically for Poco X7 Pro 5G (393px–412px viewport, 20:9 AMOLED, 120Hz)
+   & all new advanced features across all 10 pages.
    Sections:  1 Tokens · 2 Base · 3 Header · 4 Buttons · 5 Layout · 6 Hero
               7 Tabs & forms · 8 Stats · 9 Habits/tasks · 10 Records/mood
               11 Workout/nutrition · 12 Overlays/timer · 13 Charts/history
@@ -470,7 +471,7 @@ button {
   transform: scale(.98);
 }
 
-.hero-link span{
+.hero-link span {
   margin-left: 5px;
 }
 
@@ -502,6 +503,37 @@ button {
 
 .icon-button:active {
   transform: scale(.94);
+}
+
+/* Smart danger button: works for both "×" icon buttons and "Delete"/"Remove" text buttons */
+.danger-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 34px;
+  min-height: 34px;
+  width: auto;
+  height: auto;
+  padding: 5px 11px;
+  border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--line));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--danger) 6%, transparent);
+  color: var(--danger) !important;
+  font-size: .825rem;
+  font-weight: 540;
+  line-height: 1.1;
+  cursor: pointer;
+  transition: background .18s var(--ease), border-color .18s var(--ease), transform .15s var(--ease);
+}
+
+.danger-text:hover {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  border-color: color-mix(in srgb, var(--danger) 50%, var(--line));
+}
+
+.danger-text:active {
+  transform: scale(.95);
 }
 
 /* 5 · LAYOUT ============================================================== */
@@ -609,6 +641,13 @@ button {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(10px, 1.5vw, 18px);
   min-width: 0;
+  align-items: stretch;
+}
+
+/* Ensures clickable wrapper divs inside .stats-grid stretch to full card height */
+.stats-grid > div {
+  display: grid;
+  min-width: 0;
 }
 
 .dashboard-grid {
@@ -708,9 +747,13 @@ button {
   display: none;
 }
 
-.timer-strip .eyebrow {
+/* Keep contextual eyebrows visible inside timers, CBT thought cards & live anchors */
+.timer-strip .eyebrow,
+.routine-step-box .eyebrow {
   display: block;
-  font-size: .8125rem;
+  font-size: .78rem;
+  font-weight: 560;
+  letter-spacing: .02em;
   color: var(--mu);
 }
 
@@ -906,14 +949,14 @@ button {
   text-decoration: none;
 }
 
-.hero-link:nth-child(2) {
+.hero-link:nth-child(n+2) {
   border-color: var(--line);
   background: var(--paper);
   color: var(--tx);
   box-shadow: none;
 }
 
-.hero-link:nth-child(2):hover {
+.hero-link:nth-child(n+2):hover {
   opacity: 1;
   background: var(--hover);
 }
@@ -1111,11 +1154,12 @@ textarea:focus {
 
 input[type="range"] {
   width: 100%;
-  min-height: 0;
+  min-height: 32px;
   padding: 0;
   border: 0;
   background: none;
   accent-color: var(--ac);
+  cursor: pointer;
 }
 
 input[type="checkbox"] {
@@ -1205,6 +1249,7 @@ input[type="checkbox"] {
   display: grid;
   gap: 10px;
   align-content: start;
+  height: 100%;
   min-width: 0;
   padding: clamp(15px, 1.8vw, 24px);
 }
@@ -1334,7 +1379,7 @@ input[type="checkbox"] {
 
 .habit-row.checked,
 .task-row.task-done {
-  opacity: .64;
+  opacity: .72;
 }
 
 .habit-info,
@@ -1394,13 +1439,16 @@ input[type="checkbox"] {
 }
 
 .habit-row.checked .check-circle,
+.check-circle.checked,
 .task-check.on {
   background: var(--ac);
   border-color: var(--ac);
+  color: #fff;
   animation: check-pop .32s var(--ease);
 }
 
 .theme-dark .habit-row.checked .check-circle,
+.theme-dark .check-circle.checked,
 .theme-dark .task-check.on {
   color: #0f1117;
 }
@@ -1409,7 +1457,7 @@ input[type="checkbox"] {
 .audit-q-box {
   display: grid;
   align-items: start;
-  gap: 6px;
+  gap: 8px;
 }
 
 .panel-foot {
@@ -1622,7 +1670,7 @@ input[type="checkbox"] {
   margin-top: 8px;
 }
 
-.row-actions button {
+.row-actions button:not(.danger-text) {
   border: 0;
   border-radius: 8px;
   background: none;
@@ -1631,13 +1679,9 @@ input[type="checkbox"] {
   font-size: .8125rem;
 }
 
-.row-actions button:hover {
+.row-actions button:not(.danger-text):hover {
   background: var(--hover);
   color: var(--tx);
-}
-
-.danger-text {
-  color: var(--danger) !important;
 }
 
 .step-list {
@@ -1688,6 +1732,24 @@ input[type="checkbox"] {
   align-items: center;
   gap: 10px;
   min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--paper);
+}
+
+.schedule-edit-row.checked {
+  opacity: .68;
+}
+
+.schedule-edit-row.checked .check-circle {
+  background: var(--ac);
+  border-color: var(--ac);
+  color: #fff;
+}
+
+.theme-dark .schedule-edit-row.checked .check-circle {
+  color: #0f1117;
 }
 
 .time-w {
@@ -1847,7 +1909,7 @@ input[type="checkbox"] {
 }
 
 .reps-stepper input {
-  width: 76px;
+  width: 78px;
   font-family: var(--font-mono);
 }
 
@@ -1918,6 +1980,7 @@ input[type="checkbox"] {
   padding: 13px 15px;
   text-align: left;
   border-bottom: 1px solid var(--line);
+  vertical-align: middle;
 }
 
 .clean-table th {
@@ -2191,7 +2254,7 @@ input[type="checkbox"] {
 
 .trigger-row {
   display: grid;
-  grid-template-columns: 130px minmax(0, 1fr) 28px;
+  grid-template-columns: 145px minmax(0, 1fr) 32px;
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -2690,7 +2753,7 @@ input[type="checkbox"] {
 }
 
 .habits-track-page .mini-stat-row {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
   align-items: stretch;
   gap: 14px;
   padding: 20px 22px;
@@ -2900,22 +2963,6 @@ input[type="checkbox"] {
   min-width: 0;
 }
 
-.habits-track-page .schedule-edit-row {
-  display: grid;
-  grid-template-columns: 145px minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-}
-
-.habits-track-page .schedule-edit-row input {
-  width: 100%;
-  min-width: 0;
-}
-
-.habits-track-page .schedule-edit-row .time-w {
-  width: 100%;
-}
-
 .habits-track-page .empty {
   min-width: 0;
 }
@@ -2954,7 +3001,7 @@ input[type="checkbox"] {
 .tracker-layout .tracker-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .tracker-layout input,
@@ -3366,6 +3413,18 @@ input[type="checkbox"] {
     flex: 1 1 auto;
   }
 
+  /* Inside habit rows (e.g., Social Ladder, Lab Tracker, CBT), keep btn groups compact */
+  .habit-row .heading-btn-group,
+  .routine-step-box .heading-btn-group,
+  .clean-table .heading-btn-group {
+    width: auto;
+  }
+
+  .habit-row .heading-btn-group .btn,
+  .clean-table .heading-btn-group .btn {
+    flex: 0 0 auto;
+  }
+
   /* Hero section optimized for mobile 120Hz battery & zero clipping */
   .hero-banner {
     --dot: 18px;
@@ -3503,6 +3562,21 @@ input[type="checkbox"] {
   .clean-table td {
     padding: 11px 12px;
     font-size: .84rem;
+  }
+
+  /* Sticky first column for 7-Day Matrix & reference tables on mobile swipe */
+  .clean-table th:first-child,
+  .clean-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--paper);
+    box-shadow: 2px 0 6px rgb(0 0 0 / 4%);
+  }
+
+  .clean-table th:first-child {
+    background: var(--card);
+    z-index: 3;
   }
 
   .modal-backdrop {
@@ -3662,43 +3736,44 @@ input[type="checkbox"] {
     line-height: 1.54;
   }
 
-  /* Compact sticky header so it never overflows on 393px width */
+  /* Compact sticky header so Logo + Day pill + 3 Icon Buttons fit on 393px width */
   .site-header {
     padding-left: max(12px, env(safe-area-inset-left, 0px));
     padding-right: max(12px, env(safe-area-inset-right, 0px));
-    gap: 8px;
+    gap: 6px;
   }
 
   .logo {
-    gap: 8px;
+    gap: 7px;
   }
 
   .logo-mark {
-    width: 32px;
-    height: 32px;
-    border-radius: 10px;
-    font-size: 14px;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    font-size: 13px;
   }
 
   .logo-text {
-    font-size: .98rem;
+    font-size: .94rem;
   }
 
   .header-actions {
-    gap: 6px;
+    gap: 5px;
   }
 
   .site-header .pill-solid,
   .site-header .btn {
-    min-height: 38px;
-    padding: 7px 13px;
-    font-size: .8rem;
+    min-height: 35px;
+    padding: 6px 11px;
+    font-size: .76rem;
     white-space: nowrap;
   }
 
   .site-header .icon-button {
-    width: 38px;
-    height: 38px;
+    width: 35px;
+    height: 35px;
+    font-size: .88rem;
   }
 
   /* Page container rhythm */
@@ -3868,7 +3943,7 @@ input[type="checkbox"] {
     font-size: .82rem;
   }
 
-  /* CRITICAL FIX: Habit & Task rows wrap cleanly so text never crushes */
+  /* CRITICAL FIX: Habit & Task rows wrap cleanly without misaligning first-child badges */
   .habit-row,
   .task-row,
   .habits-track-page .habit-row,
@@ -3897,7 +3972,7 @@ input[type="checkbox"] {
   .habits-track-page .habit-info,
   .tracker-habits-grid .habit-info,
   .tracker-sections .habit-info {
-    flex: 1 1 calc(100% - 40px);
+    flex: 1 1 calc(100% - 42px);
     min-width: 0;
   }
 
@@ -3913,12 +3988,24 @@ input[type="checkbox"] {
     line-height: 1.4;
   }
 
-  .habit-row > .status-pill,
-  .task-row > .status-pill,
-  .habits-track-page .habit-row > .status-pill {
+  /* Only indent trailing status-pills that follow a check-circle */
+  .habit-row > .check-circle ~ .status-pill,
+  .task-row > .task-check ~ .status-pill,
+  .habits-track-page .habit-row > .check-circle ~ .status-pill {
     margin-left: 36px;
     padding: 3px 9px;
     font-size: .7rem;
+  }
+
+  .habit-row > .status-pill:first-child {
+    margin-left: 0;
+    margin-top: 2px;
+  }
+
+  .habit-row > .heading-btn-group {
+    width: 100%;
+    justify-content: flex-end;
+    padding-top: 4px;
   }
 
   .habit-row > .row-actions,
@@ -3930,7 +4017,7 @@ input[type="checkbox"] {
     border-top: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
   }
 
-  .row-actions button,
+  .row-actions button:not(.danger-text),
   .dots-button {
     min-height: 36px;
     padding: 6px 10px;
@@ -3954,6 +4041,11 @@ input[type="checkbox"] {
   .habits-track-page .form-grid.four-col-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
+  }
+
+  /* Keep Daily Biometrics (Steps, Water, Screen, Sleep) 1-column on narrow phones so quick-tap pills fit */
+  .tracker-layout .tracker-metrics {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .toolbar {
@@ -4020,10 +4112,11 @@ input[type="checkbox"] {
     border-radius: 13px;
   }
 
-  /* Exercise & Nutrition */
+  /* Exercise & Nutrition (Supports Reps/Set + Bag/DB kg steppers) */
   .home-ex-controls {
     align-items: stretch;
     flex-direction: column;
+    gap: 10px;
   }
 
   .set-chips-row {
@@ -4039,11 +4132,13 @@ input[type="checkbox"] {
 
   .reps-stepper {
     width: 100%;
+    justify-content: space-between;
   }
 
   .reps-stepper input {
-    flex: 1;
-    width: auto;
+    flex: 0 0 110px;
+    width: 110px;
+    text-align: center;
   }
 
   .quick-food-grid {
@@ -4055,11 +4150,13 @@ input[type="checkbox"] {
     padding: 11px 12px;
   }
 
+  /* Upgraded 5-element Schedule Edit Row on Mobile (Check + Time + Delete on Row 1, Label on Row 2) */
   .schedule-edit-row,
   .habits-track-page .schedule-edit-row {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 8px;
     padding: 12px;
     border: 1px solid var(--line);
@@ -4067,7 +4164,31 @@ input[type="checkbox"] {
     background: var(--paper);
   }
 
-  .time-w {
+  .schedule-edit-row .check-circle {
+    order: 1;
+    margin-top: 0;
+  }
+
+  .schedule-edit-row .time-w {
+    order: 2;
+    flex: 1 1 110px;
+    width: auto;
+    min-height: 40px;
+    padding: 7px 12px;
+  }
+
+  .schedule-edit-row .status-pill {
+    order: 3;
+  }
+
+  .schedule-edit-row .danger-text {
+    order: 4;
+    margin-left: auto;
+  }
+
+  .schedule-edit-row .flex-1 {
+    order: 5;
+    flex: 1 1 100%;
     width: 100%;
   }
 
@@ -4081,7 +4202,7 @@ input[type="checkbox"] {
   }
 
   .trigger-row {
-    grid-template-columns: 88px minmax(0, 1fr) 26px;
+    grid-template-columns: 105px minmax(0, 1fr) 26px;
     gap: 8px;
     font-size: .82rem;
   }
@@ -4177,6 +4298,7 @@ input[type="checkbox"] {
     gap: 16px;
   }
 
+  .modern-donut-layout > .donut-svg-box,
   .modern-donut-layout > svg {
     max-width: 210px;
     margin-inline: auto;
@@ -4380,26 +4502,3 @@ input[type="checkbox"] {
     display: none;
   }
 }
-
-.danger-text {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  width: 32px;
-  height: 32px;
-  padding: 0;
-
-  border: 1px solid rgb(217, 217, 217);
-  border-radius: 10px;
-  background: transparent;
-
-  color: #dc2626;
-  font-size: 24px;
-  font-weight: 400;
-  line-height: 1;
-
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-

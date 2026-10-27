@@ -80,7 +80,7 @@ import {
   Heatmap90,
   NAV,
   DAILY_HOME_WORKOUTS,
-  QUICK_PROTEIN_FOODS
+  QUICK_PROTEIN_FOODS,
 } from "./shared.jsx";
 import { TodayPage } from "./pages/TodayPage.jsx";
 import { HabitsAndTrackPage } from "./pages/HabitsAndTrackPage.jsx";
@@ -92,23 +92,42 @@ import { GoalsAndRoadmapPage } from "./pages/GoalsAndRoadmapPage.jsx";
 import { ReflectionAndMindPage } from "./pages/ReflectionAndMindPage.jsx";
 import { MoreAndSettingsPage } from "./pages/MoreAndSettingsPage.jsx";
 import { YogaPage } from "./pages/YogaPage.jsx";
-import { UrgeSOSModal, ProfileModal, LifestyleLogModal, RecordForm } from "./components/Modals";
+import {
+  UrgeSOSModal,
+  ProfileModal,
+  LifestyleLogModal,
+  RecordForm,
+} from "./components/Modals";
+
+const THEME_STORAGE_KEY = "day-by-day-comeback90-theme-dark";
 
 export default function App() {
   const [data, setData] = useState(readUnifiedStore);
   const [page, setPage] = useState("Today");
   const [modal, setModal] = useState(null);
   const [sosOpen, setSosOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
+  const [cmdQuery, setCmdQuery] = useState("");
   const [toast, setToast] = useState("");
   const [query, setQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() => {
+    try {
+      return window.localStorage.getItem(THEME_STORAGE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const [today, setToday] = useState(todayISO);
   const [selectedISO, setSelectedISO] = useState(todayISO);
 
-  const today = todayISO();
   const p = data.profile || {};
-  const dm = useCallback((txt) => discreetText(txt, Boolean(p.discreet)), [p.discreet]);
+  const dm = useCallback(
+    (txt) => discreetText(txt, Boolean(p.discreet)),
+    [p.discreet]
+  );
 
+  /* Persist unified store */
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -116,6 +135,46 @@ export default function App() {
       /* ignore quota errors */
     }
   }, [data]);
+
+  /* Persist dark theme preference */
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, dark ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }, [dark]);
+
+  /* Auto-detect midnight rollover so 'today' stays accurate */
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const nowISO = todayISO();
+      setToday((prev) => {
+        if (prev !== nowISO) {
+          setSelectedISO((sel) => (sel === prev ? nowISO : sel));
+          return nowISO;
+        }
+        return prev;
+      });
+    }, 60000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  /* Global keyboard shortcuts: Ctrl/Cmd+K (Command Palette) & Alt+S (Urge SOS) */
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCmdOpen((o) => !o);
+        setCmdQuery("");
+      } else if (e.altKey && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        setSosOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -146,7 +205,9 @@ export default function App() {
     setData((old) => {
       const existing = (old.days && old.days[isoDate]) || createEmptyDay();
       const nextDay =
-        typeof updater === "function" ? updater(existing) : { ...existing, ...updater };
+        typeof updater === "function"
+          ? updater(existing)
+          : { ...existing, ...updater };
       return {
         ...old,
         days: { ...(old.days || {}), [isoDate]: nextDay },
@@ -159,7 +220,8 @@ export default function App() {
       (data.habits || []).filter(
         (h) =>
           !h.archived &&
-          (h.schedule !== "weekdays" || [1, 2, 3, 4, 5].includes(new Date().getDay()))
+          (h.schedule !== "weekdays" ||
+            [1, 2, 3, 4, 5].includes(new Date().getDay()))
       ),
     [data.habits]
   );
@@ -174,7 +236,10 @@ export default function App() {
     () => calcDailyScoreBreakdown(todayDayObj, p),
     [todayDayObj, p]
   );
-  const streaks = useMemo(() => calcStreaks(data.days, p, today), [data.days, p, today]);
+  const streaks = useMemo(
+    () => calcStreaks(data.days, p, today),
+    [data.days, p, today]
+  );
 
   const saveRecord = (key, record, id) => {
     update(key, (arr) =>
@@ -196,26 +261,42 @@ export default function App() {
   const setDoneHabit = (habit) => {
     update("habits", (arr) =>
       arr.map((h) =>
-        h.id === habit.id ? { ...h, doneDate: h.doneDate === today ? "" : today } : h
+        h.id === habit.id
+          ? { ...h, doneDate: h.doneDate === today ? "" : today }
+          : h
       )
     );
     update("checkins", (arr) => {
-      const existing = arr.find((c) => c.habitId === habit.id && c.date === today);
+      const existing = arr.find(
+        (c) => c.habitId === habit.id && c.date === today
+      );
       if (existing) {
-        return arr.map((c) => (c.id === existing.id ? { ...c, done: !existing.done } : c));
+        return arr.map((c) =>
+          c.id === existing.id ? { ...c, done: !existing.done } : c
+        );
       }
       return [
-        { id: uid(), habitId: habit.id, name: habit.name, date: today, done: true },
+        {
+          id: uid(),
+          habitId: habit.id,
+          name: habit.name,
+          date: today,
+          done: true,
+        },
         ...arr,
       ];
     });
-    notify(habit.doneDate === today ? "Check-in undone" : "Habit checked in");
+    notify(
+      habit.doneDate === today ? "Check-in undone" : "Habit checked in"
+    );
   };
 
   const startModal = (type, item = null) => setModal({ type, item });
 
   const exportData = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -231,9 +312,29 @@ export default function App() {
     reader.onload = () => {
       try {
         const parsed = JSON.parse(reader.result);
-        if (!parsed || typeof parsed !== "object") throw new Error("Invalid JSON");
-        setData((old) => ({ ...old, ...parsed }));
-        notify("Backup restored");
+        if (!parsed || typeof parsed !== "object") {
+          throw new Error("Invalid JSON");
+        }
+        const def = createInitialData();
+        setData((old) => ({
+          ...def,
+          ...old,
+          ...parsed,
+          profile: {
+            ...def.profile,
+            ...(old.profile || {}),
+            ...(parsed.profile || {}),
+            targets: {
+              ...def.profile.targets,
+              ...(old.profile?.targets || {}),
+              ...(parsed.profile?.targets || {}),
+            },
+          },
+          days: { ...(old.days || {}), ...(parsed.days || {}) },
+          groom: { ...(old.groom || {}), ...(parsed.groom || {}) },
+          settings: { ...(old.settings || {}), ...(parsed.settings || {}) },
+        }));
+        notify("Backup restored safely");
       } catch {
         notify("That backup file is not valid");
       }
@@ -254,6 +355,122 @@ export default function App() {
       notify("Local data cleared");
     }
   };
+
+  /* Quick Command Palette Items */
+  const commandItems = useMemo(() => {
+    const navActions = NAV.map(([name, icon, desc]) => ({
+      id: `nav-${name}`,
+      title: `Go to ${name}`,
+      sub: desc,
+      icon,
+      run: () => {
+        setPage(name);
+        setCmdOpen(false);
+      },
+    }));
+
+    const quickModals = [
+      {
+        id: "act-sos",
+        title: dm("Launch 10-Min Urge SOS"),
+        sub: "Emergency breathing, grounding & wave timer",
+        icon: "🛡",
+        run: () => {
+          setCmdOpen(false);
+          setSosOpen(true);
+        },
+      },
+      {
+        id: "act-task",
+        title: "Add a Task",
+        sub: "Create a priority task for today",
+        icon: "＋",
+        run: () => {
+          setCmdOpen(false);
+          startModal("task");
+        },
+      },
+      {
+        id: "act-habit",
+        title: "Create a Custom Habit",
+        sub: "Add a build or quit habit",
+        icon: "◉",
+        run: () => {
+          setCmdOpen(false);
+          startModal("habit");
+        },
+      },
+      {
+        id: "act-mood",
+        title: "Log Mood & Energy Check-in",
+        sub: "Record today's emotional weather (1–5)",
+        icon: "♡",
+        run: () => {
+          setCmdOpen(false);
+          startModal("mood", todayMood || null);
+        },
+      },
+      {
+        id: "act-journal",
+        title: "Write a Journal Reflection",
+        sub: "Private reflection & gratitude entry",
+        icon: "▤",
+        run: () => {
+          setCmdOpen(false);
+          startModal("journal");
+        },
+      },
+      {
+        id: "act-goal",
+        title: "Create a 90-Day Goal",
+        sub: "Set a target with milestones",
+        icon: "⚑",
+        run: () => {
+          setCmdOpen(false);
+          startModal("goal");
+        },
+      },
+      {
+        id: "act-badday",
+        title: data.badDayMode
+          ? "Turn OFF Bad Day Mode"
+          : "Turn ON Bad Day Mode (3 Basics Only)",
+        sub: "Focus only on Sunlight, Phone Outside Bedroom, and Sleep on Time",
+        icon: "☾",
+        run: () => {
+          setData((old) => ({ ...old, badDayMode: !old.badDayMode }));
+          setCmdOpen(false);
+          notify(
+            !data.badDayMode
+              ? "Bad Day Mode ON: Focus on 3 basics today"
+              : "Full 100-pt mode restored"
+          );
+        },
+      },
+      {
+        id: "act-discreet",
+        title: p.discreet
+          ? "Disable Discreet Privacy Labels"
+          : "Enable Discreet Privacy Labels",
+        sub: "Mask sensitive habit names in public",
+        icon: "👁",
+        run: () => {
+          updateProfile({ discreet: !p.discreet });
+          setCmdOpen(false);
+          notify(!p.discreet ? "Discreet mode enabled" : "Standard labels on");
+        },
+      },
+    ];
+
+    const all = [...quickModals, ...navActions];
+    const q = cmdQuery.trim().toLowerCase();
+    if (!q) return all;
+    return all.filter(
+      (item) =>
+        item.title.toLowerCase().includes(q) ||
+        item.sub.toLowerCase().includes(q)
+    );
+  }, [cmdQuery, data.badDayMode, p.discreet, todayMood, dm, notify, updateProfile]);
 
   const renderModal = () => {
     if (!modal) return null;
@@ -282,11 +499,19 @@ export default function App() {
           onSave={(entry) => {
             if (item.kind === "routine") {
               update("routines", (a) =>
-                a.map((r) => (r.id === item.id ? { ...r, logs: [entry, ...(r.logs || [])] } : r))
+                a.map((r) =>
+                  r.id === item.id
+                    ? { ...r, logs: [entry, ...(r.logs || [])] }
+                    : r
+                )
               );
             } else {
               update("metrics", (a) =>
-                a.map((m) => (m.id === item.id ? { ...m, logs: [entry, ...(m.logs || [])] } : m))
+                a.map((m) =>
+                  m.id === item.id
+                    ? { ...m, logs: [entry, ...(m.logs || [])] }
+                    : m
+                )
               );
             }
             close();
@@ -310,17 +535,17 @@ export default function App() {
               a.map((r) =>
                 r.id === item.id
                   ? {
-                    ...r,
-                    steps: [
-                      ...(r.steps || []),
-                      {
-                        id: uid(),
-                        title: v.stepTitle,
-                        instructions: v.instructions || "",
-                        duration: v.duration || "",
-                      },
-                    ],
-                  }
+                      ...r,
+                      steps: [
+                        ...(r.steps || []),
+                        {
+                          id: uid(),
+                          title: v.stepTitle,
+                          instructions: v.instructions || "",
+                          duration: v.duration || "",
+                        },
+                      ],
+                    }
                   : r
               )
             );
@@ -356,13 +581,19 @@ export default function App() {
             {
               ...v,
               ...(type === "habit"
-                ? { doneDate: item?.doneDate || "", archived: item?.archived || false }
+                ? {
+                    doneDate: item?.doneDate || "",
+                    archived: item?.archived || false,
+                  }
                 : {}),
               ...(type === "task"
                 ? { done: item?.done || false, archived: item?.archived || false }
                 : {}),
               ...(type === "goal"
-                ? { progress: item?.progress || 0, archived: item?.archived || false }
+                ? {
+                    progress: item?.progress || 0,
+                    archived: item?.archived || false,
+                  }
                 : {}),
               ...(type === "routine"
                 ? { steps: item?.steps || [], logs: item?.logs || [] }
@@ -383,7 +614,12 @@ export default function App() {
         return form(
           "habits",
           [
-            { name: "name", label: "Habit name", required: true, placeholder: "e.g. Read 10 pages" },
+            {
+              name: "name",
+              label: "Habit name",
+              required: true,
+              placeholder: "e.g. Read 10 pages",
+            },
             {
               name: "kind",
               label: "Type",
@@ -394,8 +630,16 @@ export default function App() {
               ],
               defaultValue: "build",
             },
-            { name: "category", label: "Category", placeholder: "Mind, body, learning…" },
-            { name: "target", label: "Daily target", placeholder: "e.g. 20 minutes" },
+            {
+              name: "category",
+              label: "Category",
+              placeholder: "Mind, body, learning…",
+            },
+            {
+              name: "target",
+              label: "Daily target",
+              placeholder: "e.g. 20 minutes",
+            },
             {
               name: "schedule",
               label: "Schedule",
@@ -414,9 +658,24 @@ export default function App() {
         return form(
           "tasks",
           [
-            { name: "title", label: "Task", required: true, placeholder: "What matters today?" },
-            { name: "notes", label: "Notes", type: "textarea", placeholder: "Optional details" },
-            { name: "due", label: "Due date", type: "date", defaultValue: today },
+            {
+              name: "title",
+              label: "Task",
+              required: true,
+              placeholder: "What matters today?",
+            },
+            {
+              name: "notes",
+              label: "Notes",
+              type: "textarea",
+              placeholder: "Optional details",
+            },
+            {
+              name: "due",
+              label: "Due date",
+              type: "date",
+              defaultValue: today,
+            },
             {
               name: "priority",
               label: "Priority",
@@ -435,7 +694,13 @@ export default function App() {
         return form(
           "moods",
           [
-            { name: "date", label: "Date", type: "date", defaultValue: today, required: true },
+            {
+              name: "date",
+              label: "Date",
+              type: "date",
+              defaultValue: today,
+              required: true,
+            },
             {
               name: "score",
               label: "How are you feeling?",
@@ -488,9 +753,23 @@ export default function App() {
         return form(
           "goals",
           [
-            { name: "title", label: "Goal title", required: true, placeholder: "e.g. Build a consistent study routine" },
-            { name: "why", label: "Why it matters", type: "textarea", placeholder: "What will this make possible?" },
-            { name: "target", label: "Target (optional)", placeholder: "e.g. 90" },
+            {
+              name: "title",
+              label: "Goal title",
+              required: true,
+              placeholder: "e.g. Build a consistent study routine",
+            },
+            {
+              name: "why",
+              label: "Why it matters",
+              type: "textarea",
+              placeholder: "What will this make possible?",
+            },
+            {
+              name: "target",
+              label: "Target (optional)",
+              placeholder: "e.g. 90",
+            },
             { name: "unit", label: "Unit", placeholder: "days, hours, kg…" },
             { name: "due", label: "Target date", type: "date" },
           ],
@@ -500,7 +779,12 @@ export default function App() {
         return form(
           "milestones",
           [
-            { name: "title", label: "Milestone", required: true, placeholder: "A meaningful next step" },
+            {
+              name: "title",
+              label: "Milestone",
+              required: true,
+              placeholder: "A meaningful next step",
+            },
             { name: "due", label: "Target date", type: "date" },
           ],
           `Add milestone · ${item?.title || "goal"}`
@@ -511,7 +795,9 @@ export default function App() {
           [
             {
               name: "value",
-              label: `Current measurement${item?.unit ? ` (${item.unit})` : ""}`,
+              label: `Current measurement${
+                item?.unit ? ` (${item.unit})` : ""
+              }`,
               type: "number",
               required: true,
               placeholder: "Enter a number",
@@ -526,7 +812,12 @@ export default function App() {
           "journals",
           [
             { name: "date", label: "Date", type: "date", defaultValue: today },
-            { name: "title", label: "Entry title", required: true, placeholder: "A few words about today" },
+            {
+              name: "title",
+              label: "Entry title",
+              required: true,
+              placeholder: "A few words about today",
+            },
             {
               name: "content",
               label: "What felt important today?",
@@ -534,7 +825,12 @@ export default function App() {
               required: true,
               placeholder: "There is no right way to write…",
             },
-            { name: "gratitude", label: "One thing I appreciate", type: "textarea", placeholder: "Small things count." },
+            {
+              name: "gratitude",
+              label: "One thing I appreciate",
+              type: "textarea",
+              placeholder: "Small things count.",
+            },
           ],
           "Write a reflection"
         );
@@ -542,7 +838,12 @@ export default function App() {
         return form(
           "routines",
           [
-            { name: "name", label: "Routine name", required: true, placeholder: "e.g. Evening wind-down" },
+            {
+              name: "name",
+              label: "Routine name",
+              required: true,
+              placeholder: "e.g. Evening wind-down",
+            },
             {
               name: "category",
               label: "Category",
@@ -577,7 +878,12 @@ export default function App() {
         return form(
           "metrics",
           [
-            { name: "name", label: "Indicator name", required: true, placeholder: "e.g. Sleep duration" },
+            {
+              name: "name",
+              label: "Indicator name",
+              required: true,
+              placeholder: "e.g. Sleep duration",
+            },
             {
               name: "category",
               label: "Category",
@@ -592,7 +898,12 @@ export default function App() {
               ],
               defaultValue: "sleep",
             },
-            { name: "unit", label: "Unit", required: true, placeholder: "hours, glasses, grams…" },
+            {
+              name: "unit",
+              label: "Unit",
+              required: true,
+              placeholder: "hours, glasses, grams…",
+            },
             { name: "target", label: "Optional target", type: "number" },
             { name: "description", label: "Notes", type: "textarea" },
           ],
@@ -602,7 +913,12 @@ export default function App() {
         return form(
           "routines",
           [
-            { name: "stepTitle", label: "Step name", required: true, placeholder: "e.g. Cleanse gently" },
+            {
+              name: "stepTitle",
+              label: "Step name",
+              required: true,
+              placeholder: "e.g. Cleanse gently",
+            },
             { name: "instructions", label: "Instructions", type: "textarea" },
             { name: "duration", label: "Duration", placeholder: "e.g. 2 min" },
           ],
@@ -629,9 +945,24 @@ export default function App() {
               defaultValue: "reduce",
             },
             { name: "date", label: "Date", type: "date", defaultValue: today },
-            { name: "intensity", label: "Urge intensity (0–10)", type: "number", defaultValue: "5" },
-            { name: "trigger", label: "Trigger (optional)", type: "textarea", placeholder: "What was happening before the urge?" },
-            { name: "response", label: "What did you do?", type: "textarea", placeholder: "Pause, walk, change environment…" },
+            {
+              name: "intensity",
+              label: "Urge intensity (0–10)",
+              type: "number",
+              defaultValue: "5",
+            },
+            {
+              name: "trigger",
+              label: "Trigger (optional)",
+              type: "textarea",
+              placeholder: "What was happening before the urge?",
+            },
+            {
+              name: "response",
+              label: "What did you do?",
+              type: "textarea",
+              placeholder: "Pause, walk, change environment…",
+            },
             {
               name: "outcome",
               label: "Outcome",
@@ -643,7 +974,11 @@ export default function App() {
               ],
               defaultValue: "urge_passed",
             },
-            { name: "reflection", label: "Reflection (optional)", type: "textarea" },
+            {
+              name: "reflection",
+              label: "Reflection (optional)",
+              type: "textarea",
+            },
           ],
           "Private reset check-in"
         );
@@ -673,7 +1008,9 @@ export default function App() {
             updateDay={updateDay}
             onHabit={setDoneHabit}
             onTask={(id) =>
-              update("tasks", (a) => a.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
+              update("tasks", (a) =>
+                a.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
+              )
             }
             onAddTask={() => startModal("task")}
             onAddHabit={() => startModal("habit")}
@@ -700,7 +1037,9 @@ export default function App() {
             onDelete={(id) => {
               const h = data.habits.find((x) => x.id === id);
               if (h && !h.archived) {
-                update("habits", (a) => a.map((x) => (x.id === id ? { ...x, archived: true } : x)));
+                update("habits", (a) =>
+                  a.map((x) => (x.id === id ? { ...x, archived: true } : x))
+                );
                 notify("Habit archived; history kept");
               } else {
                 removeRecord("habits", id);
@@ -714,7 +1053,14 @@ export default function App() {
           />
         );
       case "Quest":
-        return <QuestPage data={data} today={today} onNavigate={setPage} notify={notify} />;
+        return (
+          <QuestPage
+            data={data}
+            today={today}
+            onNavigate={setPage}
+            notify={notify}
+          />
+        );
       case "Lifestyle":
         return (
           <LifestyleAndBodyPage
@@ -747,7 +1093,7 @@ export default function App() {
             notify={notify}
           />
         );
-        case "Yoga":
+      case "Yoga":
         return (
           <YogaPage
             data={data}
@@ -816,15 +1162,20 @@ export default function App() {
     }
   };
 
-  /* ===== REPLACE the whole `return ( ... );` at the end of `export default function App()` with this ===== */
   const resetCount = (data.resetLogs || []).length + (data.urges || []).length;
+  const currentDayNum = Math.min(getDayIndex(p.startDate, today), 90);
 
   return (
     <div className={`app-shell ${dark ? "theme-dark" : ""}`}>
       <header className="site-header">
-        <button type="button" className="logo" onClick={() => setPage("Today")}>
-          
-          <span className="logo-text">{p.discreet ? "Daily Planner" : "Comeback 90"}</span>
+        <button
+          type="button"
+          className="logo"
+          onClick={() => setPage("Today")}
+        >
+          <span className="logo-text">
+            {p.discreet ? "Daily Planner" : "Comeback 90"}
+          </span>
         </button>
 
         <nav className="site-nav" aria-label="Main">
@@ -840,23 +1191,79 @@ export default function App() {
               title={desc}
             >
               {name}
-              {name === "Reset" && resetCount > 0 && <b className="nav-count">{resetCount}</b>}
+              {name === "Reset" && resetCount > 0 && (
+                <b className="nav-count">{resetCount}</b>
+              )}
             </button>
           ))}
         </nav>
 
         <div className="header-actions">
-          <button type="button" className="pill-outline" onClick={() => setSosOpen(true)}>
+          <button
+            type="button"
+            className="pill-outline"
+            onClick={() => setPage("Habits")}
+            title="Today's 100-Point Score & Clean Streak"
+          >
+            {todayBreakdown.total} pts · 🔥 {streaks.currentClean}d
+          </button>
+
+          <button
+            type="button"
+            className="pill-outline"
+            onClick={() => setSosOpen(true)}
+            title="Shortcut: Alt + S"
+          >
             {dm("Urge SOS")}
           </button>
-          <button type="button" className="pill-solid" onClick={() => startModal("profile")}>
-            Day {Math.min(getDayIndex(p.startDate, today), 90)}/90
+
+          <button
+            type="button"
+            className="pill-solid"
+            onClick={() => startModal("profile")}
+            title="Edit Profile & 90-Day Targets"
+          >
+            Day {currentDayNum}/90
           </button>
+
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => {
+              setCmdOpen(true);
+              setCmdQuery("");
+            }}
+            aria-label="Quick Command Palette (Ctrl+K)"
+            title="Quick Command Palette (Ctrl+K)"
+          >
+            ⌘
+          </button>
+
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => {
+              updateProfile({ discreet: !p.discreet });
+              notify(
+                !p.discreet
+                  ? "Discreet privacy labels ON"
+                  : "Standard labels restored"
+              );
+            }}
+            aria-label="Toggle discreet privacy mode"
+            title={
+              p.discreet ? "Discreet Mode is ON" : "Turn ON Discreet Privacy Mode"
+            }
+          >
+            {p.discreet ? "🙈" : "👁"}
+          </button>
+
           <button
             type="button"
             className="icon-button"
             onClick={() => setDark(!dark)}
             aria-label="Toggle theme"
+            title="Toggle Dark / Light Mode"
           >
             {dark ? "☼" : "◐"}
           </button>
@@ -865,11 +1272,42 @@ export default function App() {
 
       <main className="main-area">
         <div className="content-wrap">
-          {data.badDayMode && <span className="status-pill peach-pill">Bad Day Mode · 3 basics</span>}
+          {data.badDayMode && (
+            <div
+              className="row-between"
+              style={{ marginBottom: 12, flexWrap: "wrap", gap: 8 }}
+            >
+              <span className="status-pill peach-pill">
+                Bad Day Mode Active · Just finish 3 basics today (Sunlight, Phone
+                Outside, Bed on Time)
+              </span>
+              <Button
+                onClick={() =>
+                  setData((old) => ({ ...old, badDayMode: false }))
+                }
+              >
+                Exit Bad Day Mode
+              </Button>
+            </div>
+          )}
+
           {renderPage()}
+
           <footer className="app-footer">
-            <span>General info, not medical advice · Tele-MANAS 14416 · Emergency 112</span>
+            <span>
+              General info, not medical advice · Tele-MANAS 14416 · Emergency
+              112
+            </span>
             <div>
+              <button
+                type="button"
+                onClick={() => {
+                  setCmdOpen(true);
+                  setCmdQuery("");
+                }}
+              >
+                Quick Jump (Ctrl+K)
+              </button>
               <button type="button" onClick={exportData}>
                 Export
               </button>
@@ -901,7 +1339,52 @@ export default function App() {
         />
       )}
 
+      {cmdOpen && (
+        <Modal
+          title="Quick Command & Navigation (Ctrl+K)"
+          onClose={() => setCmdOpen(false)}
+        >
+          <div className="stack-col">
+            <input
+              type="search"
+              className="clean-input"
+              autoFocus
+              placeholder="Type a page or action (e.g. Workout, Pomodoro, SOS, Journal)..."
+              value={cmdQuery}
+              onChange={(e) => setCmdQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && commandItems.length > 0) {
+                  e.preventDefault();
+                  commandItems[0].run();
+                }
+              }}
+            />
+            <div
+              className="habit-list"
+              style={{ maxHeight: 340, overflowY: "auto", marginTop: 8 }}
+            >
+              {commandItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="habit-row"
+                  style={{ cursor: "pointer" }}
+                  onClick={item.run}
+                >
+                  <span className="status-pill complete">{item.icon}</span>
+                  <div className="habit-info">
+                    <strong>{item.title}</strong>
+                    <small>{item.sub}</small>
+                  </div>
+                  <span className="muted-text">↵</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {renderModal()}
+
       {toast && (
         <div className="toast">
           <span>✓</span>
@@ -909,7 +1392,12 @@ export default function App() {
         </div>
       )}
 
-      <button type="button" className="sos-fab" onClick={() => setSosOpen(true)} aria-label="Urge SOS">
+      <button
+        type="button"
+        className="sos-fab"
+        onClick={() => setSosOpen(true)}
+        aria-label="Urge SOS"
+      >
         SOS
       </button>
 
