@@ -3910,6 +3910,7 @@ input[type="checkbox"] {
   }
 
   .site-header .pill-solid,
+  .site-header .pill-outline,
   .site-header .btn {
     min-height: 35px;
     padding: 6px 11px;
