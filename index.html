@@ -3,306 +3,175 @@
 <html lang="en" class="sp-lock">
   <head>
     <meta charset="UTF-8" />
+
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
     />
 
-    <title>Comeback 90</title>
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="background-color" content="#ffffff" />
     <meta name="application-name" content="Comeback 90" />
+
     <meta
       name="description"
-      content="Comeback 90: a private 90-day routine, habit and reset tracker. Your data stays on your device."
+      content="Comeback 90 — build better habits, one day at a time."
     />
-    <meta name="robots" content="noindex, nofollow" />
-    <meta name="referrer" content="no-referrer" />
-    <meta name="theme-color" content="#FFFFFF" />
-    <meta name="color-scheme" content="light" />
-    <meta name="format-detection" content="telephone=no" />
 
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Comeback 90" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="default"
     />
+    <meta name="apple-mobile-web-app-title" content="Comeback 90" />
+
+    <title>Comeback 90</title>
 
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- SVG App Icon -->
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0A0A'/%3E%3Cpath d='M 51 32 A 19 19 0 1 1 32 13' fill='none' stroke='%23FFFFFF' stroke-width='4.5' stroke-linecap='round'/%3E%3Cpath d='M 27 37 L 42 22 M 32 22 H 42 V 32' fill='none' stroke='%23FFFFFF' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='21' cy='43' r='3' fill='%23D9381E'/%3E%3C/svg%3E"
-    />
+    <!-- Keep your real SVG logo for the browser tab -->
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      rel="preconnect"
-      href="https://fonts.gstatic.com"
-      crossorigin
-    />
-
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Google+Sans+Code:wght@400..600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
-
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Google+Sans+Code:wght@400..600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-      />
-    </noscript>
+    <link rel="apple-touch-icon" href="/icons/icon.svg" />
 
     <style>
+      :root {
+        color-scheme: light;
+        background: #ffffff;
+      }
+
       *,
       *::before,
       *::after {
         box-sizing: border-box;
       }
 
-      html {
-        margin: 0;
-        min-height: 100%;
-        background: #fff;
-        color: #0a0a0a;
-        -webkit-text-size-adjust: 100%;
-        scrollbar-gutter: stable;
-        overflow-x: hidden;
-      }
-
+      html,
       body {
-        margin: 0;
+        width: 100%;
         min-height: 100%;
-        background: #fff;
-        color: #0a0a0a;
-        overflow-x: hidden;
+        margin: 0;
+        background: #ffffff;
       }
 
-      /* Prevent scroll jumps while splash is active */
       html.sp-lock,
       html.sp-lock body {
         overflow: hidden;
         overscroll-behavior: none;
       }
 
-      /* Minimal white splash screen */
-      #splash {
+      #root {
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+
+      #app-splash {
         position: fixed;
         inset: 0;
-        z-index: 2147483000;
-        display: grid;
-        place-items: center;
-        padding:
-          env(safe-area-inset-top, 0px)
-          env(safe-area-inset-right, 0px)
-          env(safe-area-inset-bottom, 0px)
-          env(safe-area-inset-left, 0px);
-        background: #fff;
-        color: #0a0a0a;
-        font-family:
-          "Plus Jakarta Sans",
-          system-ui,
-          -apple-system,
-          "Segoe UI",
-          sans-serif;
-        -webkit-font-smoothing: antialiased;
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
         opacity: 1;
         visibility: visible;
         transition:
-          opacity 0.25s ease,
-          visibility 0s linear 0.25s;
+          opacity 180ms ease,
+          visibility 180ms ease;
       }
 
-      #splash.sp-hide {
+      #app-splash .splash-loader {
+        width: 112px;
+        height: 3px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #eeeeee;
+      }
+
+      #app-splash .splash-loader::after {
+        content: "";
+        display: block;
+        width: 38%;
+        height: 100%;
+        border-radius: inherit;
+        background: #222222;
+        animation: splash-loading 1.05s ease-in-out infinite;
+      }
+
+      #app-splash.splash-hidden {
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
       }
 
-      .sp-wrap {
-        display: grid;
-        justify-items: center;
-        text-align: center;
-        animation: sp-in 0.3s ease both;
-      }
-
-      /* Thin loading indicator */
-      .sp-bar {
-        position: relative;
-        width: 112px;
-        height: 3px;
-        overflow: hidden;
-        border-radius: 999px;
-        background: #e8e8e8;
-      }
-
-      .sp-bar i {
-        position: absolute;
-        inset: 0 auto 0 0;
-        width: 42%;
-        border-radius: inherit;
-        background: #0a0a0a;
-        animation: sp-slide 1.15s
-          cubic-bezier(0.4, 0, 0.2, 1) infinite;
-      }
-
-      @keyframes sp-in {
-        from {
-          opacity: 0;
-          transform: translateY(4px);
+      @keyframes splash-loading {
+        0% {
+          transform: translateX(-110%);
         }
 
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      @keyframes sp-slide {
-        from {
-          transform: translateX(-100%);
-        }
-
-        to {
-          transform: translateX(270%);
+        100% {
+          transform: translateX(370%);
         }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .sp-wrap,
-        .sp-bar i {
-          animation: none;
+        #app-splash .splash-loader::after {
+          animation-duration: 2.5s;
         }
 
-        .sp-bar i {
-          width: 100%;
-          opacity: 0.3;
-        }
-
-        #splash {
-          transition-duration: 0.01s;
+        #app-splash {
+          transition: none;
         }
       }
     </style>
   </head>
 
   <body>
-    <div id="root"></div>
-
-    <!-- White screen with loading bar only -->
-    <div
-      id="splash"
-      role="status"
-      aria-live="polite"
-      aria-label="Loading Comeback 90"
-    >
-      <div class="sp-wrap">
-        <div class="sp-bar" aria-hidden="true">
-          <i></i>
-        </div>
-      </div>
+    <div id="app-splash" aria-label="Loading Comeback 90">
+      <div class="splash-loader" aria-hidden="true"></div>
     </div>
 
-    <noscript>
-      Comeback 90 needs JavaScript to run.
-      Please enable it in your browser.
-    </noscript>
+    <div id="root"></div>
 
     <script>
-      (() => {
-        const splash = document.getElementById("splash");
-        const root = document.getElementById("root");
-        const html = document.documentElement;
-
-        if (!splash || !root) {
-          html.classList.remove("sp-lock");
-          return;
-        }
-
-        if ("scrollRestoration" in history) {
-          history.scrollRestoration = "manual";
-        }
-
-        window.scrollTo(0, 0);
-
-        const started = performance.now();
-        const MIN_SHOW = 300;
-        let finished = false;
-        let observer = null;
-        let fallbackTimer = null;
+      (function () {
+        var splash = document.getElementById("app-splash");
+        var root = document.getElementById("root");
+        var hidden = false;
 
         function hideSplash() {
-          if (finished || root.childElementCount === 0) {
+          if (hidden || !splash) return;
+
+          hidden = true;
+          splash.classList.add("splash-hidden");
+          document.documentElement.classList.remove("sp-lock");
+
+          window.setTimeout(function () {
+            if (splash && splash.parentNode) {
+              splash.parentNode.removeChild(splash);
+            }
+          }, 220);
+        }
+
+        window.addEventListener("load", function () {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(hideSplash);
+          });
+        });
+
+        window.addEventListener("error", function (event) {
+          if (event && event.target && event.target !== window) {
             return;
           }
+        });
 
-          finished = true;
-
-          if (observer) {
-            observer.disconnect();
-          }
-
-          if (fallbackTimer) {
-            clearTimeout(fallbackTimer);
-          }
-
-          const fontsReady = document.fonts?.ready
-            ? Promise.race([
-                document.fonts.ready,
-                new Promise((resolve) =>
-                  setTimeout(resolve, 800)
-                ),
-              ])
-            : Promise.resolve();
-
-          fontsReady.then(() => {
-            const wait = Math.max(
-              0,
-              MIN_SHOW - (performance.now() - started)
-            );
-
-            setTimeout(() => {
-              requestAnimationFrame(() => {
-                window.scrollTo(0, 0);
-                html.classList.remove("sp-lock");
-                splash.classList.add("sp-hide");
-
-                setTimeout(() => {
-                  splash.remove();
-                }, 280);
-              });
-            }, wait);
-          });
-        }
-
-        if ("MutationObserver" in window) {
-          observer = new MutationObserver(() => {
-            if (root.childElementCount > 0) {
-              hideSplash();
-            }
-          });
-
-          observer.observe(root, {
-            childList: true,
-          });
-        }
-
-        if (root.childElementCount > 0) {
-          hideSplash();
-        }
-
-        /* Prevent an endless loading screen */
-        fallbackTimer = setTimeout(() => {
-          if (root.childElementCount > 0) {
+        // Safety fallback if the app takes longer to initialize.
+        window.setTimeout(function () {
+          if (root && root.childElementCount > 0) {
             hideSplash();
           }
-        }, 15000);
+        }, 12000);
       })();
     </script>
 
