@@ -1,5 +1,6 @@
+
 <!doctype html>
-<html lang="en">
+<html lang="en" class="sp-lock">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -15,36 +16,34 @@
     />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="referrer" content="no-referrer" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#FFFFFF" />
     <meta name="color-scheme" content="light" />
     <meta name="format-detection" content="telephone=no" />
 
-    <!-- Open Graph / Social Meta -->
-    <meta property="og:title" content="Comeback 90" />
-    <meta
-      property="og:description"
-      content="A private 90-day routine, habit and reset tracker. Your data stays on your device."
-    />
-    <meta property="og:type" content="website" />
-
-    <!-- Mobile / PWA -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Comeback 90" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="default"
+    />
 
-    <!-- Fixed Clean SVG Icon (No Jagged Arrow Tip) -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- SVG App Icon -->
     <link
-      id="app-favicon"
       rel="icon"
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0A0A'/%3E%3Cpath d='M 51 32 A 19 19 0 1 1 32 13' fill='none' stroke='%23FFFFFF' stroke-width='4.5' stroke-linecap='round'/%3E%3Cpath d='M 27 37 L 42 22 M 32 22 H 42 V 32' fill='none' stroke='%23FFFFFF' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='21' cy='43' r='3' fill='%23D9381E'/%3E%3C/svg%3E"
     />
-    <link id="apple-touch-icon" rel="apple-touch-icon" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
 
     <link
       rel="preload"
@@ -67,15 +66,32 @@
         box-sizing: border-box;
       }
 
-      html,
+      html {
+        margin: 0;
+        min-height: 100%;
+        background: #fff;
+        color: #0a0a0a;
+        -webkit-text-size-adjust: 100%;
+        scrollbar-gutter: stable;
+        overflow-x: hidden;
+      }
+
       body {
         margin: 0;
         min-height: 100%;
-        background-color: #ffffff;
+        background: #fff;
         color: #0a0a0a;
-        -webkit-text-size-adjust: 100%;
+        overflow-x: hidden;
       }
 
+      /* Prevent scroll jumps while splash is active */
+      html.sp-lock,
+      html.sp-lock body {
+        overflow: hidden;
+        overscroll-behavior: none;
+      }
+
+      /* Minimal white splash screen */
       #splash {
         position: fixed;
         inset: 0;
@@ -87,10 +103,20 @@
           env(safe-area-inset-right, 0px)
           env(safe-area-inset-bottom, 0px)
           env(safe-area-inset-left, 0px);
-        background-color: #ffffff;
+        background: #fff;
+        color: #0a0a0a;
+        font-family:
+          "Plus Jakarta Sans",
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        opacity: 1;
+        visibility: visible;
         transition:
-          opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1),
-          visibility 0s linear 0.32s;
+          opacity 0.25s ease,
+          visibility 0s linear 0.25s;
       }
 
       #splash.sp-hide {
@@ -99,50 +125,64 @@
         pointer-events: none;
       }
 
-      .sp-mark {
-        width: 64px;
-        height: 64px;
-        display: block;
-        animation: sp-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+      .sp-wrap {
+        display: grid;
+        justify-items: center;
+        text-align: center;
+        animation: sp-in 0.3s ease both;
       }
 
-      .sp-mark svg {
-        width: 100%;
-        height: 100%;
-        display: block;
+      /* Thin loading indicator */
+      .sp-bar {
+        position: relative;
+        width: 112px;
+        height: 3px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e8e8e8;
       }
 
-      .sp-arc {
-        stroke-dasharray: 90;
-        stroke-dashoffset: 90;
-        animation: sp-draw 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      .sp-bar i {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 42%;
+        border-radius: inherit;
+        background: #0a0a0a;
+        animation: sp-slide 1.15s
+          cubic-bezier(0.4, 0, 0.2, 1) infinite;
       }
 
       @keyframes sp-in {
         from {
           opacity: 0;
-          transform: scale(0.94);
+          transform: translateY(4px);
         }
+
         to {
           opacity: 1;
-          transform: scale(1);
+          transform: translateY(0);
         }
       }
 
-      @keyframes sp-draw {
+      @keyframes sp-slide {
+        from {
+          transform: translateX(-100%);
+        }
+
         to {
-          stroke-dashoffset: 0;
+          transform: translateX(270%);
         }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .sp-mark,
-        .sp-arc {
+        .sp-wrap,
+        .sp-bar i {
           animation: none;
         }
 
-        .sp-arc {
-          stroke-dashoffset: 0;
+        .sp-bar i {
+          width: 100%;
+          opacity: 0.3;
         }
 
         #splash {
@@ -155,137 +195,87 @@
   <body>
     <div id="root"></div>
 
-    <!-- Minimal Splash: Pure White BG + Fixed Icon Only -->
+    <!-- White screen with loading bar only -->
     <div
       id="splash"
       role="status"
       aria-live="polite"
       aria-label="Loading Comeback 90"
     >
-      <div class="sp-mark" aria-hidden="true">
-        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-          <rect width="64" height="64" rx="14" fill="#0A0A0A" />
-          <path
-            class="sp-arc"
-            d="M 51 32 A 19 19 0 1 1 32 13"
-            fill="none"
-            stroke="#FFFFFF"
-            stroke-width="4.5"
-            stroke-linecap="round"
-          />
-          <path
-            d="M 27 37 L 42 22 M 32 22 H 42 V 32"
-            fill="none"
-            stroke="#FFFFFF"
-            stroke-width="4.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <circle cx="21" cy="43" r="3" fill="#D9381E" />
-        </svg>
+      <div class="sp-wrap">
+        <div class="sp-bar" aria-hidden="true">
+          <i></i>
+        </div>
       </div>
     </div>
 
     <noscript>
-      Comeback 90 needs JavaScript to run. Please enable it in your browser.
+      Comeback 90 needs JavaScript to run.
+      Please enable it in your browser.
     </noscript>
 
     <script>
       (() => {
         const splash = document.getElementById("splash");
         const root = document.getElementById("root");
+        const html = document.documentElement;
 
-        // Auto-generate 180x180 PNG Apple Touch Icon & PWA Manifest
-        const setupPwaAssets = () => {
-          try {
-            const svgMarkup = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="180" height="180">
-              <rect width="64" height="64" rx="14" fill="#0A0A0A"/>
-              <path d="M 51 32 A 19 19 0 1 1 32 13" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round"/>
-              <path d="M 27 37 L 42 22 M 32 22 H 42 V 32" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-              <circle cx="21" cy="43" r="3" fill="#D9381E"/>
-            </svg>`;
-
-            const svgUrl =
-              "data:image/svg+xml;charset=utf-8," +
-              encodeURIComponent(svgMarkup);
-
-            const img = new Image();
-            img.onload = () => {
-              const canvas = document.createElement("canvas");
-              canvas.width = 180;
-              canvas.height = 180;
-              const ctx = canvas.getContext("2d");
-              if (!ctx) return;
-              ctx.drawImage(img, 0, 0, 180, 180);
-              const pngDataUrl = canvas.toDataURL("image/png");
-
-              const appleLink = document.getElementById("apple-touch-icon");
-              if (appleLink) appleLink.href = pngDataUrl;
-
-              const manifest = {
-                name: "Comeback 90",
-                short_name: "Comeback 90",
-                description:
-                  "A private 90-day routine, habit and reset tracker.",
-                start_url: "/",
-                display: "standalone",
-                background_color: "#FFFFFF",
-                theme_color: "#FFFFFF",
-                icons: [
-                  {
-                    src: pngDataUrl,
-                    sizes: "180x180",
-                    type: "image/png",
-                    purpose: "any maskable",
-                  },
-                ],
-              };
-
-              const manifestBlob = new Blob([JSON.stringify(manifest)], {
-                type: "application/manifest+json",
-              });
-              const manifestLink = document.createElement("link");
-              manifestLink.rel = "manifest";
-              manifestLink.href = URL.createObjectURL(manifestBlob);
-              document.head.appendChild(manifestLink);
-            };
-            img.src = svgUrl;
-          } catch (_) {}
-        };
-
-        if ("requestIdleCallback" in window) {
-          window.requestIdleCallback(setupPwaAssets);
-        } else {
-          setTimeout(setupPwaAssets, 200);
+        if (!splash || !root) {
+          html.classList.remove("sp-lock");
+          return;
         }
 
-        if (!splash || !root) return;
+        if ("scrollRestoration" in history) {
+          history.scrollRestoration = "manual";
+        }
+
+        window.scrollTo(0, 0);
 
         const started = performance.now();
-        const MIN_SHOW = 350;
+        const MIN_SHOW = 300;
         let finished = false;
         let observer = null;
+        let fallbackTimer = null;
 
         function hideSplash() {
-          if (finished) return;
+          if (finished || root.childElementCount === 0) {
+            return;
+          }
+
           finished = true;
 
-          if (observer) observer.disconnect();
+          if (observer) {
+            observer.disconnect();
+          }
+
+          if (fallbackTimer) {
+            clearTimeout(fallbackTimer);
+          }
 
           const fontsReady = document.fonts?.ready
             ? Promise.race([
                 document.fonts.ready,
-                new Promise((resolve) => setTimeout(resolve, 1200)),
+                new Promise((resolve) =>
+                  setTimeout(resolve, 800)
+                ),
               ])
             : Promise.resolve();
 
           fontsReady.then(() => {
-            const wait = Math.max(0, MIN_SHOW - (performance.now() - started));
+            const wait = Math.max(
+              0,
+              MIN_SHOW - (performance.now() - started)
+            );
 
             setTimeout(() => {
               requestAnimationFrame(() => {
+                window.scrollTo(0, 0);
+                html.classList.remove("sp-lock");
                 splash.classList.add("sp-hide");
-                setTimeout(() => splash.remove(), 350);
+
+                setTimeout(() => {
+                  splash.remove();
+                }, 280);
               });
             }, wait);
           });
@@ -306,6 +296,13 @@
         if (root.childElementCount > 0) {
           hideSplash();
         }
+
+        /* Prevent an endless loading screen */
+        fallbackTimer = setTimeout(() => {
+          if (root.childElementCount > 0) {
+            hideSplash();
+          }
+        }, 15000);
       })();
     </script>
 
