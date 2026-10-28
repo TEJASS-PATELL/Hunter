@@ -1,236 +1,220 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
-    />
 
-    <title>Comeback 90</title>
-    <meta name="application-name" content="Comeback 90" />
-    <meta
-      name="description"
-      content="Comeback 90: a private 90-day routine, habit and reset tracker. Your data stays on your device."
-    />
-    <meta name="robots" content="noindex, nofollow" />
-    <meta name="referrer" content="no-referrer" />
-    <meta name="theme-color" content="#ffffff" />
-    <meta name="color-scheme" content="light" />
-    <meta name="format-detection" content="telephone=no" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
 
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Comeback 90" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Comeback 90</title>
+  <meta name="application-name" content="Comeback 90" />
+  <meta name="description"
+    content="Comeback 90: a private 90-day routine, habit and reset tracker. Your data stays on your device." />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="theme-color" content="#ffffff" />
+  <meta name="color-scheme" content="light" />
+  <meta name="format-detection" content="telephone=no" />
 
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230a0a0a'/%3E%3Cpath d='M20 42a12 12 0 0 1 24 0z' fill='%23fff'/%3E%3Cpath d='M14 46h36' stroke='%23fff' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E"
-    />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Comeback 90" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <link
-      rel="preload"
-      as="style"
-      href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Google+Sans+Code:wght@400..600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
-      onload="this.onload=null;this.rel='stylesheet'"
-    />
+  <link rel="icon" type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0A0A'/%3E%3Cpath d='M 51 32 A 19 19 0 1 1 32 13' fill='none' stroke='%23FFFFFF' stroke-width='4.5' stroke-linecap='round'/%3E%3Cpath d='M 27 37 L 42 22 M 32 22 H 42 V 32' fill='none' stroke='%23FFFFFF' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='21' cy='43' r='3' fill='%23D9381E'/%3E%3C/svg%3E" />
 
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Google+Sans+Code:wght@400..600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
-      />
-    </noscript>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <style>
-      html,
-      body {
-        margin: 0;
-        min-height: 100%;
-        background: #fff;
-      }
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Google+Sans+Code:wght@400..600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap"
+    onload="this.onload=null;this.rel='stylesheet'" />
 
-      #splash {
-        position: fixed;
-        inset: 0;
-        z-index: 2147483000;
-        display: grid;
-        place-items: center;
-        padding:
-          env(safe-area-inset-top, 0)
-          env(safe-area-inset-right, 0)
-          env(safe-area-inset-bottom, 0)
-          env(safe-area-inset-left, 0);
-        background: #fff;
-        color: #0a0a0a;
-        font-family:
-          "Plus Jakarta Sans",
-          system-ui,
-          -apple-system,
-          "Segoe UI",
-          sans-serif;
-        -webkit-font-smoothing: antialiased;
-        transition:
-          opacity 0.3s ease,
-          visibility 0s linear 0.3s;
-      }
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Google+Sans+Code:wght@400..600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" />
+  </noscript>
 
-      #splash.sp-hide {
+  <style>
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #fff;
+    }
+
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483000;
+      display: grid;
+      place-items: center;
+      padding:
+        env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+      background: #fff;
+      color: #0a0a0a;
+      font-family:
+        "Plus Jakarta Sans",
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      transition:
+        opacity 0.3s ease,
+        visibility 0s linear 0.3s;
+    }
+
+    #splash.sp-hide {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .sp-wrap {
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      animation: sp-in 0.4s ease both;
+    }
+
+    .sp-bar {
+      position: relative;
+      width: 112px;
+      height: 3px;
+      margin-top: 28px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #e8e8e8;
+    }
+
+    .sp-bar i {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 42%;
+      border-radius: inherit;
+      background: #0a0a0a;
+      animation: sp-slide 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes sp-in {
+      from {
         opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
+        transform: translateY(6px);
       }
 
-      .sp-wrap {
-        display: grid;
-        justify-items: center;
-        text-align: center;
-        animation: sp-in 0.4s ease both;
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes sp-slide {
+      from {
+        transform: translateX(-100%);
       }
 
-      .sp-bar {
-        position: relative;
-        width: 112px;
-        height: 3px;
-        margin-top: 28px;
-        overflow: hidden;
-        border-radius: 99px;
-        background: #e8e8e8;
+      to {
+        transform: translateX(240%);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .sp-wrap,
+      .sp-bar i {
+        animation: none;
       }
 
       .sp-bar i {
-        position: absolute;
-        inset: 0 auto 0 0;
-        width: 42%;
-        border-radius: inherit;
-        background: #0a0a0a;
-        animation: sp-slide 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        width: 100%;
+        opacity: 0.3;
       }
 
-      @keyframes sp-in {
-        from {
-          opacity: 0;
-          transform: translateY(6px);
-        }
-
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      #splash {
+        transition-duration: 0.01s;
       }
+    }
+  </style>
+</head>
 
-      @keyframes sp-slide {
-        from {
-          transform: translateX(-100%);
-        }
+<body>
+  <div id="root"></div>
 
-        to {
-          transform: translateX(240%);
-        }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .sp-wrap,
-        .sp-bar i {
-          animation: none;
-        }
-
-        .sp-bar i {
-          width: 100%;
-          opacity: 0.3;
-        }
-
-        #splash {
-          transition-duration: 0.01s;
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    <div id="root"></div>
-
-    <div
-      id="splash"
-      role="status"
-      aria-live="polite"
-      aria-label="Loading Comeback 90"
-    >
-      <div class="sp-wrap">
-        <div class="sp-bar" aria-hidden="true">
-          <i></i>
-        </div>
+  <div id="splash" role="status" aria-live="polite" aria-label="Loading Comeback 90">
+    <div class="sp-wrap">
+      <div class="sp-bar" aria-hidden="true">
+        <i></i>
       </div>
     </div>
+  </div>
 
-    <noscript>
-      Comeback 90 needs JavaScript to run. Please enable it in your browser.
-    </noscript>
+  <noscript>
+    Comeback 90 needs JavaScript to run. Please enable it in your browser.
+  </noscript>
 
-    <script>
-      (() => {
-        const splash = document.getElementById("splash");
-        const root = document.getElementById("root");
+  <script>
+    (() => {
+      const splash = document.getElementById("splash");
+      const root = document.getElementById("root");
 
-        if (!splash || !root) return;
+      if (!splash || !root) return;
 
-        const started = Date.now();
-        const MIN_SHOW = 350;
-        let finished = false;
-        let observer;
+      const started = Date.now();
+      const MIN_SHOW = 350;
+      let finished = false;
+      let observer;
 
-        function hideSplash() {
-          if (finished) return;
-          finished = true;
+      function hideSplash() {
+        if (finished) return;
+        finished = true;
 
-          if (observer) observer.disconnect();
+        if (observer) observer.disconnect();
 
-          const fontsReady = document.fonts?.ready
-            ? Promise.race([
-                document.fonts.ready,
-                new Promise((resolve) => setTimeout(resolve, 1200)),
-              ])
-            : Promise.resolve();
+        const fontsReady = document.fonts?.ready
+          ? Promise.race([
+            document.fonts.ready,
+            new Promise((resolve) => setTimeout(resolve, 1200)),
+          ])
+          : Promise.resolve();
 
-          fontsReady.then(() => {
-            const wait = Math.max(
-              0,
-              MIN_SHOW - (Date.now() - started)
-            );
+        fontsReady.then(() => {
+          const wait = Math.max(
+            0,
+            MIN_SHOW - (Date.now() - started)
+          );
 
-            setTimeout(() => {
-              requestAnimationFrame(() => {
-                splash.classList.add("sp-hide");
+          setTimeout(() => {
+            requestAnimationFrame(() => {
+              splash.classList.add("sp-hide");
 
-                setTimeout(() => splash.remove(), 350);
-              });
-            }, wait);
-          });
-        }
+              setTimeout(() => splash.remove(), 350);
+            });
+          }, wait);
+        });
+      }
 
-        if ("MutationObserver" in window) {
-          observer = new MutationObserver(() => {
-            if (root.childElementCount > 0) {
-              hideSplash();
-            }
-          });
+      if ("MutationObserver" in window) {
+        observer = new MutationObserver(() => {
+          if (root.childElementCount > 0) {
+            hideSplash();
+          }
+        });
 
-          observer.observe(root, {
-            childList: true,
-          });
-        }
+        observer.observe(root, {
+          childList: true,
+        });
+      }
 
-        if (root.childElementCount > 0) {
-          hideSplash();
-        }
-      })();
-    </script>
+      if (root.childElementCount > 0) {
+        hideSplash();
+      }
+    })();
+  </script>
 
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>
