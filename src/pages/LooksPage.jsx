@@ -105,6 +105,82 @@ const FIT_RULES_CHECKLIST = [
   },
 ];
 
+const HEIGHT_DECOMPRESSION_STEPS = [
+  {
+    id: "ht-1",
+    name: "1. Bar Dead Hang / Doorframe Spinal Traction",
+    durationSec: 45,
+    reps: "3 sets × 30–45 sec",
+    gainTag: "+0.6 to 1.0 cm (Disc Decompression)",
+    instruction:
+      "Pull-up bar ya majboot दरवाजे ke frame ko pakad kar shoulders ko kaanon ke paas dhila chhod do. Lower back aur hips ko hawa mein bhaari latakne do (feet halka zameen ko touch kar sakte hain). Gravity aapke 23 spinal discs ke beech space kholegi.",
+  },
+  {
+    id: "ht-2",
+    name: "2. Wall Crown-to-Ceiling Reach (Thoracic & Neck Unfold)",
+    durationSec: 60,
+    reps: "3 sets × 20 sec hold",
+    gainTag: "+0.5 to 0.8 cm (Fixes Tech-Neck)",
+    instruction:
+      "Deewar se heels, glutes aur upper back chipkao. Chin ko andar tuck karo (double chin jaisa) aur apne sir ke sabse upari hisse (crown) ko chhat (ceiling) ki taraf 1 inch upar kheench kar hold karo.",
+  },
+  {
+    id: "ht-3",
+    name: "3. APT Pelvic Tuck + Kneeling Hip-Flexor Release",
+    durationSec: 60,
+    reps: "45 sec / side",
+    gainTag: "+0.5 to 1.0 cm (Straightens Lumbar Curve)",
+    instruction:
+      "Lambi sitting se pelvis aage tilt ho jata hai (APT) jisse kamar ki S-curve dab kar height chura leti hai. Belt buckle ko naabhi ki taraf upar tuck karo, glutes 80% squeeze karo aur front hip flexor ko lamba stretch do.",
+  },
+  {
+    id: "ht-4",
+    name: "4. Cobra Thoracic Extension to Downward Dog Wave",
+    durationSec: 60,
+    reps: "8 slow waves (60 sec)",
+    gainTag: "+0.4 cm (Upper Back Extension)",
+    instruction:
+      "Glutes tight rakh kar chest ko upar uthao (Sphinx/Baby Cobra—sirf upper back kholo, lower back pinch mat karo) aur fir hips upar push karke Downward Dog mein spine ko lamba stretch do.",
+  },
+  {
+    id: "ht-5",
+    name: "5. Nighttime Disc Rehydration (Pillow Under Knees)",
+    durationSec: 90,
+    reps: "Every night before sleep",
+    gainTag: "Locks Morning Height Gain",
+    instruction:
+      "Raat ko sote waqt spinal discs paani absorb karke wapas phoolti hain. Peeth ke bal let kar ghutno ke neeche 1 takiya (pillow) lagao aur 3L+ daily hydration rakho taaki subah 1.5 cm full disc height mile.",
+  },
+];
+
+const VISUAL_HEIGHT_HACKS = [
+  {
+    id: "vh-sole",
+    title: "Wear chunky minimal sneakers with a 3 to 3.5 cm outsole",
+    sub: "White/neutral court sneakers, running soles, or Chelsea boots add 3+ cm instantly without fake insoles.",
+  },
+  {
+    id: "vh-monochrome",
+    title: "Use monochrome or tonal dark outfits (Navy, Charcoal, Olive, Black)",
+    sub: "Wearing similar colour tones on top and bottom creates an unbroken vertical line that makes you look 2–3 cm taller.",
+  },
+  {
+    id: "vh-waistline",
+    title: "Mid-rise straight trousers + T-shirt ending right at the belt bone",
+    sub: "Long baggy tees cut your leg length in half. Longer visual legs = taller perceived height.",
+  },
+  {
+    id: "vh-crown",
+    title: "Add 2–3 cm textured volume on top of hair with neat tapered sides",
+    sub: "A short quiff or textured crop with low-tapered sides adds both actual and visual vertical height.",
+  },
+  {
+    id: "vh-lats",
+    title: "Build side delts & upper-back posture (Invisible String Cue)",
+    sub: "Walk as if an invisible thread is pulling the crown of your head toward the sky.",
+  },
+];
+
 function parseAvgRupeeRange(str = "") {
   const nums = String(str)
     .replace(/,/g, "")
@@ -115,8 +191,9 @@ function parseAvgRupeeRange(str = "") {
 }
 
 function LooksPage({ data, setData, notify }) {
-  const [subTab, setSubTab] = useState("face"); // face | hair | skin | groom
+  const [subTab, setSubTab] = useState("face"); // face | height | hair | skin | groom
   const [doneRoutineSteps, setDoneRoutineSteps] = useState({});
+  const [doneHeightSteps, setDoneHeightSteps] = useState({});
   const [budgetTier, setBudgetTier] = useState("low"); // low | mid
   const [shapeQuiz, setShapeQuiz] = useState({
     lengthVsWidth: "balanced",
@@ -124,10 +201,23 @@ function LooksPage({ data, setData, notify }) {
     foreheadVsJaw: "equal",
   });
 
+  /* Reclaimable Height Estimator State */
+  const [heightAudit, setHeightAudit] = useState({
+    sittingHours: "high", // low | med | high
+    aptLevel: "moderate", // none | moderate | high
+    neckSlouch: "yes", // no | yes
+  });
+
   const today = todayISO();
+  const p = data.profile || {};
   const groom = data.groom || {};
   const auditAnswers = (data.faceAudit && data.faceAudit.answers) || {};
   const todayDayObj = (data.days && data.days[today]) || createEmptyDay();
+
+  const [heightForm, setHeightForm] = useState({
+    morningCm: groom.morningHeightCm || +(safeNum(p.heightCm, 172) + 1.5).toFixed(1),
+    eveningCm: groom.eveningHeightCm || safeNum(p.heightCm, 172),
+  });
 
   const setGroom = (patch) =>
     setData((old) => ({
@@ -222,6 +312,111 @@ function LooksPage({ data, setData, notify }) {
     }
   };
 
+  /* Height Decompression Routine Sync */
+  const isHeightRoutineDoneToday = Boolean(
+    todayDayObj.life && todayDayObj.life.eyePosture && groom.heightDoneDate === today
+  );
+
+  const toggleHeightStepDone = (stepId) => {
+    const next = { ...doneHeightSteps, [stepId]: !doneHeightSteps[stepId] };
+    setDoneHeightSteps(next);
+    const doneCount = Object.values(next).filter(Boolean).length;
+    if (doneCount >= 3) {
+      markFullHeightRoutineToday(true, next);
+    }
+  };
+
+  const markFullHeightRoutineToday = (val = true, customMap = null) => {
+    const nextMap = customMap || {};
+    if (val && !customMap) {
+      HEIGHT_DECOMPRESSION_STEPS.forEach((s) => {
+        nextMap[s.id] = true;
+      });
+    }
+    setDoneHeightSteps(nextMap);
+
+    setData((old) => {
+      const prevDay = (old.days && old.days[today]) || createEmptyDay();
+      return {
+        ...old,
+        groom: {
+          ...(old.groom || {}),
+          heightDoneDate: val ? today : "",
+        },
+        days: {
+          ...(old.days || {}),
+          [today]: {
+            ...prevDay,
+            life: {
+              ...(prevDay.life || {}),
+              eyePosture: val ? true : prevDay.life?.eyePosture,
+            },
+          },
+        },
+      };
+    });
+
+    if (val && typeof notify === "function") {
+      notify("Spinal Decompression & Height Protocol logged for today!");
+    }
+  };
+
+  /* Reclaimable Height Calculation (Age 22 Biomechanics) */
+  const heightPotential = useMemo(() => {
+    let discGain = 0.6;
+    if (heightAudit.sittingHours === "high") discGain = 1.1;
+    else if (heightAudit.sittingHours === "med") discGain = 0.8;
+
+    let aptGain = 0.2;
+    if (heightAudit.aptLevel === "high") aptGain = 1.0;
+    else if (heightAudit.aptLevel === "moderate") aptGain = 0.6;
+
+    const neckGain = heightAudit.neckSlouch === "yes" ? 0.6 : 0.2;
+
+    const totalReclaimCm = +(discGain + aptGain + neckGain).toFixed(1);
+    const baseHeight = safeNum(p.heightCm, 172);
+    const potentialHeight = +(baseHeight + totalReclaimCm).toFixed(1);
+
+    return {
+      discGain,
+      aptGain,
+      neckGain,
+      totalReclaimCm,
+      baseHeight,
+      potentialHeight,
+    };
+  }, [heightAudit, p.heightCm]);
+
+  const handleSaveHeightLog = () => {
+    const mCm = Math.max(130, Math.min(220, safeNum(heightForm.morningCm, 173.5)));
+    const eCm = Math.max(130, Math.min(220, safeNum(heightForm.eveningCm, 172)));
+    const entry = {
+      id: uid(),
+      date: today,
+      morningCm: mCm,
+      eveningCm: eCm,
+      dropCm: +Math.max(0, mCm - eCm).toFixed(1),
+    };
+
+    setData((old) => ({
+      ...old,
+      profile: {
+        ...(old.profile || {}),
+        heightCm: eCm,
+      },
+      groom: {
+        ...(old.groom || {}),
+        morningHeightCm: mCm,
+        eveningHeightCm: eCm,
+        heightLogs: [entry, ...(old.groom?.heightLogs || []).slice(0, 14)],
+      },
+    }));
+
+    if (typeof notify === "function") {
+      notify(`Height logged: Morning ${mCm} cm · Evening ${eCm} cm`);
+    }
+  };
+
   /* Face Shape Quiz Recommender */
   const applyRecommendedFaceShape = () => {
     let rec = "oval";
@@ -305,6 +500,7 @@ function LooksPage({ data, setData, notify }) {
   /* Capsule Wardrobe Closet & Cost Estimator */
   const ownedWardrobe = groom.ownedWardrobe || {};
   const fitChecks = groom.fitChecks || {};
+  const visualHeightChecks = groom.visualHeightChecks || {};
 
   const wardrobeSummary = useMemo(() => {
     let ownedCount = 0;
@@ -340,8 +536,8 @@ function LooksPage({ data, setData, notify }) {
     <>
       <Heading
         eyebrow="PRACTICAL GROOMING · MAX 15 MIN/DAY"
-        title="Looks, face posture & style"
-        description="Focus on what actually works: posture, skin clarity, haircut framing, and well-fitted clothes."
+        title="Looks, height posture & style"
+        description="Focus on what actually works: posture, spinal decompression (+1–2 cm height), skin clarity, haircut framing, and well-fitted clothes."
       />
 
       <div className="stats-grid" style={{ marginBottom: 18 }}>
@@ -355,21 +551,17 @@ function LooksPage({ data, setData, notify }) {
           color="sage"
         />
         <Stat
+          icon="↕"
+          label="Height & Decompression"
+          value={`+${heightPotential.totalReclaimCm} cm`}
+          detail={`${heightPotential.baseHeight} → ${heightPotential.potentialHeight} cm potential`}
+          color="blue"
+        />
+        <Stat
           icon="☀"
           label="AM + PM Skincare"
           value={todayDayObj.c?.skincare ? "+5 pts ✓" : "In Progress"}
           detail={`Profile: ${SKIN_ROUTINES[selectedSkinType].label}`}
-          color="blue"
-        />
-        <Stat
-          icon="✂"
-          label="Face Framing"
-          value={FACE_SHAPES_GUIDE[selectedFaceShape].label}
-          detail={
-            haircutStatus
-              ? `${haircutStatus.daysSince}d since last cut`
-              : "Log haircut date in Hair tab"
-          }
           color="peach"
         />
         <Stat
@@ -384,6 +576,7 @@ function LooksPage({ data, setData, notify }) {
       <div className="tabs large-tabs">
         {[
           ["face", "Face & Posture Routine"],
+          ["height", "Height (+1–2 cm Protocol)"],
           ["hair", "Hair & Beard Guide"],
           ["skin", "Skin & Tan Control"],
           ["groom", "Wardrobe & Quick Wins"],
@@ -572,7 +765,341 @@ function LooksPage({ data, setData, notify }) {
       )}
 
       {/* =====================================================================
-          TAB 2: HAIR & BEARD GUIDE + FACE SHAPE FINDER & HAIRCUT TRACKER
+          TAB 2 (NEW): HEIGHT (+1 TO 2.5 CM BIOMECHANICAL PROTOCOL AT AGE 22)
+          ===================================================================== */}
+      {subTab === "height" && (
+        <div className="stack-col">
+          <div className="intro-callout">
+            <div className="callout-icon">↕</div>
+            <div>
+              <strong>
+                Age 22 Par 1–2 cm Height Badhane Ka Honest Scientific Sach
+              </strong>
+              <p>
+                22 ki umar mein leg bones ki growth plates fuse ho chuki hoti
+                hain, isliye fake height pills se door raho. Lekin aapki{" "}
+                <strong>23 Spinal Discs (reerh ki gaddiyan)</strong>,{" "}
+                <strong>Anterior Pelvic Tilt (APT)</strong>, aur{" "}
+                <strong>Forward Neck Slouch</strong> mein{" "}
+                <strong>1.5 se 2.5 cm</strong> asli standing height dabi hoti
+                hai—jise Spinal Decompression aur Alignment se 4–6 weeks mein
+                reclaim kiya ja sakta hai.
+              </p>
+            </div>
+          </div>
+
+          <div className="dashboard-grid">
+            {/* LEFT: 5-STEP SPINAL DECOMPRESSION & ALIGNMENT PROTOCOL */}
+            <Card>
+              <div className="section-head">
+                <div>
+                  <div className="eyebrow">
+                    EVIDENCE-BASED SPINAL DECOMPRESSION
+                  </div>
+                  <h2>Daily 6-Min Height &amp; Spine Lengthening Routine</h2>
+                  <p>
+                    Best done after long study sessions or before sleep to
+                    decompress your 23 intervertebral discs.
+                  </p>
+                </div>
+                <Button
+                  kind={isHeightRoutineDoneToday ? "secondary" : "primary"}
+                  onClick={() =>
+                    markFullHeightRoutineToday(!isHeightRoutineDoneToday)
+                  }
+                >
+                  {isHeightRoutineDoneToday
+                    ? "✓ Logged Today"
+                    : "✓ Complete All 5 Steps"}
+                </Button>
+              </div>
+
+              <div className="stack-col" style={{ marginTop: 12 }}>
+                {HEIGHT_DECOMPRESSION_STEPS.map((s) => {
+                  const stepDone =
+                    Boolean(doneHeightSteps[s.id]) || isHeightRoutineDoneToday;
+                  return (
+                    <div
+                      key={s.id}
+                      className="routine-step-box"
+                      style={
+                        stepDone
+                          ? { borderLeft: "4px solid var(--sage)" }
+                          : undefined
+                      }
+                    >
+                      <div className="row-between">
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                          }}
+                        >
+                          <button
+                            type="button"
+                            className={`check-circle ${
+                              stepDone ? "checked" : ""
+                            }`}
+                            onClick={() => toggleHeightStepDone(s.id)}
+                          >
+                            {stepDone ? "✓" : ""}
+                          </button>
+                          <strong>{s.name}</strong>
+                        </div>
+                        <span className="status-pill complete">
+                          {s.gainTag}
+                        </span>
+                      </div>
+
+                      <small className="muted-text">
+                        Prescription: <strong>{s.reps}</strong>
+                      </small>
+                      <p>{s.instruction}</p>
+
+                      <CountdownTimer
+                        defaultSeconds={s.durationSec}
+                        label={s.name}
+                        onComplete={() => {
+                          toggleHeightStepDone(s.id);
+                          if (typeof notify === "function") {
+                            notify(`${s.name} hold complete!`);
+                          }
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+
+            {/* RIGHT: HIDDEN HEIGHT CALCULATOR + MORNING VS EVENING LOG + VISUAL +3CM */}
+            <div className="stack-col">
+              <Card>
+                <div className="eyebrow">
+                  HIDDEN POSTURAL HEIGHT CALCULATOR
+                </div>
+                <h2>
+                  Kitne cm height aapki posture mein dabi hui hai? (+
+                  {heightPotential.totalReclaimCm} cm)
+                </h2>
+                <p>
+                  Answer 3 quick questions below to see how much vertical
+                  stadiometer height you can unlock from decompression &amp;
+                  pelvic alignment:
+                </p>
+
+                <div className="stack-col" style={{ marginTop: 12 }}>
+                  <Field label="1. Roz kitne ghante lagatar chair/bed par baith kar padhte ho?">
+                    <select
+                      value={heightAudit.sittingHours}
+                      onChange={(e) =>
+                        setHeightAudit({
+                          ...heightAudit,
+                          sittingHours: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="high">
+                        6–10+ hours/day (High disc compression: ~1.1 cm)
+                      </option>
+                      <option value="med">
+                        3–6 hours/day (Moderate compression: ~0.8 cm)
+                      </option>
+                      <option value="low">
+                        Under 3 hours/day (Minimal compression: ~0.6 cm)
+                      </option>
+                    </select>
+                  </Field>
+
+                  <Field label="2. Kya aapki lower back arch hoti hai aur pet aage nikalta hai (APT)?">
+                    <select
+                      value={heightAudit.aptLevel}
+                      onChange={(e) =>
+                        setHeightAudit({
+                          ...heightAudit,
+                          aptLevel: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="high">
+                        Yes, noticeable lower-back arch (~1.0 cm hidden)
+                      </option>
+                      <option value="moderate">
+                        Slight pelvic tilt from sitting (~0.6 cm hidden)
+                      </option>
+                      <option value="none">
+                        No, flat neutral pelvis (~0.2 cm)
+                      </option>
+                    </select>
+                  </Field>
+
+                  <Field label="3. Phone/Laptop dekhte waqt gardan aur kandhe aage jhukte hain?">
+                    <select
+                      value={heightAudit.neckSlouch}
+                      onChange={(e) =>
+                        setHeightAudit({
+                          ...heightAudit,
+                          neckSlouch: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="yes">
+                        Yes, tech-neck / rounded shoulders (~0.6 cm hidden)
+                      </option>
+                      <option value="no">
+                        No, ears stay aligned over shoulders (~0.2 cm)
+                      </option>
+                    </select>
+                  </Field>
+                </div>
+
+                <div
+                  className="mini-stat-row"
+                  style={{ marginTop: 14, marginBottom: 0 }}
+                >
+                  <div>
+                    <span className="mini-stat-number">
+                      {heightPotential.baseHeight} cm
+                    </span>
+                    <span>Current Compressed Height</span>
+                  </div>
+                  <div>
+                    <span className="mini-stat-number">
+                      +{heightPotential.totalReclaimCm} cm
+                    </span>
+                    <span>Reclaimable Spine + APT</span>
+                  </div>
+                  <div>
+                    <span className="mini-stat-number">
+                      {heightPotential.potentialHeight} cm
+                    </span>
+                    <span>Decompressed Peak Height</span>
+                  </div>
+                </div>
+              </Card>
+
+              <Card>
+                <div className="eyebrow">
+                  DIURNAL SPINE TRACKER (MORNING VS. NIGHT)
+                </div>
+                <h2>Measure your 1.5 cm morning vs. evening gap</h2>
+                <p>
+                  Har insaan subah uthte hi <strong>1.5 se 2 cm lamba</strong>{" "}
+                  hota hai kyunki raat mein discs phool jati hain. Goal ye hai
+                  ki Dead Hangs aur Core/Glute strength se aap subah wali height
+                  din bhar hold kar sako.
+                </p>
+
+                <div className="form-grid" style={{ marginTop: 12 }}>
+                  <Field label="Morning Height (Right after waking up - cm)">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={heightForm.morningCm}
+                      onChange={(e) =>
+                        setHeightForm({
+                          ...heightForm,
+                          morningCm: e.target.value,
+                        })
+                      }
+                    />
+                  </Field>
+                  <Field label="Evening Height (Before bed - cm)">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={heightForm.eveningCm}
+                      onChange={(e) =>
+                        setHeightForm({
+                          ...heightForm,
+                          eveningCm: e.target.value,
+                        })
+                      }
+                    />
+                  </Field>
+                </div>
+
+                <div
+                  className="row-between"
+                  style={{ marginTop: 12, flexWrap: "wrap", gap: 10 }}
+                >
+                  <Button kind="primary" onClick={handleSaveHeightLog}>
+                    Save Height Measurement
+                  </Button>
+                  <span className="status-pill complete">
+                    Daily Disc Shrinkage:{" "}
+                    {Math.max(
+                      0,
+                      safeNum(heightForm.morningCm, 173.5) -
+                        safeNum(heightForm.eveningCm, 172)
+                    ).toFixed(1)}{" "}
+                    cm
+                  </span>
+                </div>
+
+                {(groom.heightLogs || []).length > 0 && (
+                  <div className="habit-list" style={{ marginTop: 12 }}>
+                    {(groom.heightLogs || []).slice(0, 4).map((hl) => (
+                      <div key={hl.id} className="habit-row checked">
+                        <div className="habit-info">
+                          <strong>
+                            ☀ AM: {hl.morningCm} cm · ☾ PM: {hl.eveningCm} cm
+                          </strong>
+                          <small>{fmtDate(hl.date)}</small>
+                        </div>
+                        <span className="status-pill">
+                          Δ {hl.dropCm} cm gap
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              <Card>
+                <div className="eyebrow">
+                  INSTANT VISUAL HEIGHT (+2.5 TO 3.5 CM PERCEIVED)
+                </div>
+                <h2>5 Optical &amp; Footwear Rules to Look Taller Today</h2>
+                <div className="habit-list" style={{ marginTop: 12 }}>
+                  {VISUAL_HEIGHT_HACKS.map((vh) => {
+                    const checked = Boolean(visualHeightChecks[vh.id]);
+                    return (
+                      <div
+                        key={vh.id}
+                        className={`habit-row ${checked ? "checked" : ""}`}
+                      >
+                        <button
+                          type="button"
+                          className="check-circle"
+                          onClick={() =>
+                            setGroom({
+                              visualHeightChecks: {
+                                ...visualHeightChecks,
+                                [vh.id]: !checked,
+                              },
+                            })
+                          }
+                        >
+                          {checked ? "✓" : ""}
+                        </button>
+                        <div className="habit-info">
+                          <strong>{vh.title}</strong>
+                          <small>{vh.sub}</small>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          TAB 3: HAIR & BEARD GUIDE + FACE SHAPE FINDER & HAIRCUT TRACKER
           ===================================================================== */}
       {subTab === "hair" && (
         <div className="stack-col">
@@ -584,7 +1111,7 @@ function LooksPage({ data, setData, notify }) {
                   <h2>Haircut &amp; beard framing guide</h2>
                 </div>
                 <Button onClick={copyBarberInstructions}>
-                   Copy Barber Notes
+                  📋 Copy Barber Notes
                 </Button>
               </div>
 
@@ -762,7 +1289,7 @@ function LooksPage({ data, setData, notify }) {
       )}
 
       {/* =====================================================================
-          TAB 3: SKIN & TAN CONTROL + DAILY AM/PM SKINCARE CHECKLIST
+          TAB 4: SKIN & TAN CONTROL + DAILY AM/PM SKINCARE CHECKLIST
           ===================================================================== */}
       {subTab === "skin" && (
         <div className="stack-col">
@@ -791,22 +1318,22 @@ function LooksPage({ data, setData, notify }) {
               {[
                 [
                   "amCleanse",
-                  " AM: Gentle Face Cleanser + Moisturizer",
+                  "AM: Gentle Face Cleanser + Moisturizer",
                   "Wash off night oil; never use harsh body soap on your face",
                 ],
                 [
                   "amSpf",
-                  " AM: 2-Finger SPF 50 PA+++ Sunscreen",
+                  "AM: 2-Finger SPF 50 PA+++ Sunscreen",
                   "Apply 15 mins before stepping out to prevent UV tan & dark spots",
                 ],
                 [
                   "pmWash",
-                  " PM: Evening Face Wash (Remove sweat & dust)",
+                  "PM: Evening Face Wash (Remove sweat & dust)",
                   "Crucial after evening workout or dusty commute",
                 ],
                 [
                   "pmMoist",
-                  " PM: Night Barrier Moisturizer + Lip Care",
+                  "PM: Night Barrier Moisturizer + Lip Care",
                   "Repairs skin barrier overnight while you sleep",
                 ],
               ].map(([key, title, sub]) => {
@@ -871,7 +1398,7 @@ function LooksPage({ data, setData, notify }) {
       )}
 
       {/* =====================================================================
-          TAB 4: WARDROBE CAPSULE, FIT AUDIT & QUICK WINS
+          TAB 5: WARDROBE CAPSULE, FIT AUDIT & QUICK WINS
           ===================================================================== */}
       {subTab === "groom" && (
         <div className="stack-col">
@@ -1056,9 +1583,7 @@ function LooksPage({ data, setData, notify }) {
                           </button>
                         </td>
                         <td>
-                          <strong
-                            className={isOwned ? "struck" : ""}
-                          >
+                          <strong className={isOwned ? "struck" : ""}>
                             {row.item}
                           </strong>
                         </td>

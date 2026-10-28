@@ -1,11 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Google+Sans+Code:wght@400..600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap");
 
 /* ==========================================================================
-   COMEBACK 90 — SINGLE-FILE THEME  ·  Antigravity design language (v2.5 Mobile-First Pro)
+   COMEBACK 90 — SINGLE-FILE THEME  ·  Antigravity design language (v3.1 Mobile-First Pro Clean)
    --------------------------------------------------------------------------
-   One file, same class names as before — drop-in replacement.
-   Tuned specifically for Poco X7 Pro 5G (393px–412px viewport, 20:9 AMOLED, 120Hz)
-   & all new advanced features across all 10 pages.
+   Tuned specifically for Poco X7 Pro 5G (393px–412px viewport, 20:9 AMOLED, 120Hz).
    Sections:  1 Tokens · 2 Base · 3 Header · 4 Buttons · 5 Layout · 6 Hero
               7 Tabs & forms · 8 Stats · 9 Habits/tasks · 10 Records/mood
               11 Workout/nutrition · 12 Overlays/timer · 13 Charts/history
@@ -505,7 +503,6 @@ button {
   transform: scale(.94);
 }
 
-/* Smart danger button: works for both "×" icon buttons and "Delete"/"Remove" text buttons */
 .danger-text {
   display: inline-flex;
   align-items: center;
@@ -513,8 +510,8 @@ button {
   flex: 0 0 auto;
   min-width: 34px;
   min-height: 34px;
-  width: auto;
-  height: auto;
+  width: auto !important;
+  height: auto !important;
   padding: 5px 11px;
   border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--line));
   border-radius: 10px;
@@ -596,6 +593,11 @@ button {
   line-height: 1.6;
 }
 
+.heading-action {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .heading-btn-group {
   display: flex;
   align-items: center;
@@ -644,7 +646,6 @@ button {
   align-items: stretch;
 }
 
-/* Ensures clickable wrapper divs inside .stats-grid stretch to full card height */
 .stats-grid > div {
   display: grid;
   min-width: 0;
@@ -747,11 +748,11 @@ button {
   display: none;
 }
 
-/* Keep contextual eyebrows visible inside timers, CBT thought cards & live anchors */
 .timer-strip .eyebrow,
-.routine-step-box .eyebrow {
+.routine-step-box .eyebrow,
+.card > .row-between .eyebrow {
   display: block;
-  font-size: .78rem;
+  font-size: .76rem;
   font-weight: 560;
   letter-spacing: .02em;
   color: var(--mu);
@@ -788,7 +789,6 @@ button {
   max-width: 100%;
 }
 
-/* Background dot pattern */
 .hero-banner::before {
   content: "";
   position: absolute;
@@ -815,7 +815,6 @@ button {
   opacity: 0.62;
 }
 
-/* Soft aurora glow */
 .hero-banner::after {
   content: "";
   position: absolute;
@@ -834,7 +833,6 @@ button {
   opacity: 0.75;
 }
 
-/* Small label above heading */
 .hero-kicker {
   display: inline-flex;
   align-items: center;
@@ -849,7 +847,6 @@ button {
   box-shadow: 0 2px 10px rgba(20, 25, 35, 0.03);
 }
 
-/* Heading and description */
 .hero-copy {
   display: grid;
   justify-items: center;
@@ -874,7 +871,6 @@ button {
   line-height: 1.62;
 }
 
-/* Gradient-highlighted words */
 .hero-copy em,
 .lifestyle-banner em,
 .reset-banner em {
@@ -889,7 +885,6 @@ button {
   background-clip: text;
 }
 
-/* Progress indicator */
 .hero-progress-wrap {
   display: grid;
   gap: 10px;
@@ -916,7 +911,6 @@ button {
   transition: width .6s var(--ease);
 }
 
-/* Call-to-action buttons */
 .hero-cta-row {
   display: flex;
   justify-content: center;
@@ -1072,12 +1066,14 @@ button {
 
 .category-pills button {
   min-height: 40px;
-  padding: 8px 16px;
+  padding: 8px 15px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--paper);
-  font-size: .875rem;
+  font-size: .855rem;
   font-weight: 530;
+  line-height: 1.35;
+  text-align: center;
   transition: border-color .18s var(--ease), background .18s var(--ease), color .18s var(--ease);
 }
 
@@ -1221,6 +1217,7 @@ input[type="checkbox"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   padding: 4px 11px;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -1228,6 +1225,7 @@ input[type="checkbox"] {
   color: var(--mu);
   font-size: .75rem;
   font-weight: 550;
+  line-height: 1.3;
   white-space: nowrap;
   max-width: 100%;
 }
@@ -1242,6 +1240,13 @@ input[type="checkbox"] {
   background: var(--p-bg);
   color: var(--p-tx);
   border-color: transparent;
+}
+
+.content-wrap > .row-between .status-pill,
+.category-pills .status-pill,
+.habit-info .status-pill {
+  white-space: normal;
+  text-align: left;
 }
 
 /* 8 · DASHBOARD METRICS =================================================== */
@@ -1616,6 +1621,11 @@ input[type="checkbox"] {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.record-top .heading-btn-group {
+  width: auto;
+  justify-content: flex-end;
 }
 
 .record-symbol {
@@ -2519,6 +2529,11 @@ input[type="checkbox"] {
   border-color: color-mix(in srgb, var(--ac) 42%, var(--line));
 }
 
+.yoga-pose-card:has(.yoga-badges .status-pill:not(.complete)) {
+  border-color: var(--ac);
+  box-shadow: 0 8px 28px -12px color-mix(in srgb, var(--ac) 28%, transparent);
+}
+
 .yoga-pose-header {
   display: flex;
   justify-content: space-between;
@@ -2667,6 +2682,13 @@ input[type="checkbox"] {
   border-top: 1px solid var(--line);
 }
 
+.yoga-pose-footer .heading-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .timer-preset-row {
   display: flex;
   gap: 6px;
@@ -2688,6 +2710,31 @@ input[type="checkbox"] {
   border-color: var(--btn);
   background: var(--btn);
   color: var(--btn-tx);
+}
+
+.section-head .heading-btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.section-head .preset-chip {
+  min-height: 34px;
+  padding: 6px 12px;
+  font-family: var(--font-sans);
+  font-weight: 540;
+  color: var(--tx);
+  background: var(--paper);
+}
+
+.section-head .preset-chip:hover {
+  background: var(--hover);
+  border-color: var(--line-strong);
+}
+
+.section-head .preset-chip:active {
+  transform: scale(0.95);
 }
 
 .avoid-grid {
@@ -3004,6 +3051,20 @@ input[type="checkbox"] {
   gap: 14px;
 }
 
+.tracker-layout .tracker-metrics .category-pills {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.tracker-layout .tracker-metrics .category-pills button {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 6px;
+  font-size: .78rem;
+  justify-content: center;
+}
+
 .tracker-layout input,
 .tracker-layout textarea {
   width: 100%;
@@ -3238,6 +3299,81 @@ input[type="checkbox"] {
   animation-delay: .28s;
 }
 
+.page-swipe {
+  touch-action: pan-y pinch-zoom;
+  overflow-x: clip;
+}
+
+/* 1. Give .page-view the exact same grid layout & gap as .content-wrap */
+.page-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(16px, 2vw, 26px);
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.page-view > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.page-view > .tabs,
+.page-view > .status-pill,
+.page-view > .category-pills {
+  justify-self: start;
+  max-width: 100%;
+}
+
+/* 2. Beat .content-wrap > * specificity so swipe animation always runs */
+.content-wrap > .page-view {
+  animation: page-in-next 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.content-wrap > .page-view[data-dir="-1"] {
+  animation-name: page-in-prev;
+}
+
+/* Staggered rise for cards inside the swiped page */
+.page-view > * {
+  animation: rise 0.55s var(--ease) backwards;
+}
+
+.page-view > :nth-child(2) {
+  animation-delay: 0.05s;
+}
+
+.page-view > :nth-child(3) {
+  animation-delay: 0.1s;
+}
+
+.page-view > :nth-child(n + 4) {
+  animation-delay: 0.14s;
+}
+
+@keyframes page-in-next {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes page-in-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @supports (animation-timeline: scroll()) {
   .site-header {
     border-bottom-color: transparent;
@@ -3405,19 +3541,24 @@ input[type="checkbox"] {
     letter-spacing: -.045em;
   }
 
-  .heading-btn-group {
+  .heading-action {
     width: 100%;
   }
 
-  .heading-btn-group .btn {
+  .page-heading .heading-btn-group {
+    width: 100%;
+  }
+
+  .page-heading .heading-btn-group .btn {
     flex: 1 1 auto;
   }
 
-  /* Inside habit rows (e.g., Social Ladder, Lab Tracker, CBT), keep btn groups compact */
   .habit-row .heading-btn-group,
+  .record-top .heading-btn-group,
   .routine-step-box .heading-btn-group,
   .clean-table .heading-btn-group {
     width: auto;
+    flex-wrap: nowrap;
   }
 
   .habit-row .heading-btn-group .btn,
@@ -3425,7 +3566,17 @@ input[type="checkbox"] {
     flex: 0 0 auto;
   }
 
-  /* Hero section optimized for mobile 120Hz battery & zero clipping */
+  .tasks-panel .section-head .heading-btn-group {
+    width: 100%;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .tasks-panel .section-head .heading-btn-group .tabs {
+    width: auto;
+    flex: 1 1 auto;
+  }
+
   .hero-banner {
     --dot: 18px;
     min-height: 0;
@@ -3474,7 +3625,6 @@ input[type="checkbox"] {
     border-radius: 24px;
   }
 
-  /* Swipeable pill tabs on all mobile/tablet widths */
   .tabs,
   .content-wrap > .tabs {
     display: flex;
@@ -3502,7 +3652,6 @@ input[type="checkbox"] {
     white-space: nowrap;
   }
 
-  /* Tracker & Habits multi-column grids collapse cleanly */
   .tracker-sections,
   .tracker-habits-grid,
   .tracker-bottom-grid,
@@ -3515,7 +3664,6 @@ input[type="checkbox"] {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* 7-day workout selector becomes a smooth horizontal swipe bar */
   .weekday-selector-grid {
     display: flex;
     overflow-x: auto;
@@ -3564,17 +3712,19 @@ input[type="checkbox"] {
     font-size: .84rem;
   }
 
-  /* Sticky first column for 7-Day Matrix & reference tables on mobile swipe */
-  .clean-table th:first-child,
-  .clean-table td:first-child {
+  .clean-table th:first-child:not([style*="width"]),
+  .clean-table td:first-child:not(:has(.check-circle)) {
     position: sticky;
     left: 0;
     z-index: 2;
+    max-width: 155px;
+    white-space: normal;
+    line-height: 1.3;
     background: var(--paper);
-    box-shadow: 2px 0 6px rgb(0 0 0 / 4%);
+    box-shadow: 2px 0 6px rgb(0 0 0 / 5%);
   }
 
-  .clean-table th:first-child {
+  .clean-table th:first-child:not([style*="width"]) {
     background: var(--card);
     z-index: 3;
   }
@@ -3589,7 +3739,6 @@ input[type="checkbox"] {
     border-radius: 26px;
   }
 
-  /* Floating bottom dock navigation */
   .mobile-nav {
     display: flex;
     align-items: stretch;
@@ -3736,7 +3885,6 @@ input[type="checkbox"] {
     line-height: 1.54;
   }
 
-  /* Compact sticky header so Logo + Day pill + 3 Icon Buttons fit on 393px width */
   .site-header {
     padding-left: max(12px, env(safe-area-inset-left, 0px));
     padding-right: max(12px, env(safe-area-inset-right, 0px));
@@ -3776,7 +3924,6 @@ input[type="checkbox"] {
     font-size: .88rem;
   }
 
-  /* Page container rhythm */
   .content-wrap {
     padding-left: max(12px, env(safe-area-inset-left, 0px));
     padding-right: max(12px, env(safe-area-inset-right, 0px));
@@ -3815,13 +3962,18 @@ input[type="checkbox"] {
     margin-top: 4px;
   }
 
+  .section-head .heading-btn-group {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: 4px;
+  }
+
   .card {
     padding: 15px;
     gap: 14px;
     border-radius: 20px;
   }
 
-  /* Hero tuned for Poco X7 Pro 5G portrait */
   .hero-banner {
     --dot: 16px;
     gap: 16px;
@@ -3870,7 +4022,6 @@ input[type="checkbox"] {
     letter-spacing: -.035em;
   }
 
-  /* Buttons wrap gracefully */
   .btn,
   .pill-outline,
   .pill-solid {
@@ -3880,14 +4031,27 @@ input[type="checkbox"] {
     padding: 10px 16px;
   }
 
-  /* 2x2 Metric Cards */
   .stats-grid,
   .mini-stat-row,
   .goals-summary,
-  .habits-track-page .mini-stat-row,
-  .tracker-layout .tracker-metrics {
+  .habits-track-page .mini-stat-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
+  }
+
+  .tracker-layout .tracker-metrics {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .tracker-layout .tracker-metrics .category-pills {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tracker-layout .tracker-metrics .category-pills button {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
   }
 
   .stat-card {
@@ -3932,18 +4096,30 @@ input[type="checkbox"] {
     font-size: 3rem;
   }
 
-  /* Category pills */
   .category-pills {
-    gap: 6px;
+    gap: 7px;
   }
 
   .category-pills button {
-    min-height: 38px;
-    padding: 7px 13px;
+    flex: 1 1 auto;
+    min-height: 40px;
+    padding: 8px 12px;
     font-size: .82rem;
+    white-space: normal;
   }
 
-  /* CRITICAL FIX: Habit & Task rows wrap cleanly without misaligning first-child badges */
+  .audit-q-box .category-pills {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .audit-q-box .category-pills button {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
   .habit-row,
   .task-row,
   .habits-track-page .habit-row,
@@ -3988,7 +4164,6 @@ input[type="checkbox"] {
     line-height: 1.4;
   }
 
-  /* Only indent trailing status-pills that follow a check-circle */
   .habit-row > .check-circle ~ .status-pill,
   .task-row > .task-check ~ .status-pill,
   .habits-track-page .habit-row > .check-circle ~ .status-pill {
@@ -3998,14 +4173,24 @@ input[type="checkbox"] {
   }
 
   .habit-row > .status-pill:first-child {
-    margin-left: 0;
+    margin-left: 0 !important;
     margin-top: 2px;
   }
 
   .habit-row > .heading-btn-group {
     width: 100%;
+    flex-wrap: nowrap;
     justify-content: flex-end;
+    align-items: center;
     padding-top: 4px;
+    gap: 6px;
+  }
+
+  .habit-row > .heading-btn-group .btn {
+    flex: 0 0 auto;
+    min-height: 36px;
+    padding: 6px 12px;
+    font-size: .8rem;
   }
 
   .habit-row > .row-actions,
@@ -4023,7 +4208,19 @@ input[type="checkbox"] {
     padding: 6px 10px;
   }
 
-  /* Side quest card & reset logs */
+  .record-card .record-actions,
+  .goal-card .record-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+
+  .record-card .record-actions > .btn:first-child:nth-last-child(3),
+  .goal-card .record-actions > .btn:first-child:nth-last-child(3) {
+    grid-column: 1 / -1;
+  }
+
   .side-quest-card {
     grid-template-columns: auto minmax(0, 1fr);
     gap: 10px;
@@ -4034,18 +4231,12 @@ input[type="checkbox"] {
     justify-self: stretch;
   }
 
-  /* Forms & Toolbars */
   .form-grid,
   .form-grid.four-col-grid,
   .habits-track-page .form-grid,
   .habits-track-page .form-grid.four-col-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
-  }
-
-  /* Keep Daily Biometrics (Steps, Water, Screen, Sleep) 1-column on narrow phones so quick-tap pills fit */
-  .tracker-layout .tracker-metrics {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .toolbar {
@@ -4077,6 +4268,7 @@ input[type="checkbox"] {
   .tracker-sections .inline-add-row button {
     flex: 1 1 auto;
     width: 100%;
+    max-width: 100% !important;
     min-height: 46px;
   }
 
@@ -4088,7 +4280,6 @@ input[type="checkbox"] {
     flex: 1 1 0;
   }
 
-  /* Mood 5-column strip fitted cleanly on 393px width */
   .mood-options {
     gap: 6px;
   }
@@ -4112,7 +4303,6 @@ input[type="checkbox"] {
     border-radius: 13px;
   }
 
-  /* Exercise & Nutrition (Supports Reps/Set + Bag/DB kg steppers) */
   .home-ex-controls {
     align-items: stretch;
     flex-direction: column;
@@ -4133,11 +4323,17 @@ input[type="checkbox"] {
   .reps-stepper {
     width: 100%;
     justify-content: space-between;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--card);
   }
 
   .reps-stepper input {
-    flex: 0 0 110px;
-    width: 110px;
+    flex: 0 0 96px;
+    width: 96px;
+    min-height: 38px;
+    padding: 6px 10px;
     text-align: center;
   }
 
@@ -4150,7 +4346,6 @@ input[type="checkbox"] {
     padding: 11px 12px;
   }
 
-  /* Upgraded 5-element Schedule Edit Row on Mobile (Check + Time + Delete on Row 1, Label on Row 2) */
   .schedule-edit-row,
   .habits-track-page .schedule-edit-row {
     display: flex;
@@ -4179,6 +4374,7 @@ input[type="checkbox"] {
 
   .schedule-edit-row .status-pill {
     order: 3;
+    margin-left: 0 !important;
   }
 
   .schedule-edit-row .danger-text {
@@ -4215,7 +4411,6 @@ input[type="checkbox"] {
     padding: 0 16px 16px;
   }
 
-  /* Timer & Breathing */
   .timer-strip {
     display: grid;
     justify-items: stretch;
@@ -4228,8 +4423,16 @@ input[type="checkbox"] {
     font-size: 2.1rem;
   }
 
+  .timer-btns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+    width: 100%;
+    gap: 8px;
+  }
+
   .timer-btns .btn {
-    flex: 1 1 0;
+    width: 100%;
+    min-height: 44px;
   }
 
   .breath-orb {
@@ -4237,7 +4440,6 @@ input[type="checkbox"] {
     height: min(160px, 50vw);
   }
 
-  /* Yoga */
   .yoga-pose-card {
     gap: 14px;
     padding: 15px;
@@ -4266,8 +4468,15 @@ input[type="checkbox"] {
     align-items: stretch;
   }
 
+  .yoga-pose-footer .heading-btn-group {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .yoga-pose-footer .btn {
     width: 100%;
+    min-height: 44px;
   }
 
   .timer-preset-row {
@@ -4287,7 +4496,6 @@ input[type="checkbox"] {
     padding: 6px 13px;
   }
 
-  /* Charts */
   .modern-svg-chart {
     max-height: 240px;
   }
@@ -4304,7 +4512,6 @@ input[type="checkbox"] {
     margin-inline: auto;
   }
 
-  /* Bottom-sheet Modal for Phone */
   .modal-backdrop {
     place-items: end center;
     padding: 0;
@@ -4345,6 +4552,15 @@ input[type="checkbox"] {
 
   .modal-head h2 {
     font-size: 1.35rem;
+  }
+
+  .modal .habit-row {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .modal .habit-row .habit-info {
+    flex: 1 1 auto;
   }
 
   .app-footer {
@@ -4451,7 +4667,6 @@ input[type="checkbox"] {
     user-select: none;
   }
 
-  /* Prevents iOS/Android auto-zoom on input focus */
   input,
   select,
   textarea {
@@ -4486,6 +4701,10 @@ input[type="checkbox"] {
     animation: none !important;
     border-bottom-color: var(--line);
   }
+
+  .page-view {
+    animation: none !important;
+  }
 }
 
 @media (forced-colors: active) {
@@ -4503,9 +4722,31 @@ input[type="checkbox"] {
   }
 }
 
-.page-swipe { touch-action: pan-y pinch-zoom; overflow-x: clip; }
-.page-view { animation: page-in-next .28s cubic-bezier(.2, .8, .2, 1) both; }
-.page-view[data-dir="-1"] { animation-name: page-in-prev; }
-@keyframes page-in-next { from { opacity: 0; transform: translateX(28px); }  to { opacity: 1; transform: none; } }
-@keyframes page-in-prev { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .page-view { animation: none; } }
+.yoga-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 5px;
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.stat-icon .yoga-icon {
+  font-size: 1.35rem;
+}
+
+.btn .yoga-icon,
+.preset-chip .yoga-icon,
+.status-pill .yoga-icon {
+  margin-right: 2px;
+}
+
+.yoga-box-label .yoga-icon,
+.apt-cue-alert strong .yoga-icon,
+.accordion-head h3 .yoga-icon {
+  margin-right: 5px;
+}

@@ -1034,7 +1034,7 @@ function HabitsAndTrackPage({
             </div>
           </div>
 
-          <div className="record-grid">
+          <div className="record-grid" >
             {list.map((h) => {
               const stats = getHabitStats(h.id);
               return (
@@ -1476,5 +1476,7 @@ function HabitsAndTrackPage({
     </>
   );
 }
+
+<div className="record-grid"></div>
 
 export { HabitsAndTrackPage };

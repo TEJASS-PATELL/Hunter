@@ -803,34 +803,6 @@ function MoreAndSettingsPage({
           ===================================================================== */}
       {subTab === "help" && (
         <div className="stack-col">
-          <Card>
-            <div className="eyebrow">CONFIDENTIAL 24×7 SUPPORT (INDIA)</div>
-            <h2>You never have to fight alone</h2>
-            <div className="intro-callout" style={{ marginTop: 14 }}>
-              <div className="callout-icon">♡</div>
-              <div>
-                <strong>Tele-MANAS (National Mental Health Helpline)</strong>
-                <p>
-                  Free, confidential 24×7 support in Hindi, English, and
-                  regional languages: <strong>14416</strong> or{" "}
-                  <strong>1800-891-4416</strong>. Emergency:{" "}
-                  <strong>112</strong>.
-                </p>
-              </div>
-            </div>
-            <div className="record-actions">
-              <a href="tel:14416" className="btn primary">
-                Call Tele-MANAS (14416)
-              </a>
-              <a href="tel:18008914416" className="btn">
-                Toll-Free (1800-891-4416)
-              </a>
-              <a href="tel:112" className="btn">
-                Emergency (112)
-              </a>
-            </div>
-          </Card>
-
           <div className="dashboard-grid">
             <Card>
               <div className="eyebrow">SYSTEM PREFERENCES &amp; PRIVACY</div>
