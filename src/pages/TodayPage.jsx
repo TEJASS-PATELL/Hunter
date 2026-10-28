@@ -348,7 +348,7 @@ function TodayPage({
                 ? "★ Bad Day Mode: ON"
                 : "Low Energy / Bad Day Mode"}
             </Button>
-            <Button onClick={onOpenSOS}>🛡 {dm("Urge SOS")}</Button>
+            
             <Button kind="primary" onClick={onAddTask}>
               <span>＋</span> Add a task
             </Button>
