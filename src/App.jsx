@@ -1195,14 +1195,48 @@ export default function App() {
   return (
     <div className={`app-shell ${dark ? "theme-dark" : ""}`}>
       <header className="site-header">
+
         <button
           type="button"
           className="logo"
           onClick={() => setPage("Today")}
         >
-          <span className="logo-text">
-            {p.discreet ? "Daily Planner" : "Comeback 90"}
-          </span>
+          <svg
+            className="logo-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 64 64"
+            width="36"
+            height="36"
+            aria-hidden="true"
+          >
+            <rect
+              width="64"
+              height="64"
+              rx="14"
+              fill="#0A0A0A"
+            />
+            <path
+              d="M 51 32 A 19 19 0 1 1 32 13"
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 27 37 L 42 22 M 32 22 H 42 V 32"
+              fill="none"
+              stroke="#FFFFFF"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <circle
+              cx="21"
+              cy="43"
+              r="3"
+              fill="#D9381E"
+            />
+          </svg>
         </button>
 
         <nav className="site-nav" aria-label="Main">
@@ -1251,38 +1285,6 @@ export default function App() {
             title="Edit Profile & 90-Day Targets"
           >
             Day {currentDayNum}/90
-          </button>
-
-          <button
-            type="button"
-            className="icon-button"
-            onClick={() => {
-              setCmdOpen(true);
-              setCmdQuery("");
-            }}
-            aria-label="Quick Command Palette (Ctrl+K)"
-            title="Quick Command Palette (Ctrl+K)"
-          >
-            ⌘
-          </button>
-
-          <button
-            type="button"
-            className="icon-button"
-            onClick={() => {
-              updateProfile({ discreet: !p.discreet });
-              notify(
-                !p.discreet
-                  ? "Discreet privacy labels ON"
-                  : "Standard labels restored"
-              );
-            }}
-            aria-label="Toggle discreet privacy mode"
-            title={
-              p.discreet ? "Discreet Mode is ON" : "Turn ON Discreet Privacy Mode"
-            }
-          >
-            {p.discreet ? "⊘" : "👁"}
           </button>
 
           <button

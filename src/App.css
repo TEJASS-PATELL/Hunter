@@ -3515,8 +3515,7 @@ input[type="checkbox"] {
     backdrop-filter: saturate(1.6) blur(16px);
   }
 
-  .site-nav,
-  .header-actions .pill-outline {
+  .site-nav{
     display: none;
   }
 
@@ -4749,4 +4748,17 @@ input[type="checkbox"] {
 .apt-cue-alert strong .yoga-icon,
 .accordion-head h3 .yoga-icon {
   margin-right: 5px;
+}
+
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  display: block;
+  flex-shrink: 0;
+  border-radius: 10px;
 }
