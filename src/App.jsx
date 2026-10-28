@@ -1282,7 +1282,7 @@ export default function App() {
               p.discreet ? "Discreet Mode is ON" : "Turn ON Discreet Privacy Mode"
             }
           >
-            {p.discreet ? "🙈" : "👁"}
+            {p.discreet ? "⊘" : "👁"}
           </button>
 
           <button
@@ -1420,15 +1420,6 @@ export default function App() {
           {toast}
         </div>
       )}
-
-      <button
-        type="button"
-        className="sos-fab"
-        onClick={() => setSosOpen(true)}
-        aria-label="Urge SOS"
-      >
-        SOS
-      </button>
 
       <nav className="mobile-nav" aria-label="Mobile">
         {NAV.map(([name, icon]) => (
