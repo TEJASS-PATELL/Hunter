@@ -439,11 +439,11 @@ function TodayPage({
           <div className="heading-btn-group">
             {minDayDoneCount < 3 && (
               <Button onClick={lockThreeMinimumBasics}>
-                ✓ Lock 3 Minimum Basics ({minDayDoneCount}/3)
+                Lock 3 Minimum Basics ({minDayDoneCount}/3)
               </Button>
             )}
             <Button onClick={() => onNavigate("Lifestyle")}>
-              💪 Open Today&apos;s Workout
+              Open Today&apos;s Workout
             </Button>
           </div>
         </div>
