@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Google+Sans+Code:wght@400..600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap");
 
 /* ==========================================================================
-   COMEBACK 90 — SINGLE-FILE THEME  ·  Antigravity design language (v3.2 Mobile-First Pro Smooth)
+   COMEBACK 90 — SINGLE-FILE THEME · Antigravity design language (v3.3 Clean & Deduplicated)
    --------------------------------------------------------------------------
    Tuned specifically for Poco X7 Pro 5G (393px–412px viewport, 20:9 AMOLED, 120Hz).
    Sections:  1 Tokens · 2 Base · 3 Header · 4 Buttons · 5 Layout · 6 Hero
@@ -547,25 +547,38 @@ button {
   min-width: 0;
 }
 
-.content-wrap {
+.content-wrap,
+.page-view {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: clamp(16px, 2vw, 26px);
   min-width: 0;
+}
+
+.content-wrap {
   width: min(100% - 48px, 1320px);
   max-width: 1320px;
   margin: 0 auto;
   padding: 10px 0 104px;
 }
 
-.content-wrap > * {
+.page-view {
+  width: 100%;
+  max-width: 100%;
+}
+
+.content-wrap > *,
+.page-view > * {
   min-width: 0;
   max-width: 100%;
 }
 
 .content-wrap > .tabs,
 .content-wrap > .status-pill,
-.content-wrap > .category-pills {
+.content-wrap > .category-pills,
+.page-view > .tabs,
+.page-view > .status-pill,
+.page-view > .category-pills {
   justify-self: start;
   max-width: 100%;
 }
@@ -2405,6 +2418,7 @@ input[type="checkbox"] {
   padding: 24px 16px;
   color: var(--mu);
   text-align: center;
+  min-width: 0;
 }
 
 .donut-score-big {
@@ -2511,7 +2525,8 @@ input[type="checkbox"] {
 .task-main,
 .reset-log-content,
 .journal-entry-body,
-.record-card h3 {
+.record-card h3,
+.record-card > p {
   overflow-wrap: break-word;
 }
 
@@ -2846,14 +2861,9 @@ input[type="checkbox"] {
   gap: 18px;
 }
 
-.habits-track-page .page-heading h1 {
-  overflow-wrap: break-word;
-}
-
 .habits-track-page .heading-btn-group {
   justify-content: flex-end;
   gap: 10px;
-  min-width: 0;
 }
 
 .habits-track-page .heading-btn-group .date-picker-input {
@@ -2872,7 +2882,6 @@ input[type="checkbox"] {
   align-content: center;
   justify-items: start;
   gap: 6px;
-  min-width: 0;
   overflow-wrap: break-word;
 }
 
@@ -2883,14 +2892,9 @@ input[type="checkbox"] {
 
 .habits-track-page .large-tabs {
   width: 100%;
-  max-width: 100%;
   align-items: center;
   gap: 5px;
-  overflow-x: auto;
-  overflow-y: hidden;
   padding: 5px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
 }
 
 .habits-track-page .large-tabs button {
@@ -2903,27 +2907,13 @@ input[type="checkbox"] {
   white-space: nowrap;
 }
 
-.habits-track-page .stack-col {
-  min-width: 0;
-  gap: 18px;
-}
-
 .habits-track-page .dashboard-grid,
 .habits-track-page .lower-grid {
-  align-items: start;
   gap: 18px;
-}
-
-.habits-track-page .card {
-  min-width: 0;
-  align-content: start;
-  gap: 16px;
 }
 
 .habits-track-page .section-head {
   align-items: center;
-  gap: 12px;
-  min-width: 0;
 }
 
 .habits-track-page .section-head h2 {
@@ -2938,74 +2928,34 @@ input[type="checkbox"] {
 
 .habits-track-page .form-grid {
   align-items: start;
-  gap: 14px;
-}
-
-.habits-track-page .field {
-  min-width: 0;
-  align-content: start;
-}
-
-.habits-track-page .field input,
-.habits-track-page .field textarea {
-  width: 100%;
-  min-width: 0;
-}
-
-.habits-track-page .habit-list {
-  gap: 9px;
-  min-width: 0;
 }
 
 .habits-track-page .habit-row {
-  min-width: 0;
-  gap: 12px;
   padding: 14px 15px;
 }
 
-.habits-track-page .habit-info {
-  flex: 1 1 160px;
-  overflow-wrap: break-word;
-}
-
 .habits-track-page .habit-info strong,
-.habits-track-page .habit-info small {
+.habits-track-page .habit-info small,
+.tracker-habits-grid .habit-info strong,
+.tracker-habits-grid .habit-info small,
+.tracker-sections .habit-info strong,
+.tracker-sections .habit-info small {
   display: block;
-}
-
-.habits-track-page .habit-info strong {
-  line-height: 1.4;
-}
-
-.habits-track-page .habit-info small {
   line-height: 1.45;
-  overflow-wrap: break-word;
 }
 
 .habits-track-page .habit-row > .status-pill {
   flex: 0 0 auto;
-  max-width: 100%;
   text-align: center;
-}
-
-.habits-track-page .check-circle {
-  flex: 0 0 27px;
 }
 
 .habits-track-page .category-pills {
   align-items: center;
-  min-width: 0;
-}
-
-.habits-track-page .inline-add-row {
-  gap: 10px;
-  min-width: 0;
 }
 
 .habits-track-page .inline-add-row .clean-input {
   flex: 1 1 220px;
   width: auto;
-  min-width: 0;
 }
 
 .habits-track-page .toolbar > *,
@@ -3016,13 +2966,11 @@ input[type="checkbox"] {
 .habits-track-page .toolbar-right {
   flex: 1 1 300px;
   justify-content: flex-end;
-  gap: 10px;
 }
 
 .habits-track-page .toolbar-right .clean-input {
   flex: 1 1 180px;
   width: auto;
-  min-width: 0;
 }
 
 .habits-track-page .archive-toggle {
@@ -3040,43 +2988,21 @@ input[type="checkbox"] {
 
 .habits-track-page .record-grid {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
-  align-items: stretch;
-  gap: 16px;
 }
 
 .habits-track-page .record-card {
-  height: 100%;
-  align-content: start;
   gap: 14px;
-}
-
-.habits-track-page .record-card h3,
-.habits-track-page .record-card > p {
-  overflow-wrap: break-word;
 }
 
 .habits-track-page .record-meta {
   gap: 8px;
 }
 
-.habits-track-page .record-actions {
-  margin-top: auto;
-  padding-top: 4px;
-}
-
 .habits-track-page .record-actions > * {
   max-width: 100%;
 }
 
-.habits-track-page .schedule-list {
-  min-width: 0;
-}
-
-.habits-track-page .empty {
-  min-width: 0;
-}
-
-/* 17 · TRACKER MAIN LAYOUT (Moved BEFORE Responsive so Media Queries work!) == */
+/* 17 · TRACKER MAIN LAYOUT ================================================ */
 .tracker-layout {
   display: flex;
   flex-direction: column;
@@ -3092,7 +3018,8 @@ input[type="checkbox"] {
   min-width: 0;
 }
 
-.tracker-layout .section-head {
+.tracker-layout .section-head,
+.tracker-sections .section-head {
   margin-bottom: 14px;
 }
 
@@ -3123,16 +3050,9 @@ input[type="checkbox"] {
 .tracker-layout .tracker-metrics .category-pills button {
   width: 100%;
   min-height: 36px;
-  padding: 6px 6px;
+  padding: 6px;
   font-size: .78rem;
   justify-content: center;
-}
-
-.tracker-layout input,
-.tracker-layout textarea {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
 }
 
 .tracker-habits-grid {
@@ -3143,7 +3063,8 @@ input[type="checkbox"] {
   width: 100%;
 }
 
-.tracker-habits-grid .habit-list {
+.tracker-habits-grid .habit-list,
+.tracker-sections .habit-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -3151,7 +3072,6 @@ input[type="checkbox"] {
 
 .tracker-habits-grid .habit-row {
   gap: 10px;
-  min-width: 0;
   padding: 10px 12px;
   border-radius: var(--r-sm);
 }
@@ -3160,20 +3080,11 @@ input[type="checkbox"] {
   flex: 0 0 24px;
   width: 24px;
   height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
-.tracker-habits-grid .habit-info {
+.tracker-habits-grid .habit-info,
+.tracker-sections .habit-info {
   flex: 1 1 140px;
-  overflow-wrap: break-word;
-}
-
-.tracker-habits-grid .habit-info strong,
-.tracker-habits-grid .habit-info small {
-  display: block;
-  line-height: 1.45;
 }
 
 .tracker-habits-grid .status-pill {
@@ -3202,7 +3113,9 @@ input[type="checkbox"] {
   overflow-wrap: break-word;
 }
 
-.tracker-bottom-grid .inline-add-row {
+.tracker-bottom-grid .inline-add-row,
+.tracker-sections .inline-add-row {
+  display: flex;
   align-items: stretch;
   gap: 8px;
   width: 100%;
@@ -3210,25 +3123,25 @@ input[type="checkbox"] {
   flex-wrap: nowrap;
 }
 
-.tracker-bottom-grid .inline-add-row input {
+.tracker-bottom-grid .inline-add-row input,
+.tracker-sections .inline-add-row input {
   flex: 1 1 auto;
   width: 100%;
 }
 
 .tracker-bottom-grid .inline-add-row button {
   flex: 0 0 auto;
-  max-width: 100%;
   white-space: nowrap;
 }
 
-.tracker-bottom-grid .tracker-saved-wins {
+.tracker-bottom-grid .tracker-saved-wins,
+.tracker-sections .tracker-saved-wins {
   margin-top: 12px;
   margin-bottom: 0;
 }
 
 .tracker-bottom-grid textarea {
   min-height: 110px;
-  resize: vertical;
 }
 
 .tracker-sections {
@@ -3241,21 +3154,7 @@ input[type="checkbox"] {
 }
 
 .tracker-life-column,
-.tracker-right-column {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-  min-width: 0;
-}
-
-.tracker-life-column > *,
-.tracker-right-column > * {
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
+.tracker-right-column,
 .tracker-right-column .tracker-bottom-grid {
   display: flex;
   flex-direction: column;
@@ -3265,80 +3164,20 @@ input[type="checkbox"] {
   margin: 0;
 }
 
+.tracker-life-column > *,
+.tracker-right-column > *,
 .tracker-right-column .tracker-bottom-grid > * {
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  box-sizing: border-box;
 }
-
-.tracker-sections .habit-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-} 
 
 .tracker-sections .habit-row {
-  display: flex;
-  align-items: center;
   gap: 10px;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-.tracker-sections .habit-info {
-  flex: 1 1 140px;
-  min-width: 0;
-  overflow-wrap: break-word;
-}
-
-.tracker-sections .habit-info strong,
-.tracker-sections .habit-info small {
-  display: block;
-  line-height: 1.45;
 }
 
 .tracker-sections .check-circle {
   flex-shrink: 0;
-}
-
-.tracker-sections .section-head {
-  margin-bottom: 14px;
-}
-
-.tracker-sections .category-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.tracker-sections .inline-add-row {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-  min-width: 0;
-}
-
-.tracker-sections .inline-add-row input {
-  flex: 1;
-  width: 100%;
-}
-
-.tracker-sections .tracker-saved-wins {
-  margin-top: 12px;
-}
-
-.tracker-sections input,
-.tracker-sections textarea {
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-.tracker-sections textarea {
-  width: 100%;
-  resize: vertical;
 }
 
 /* 18 · MOTION ============================================================= */
@@ -3367,29 +3206,6 @@ input[type="checkbox"] {
   overflow-x: clip;
 }
 
-/* 1. Give .page-view the exact same grid layout & gap as .content-wrap */
-.page-view {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: clamp(16px, 2vw, 26px);
-  min-width: 0;
-  width: 100%;
-  max-width: 100%;
-}
-
-.page-view > * {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.page-view > .tabs,
-.page-view > .status-pill,
-.page-view > .category-pills {
-  justify-self: start;
-  max-width: 100%;
-}
-
-/* 2. Beat .content-wrap > * specificity so swipe animation always runs */
 .content-wrap > .page-view {
   animation: page-in-next 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
@@ -3398,7 +3214,6 @@ input[type="checkbox"] {
   animation-name: page-in-prev;
 }
 
-/* Staggered rise for cards inside the swiped page */
 .page-view > * {
   animation: rise 0.55s var(--ease) backwards;
 }
@@ -3603,10 +3418,7 @@ input[type="checkbox"] {
     letter-spacing: -.045em;
   }
 
-  .heading-action {
-    width: 100%;
-  }
-
+  .heading-action,
   .page-heading .heading-btn-group {
     width: 100%;
   }
@@ -4435,1400 +4247,6 @@ input[type="checkbox"] {
   }
 
   /* Side-by-side 2-col grid for Reps/Set & +Bag/DB steppers on mobile */
-  .home-ex-controls {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .set-chips-row {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .set-check-btn {
-    flex: 1 1 calc(33.33% - 6px);
-    min-height: 42px;
-    text-align: center;
-    padding: 6px 10px;
-  }
-
-  .reps-stepper {
-    width: 100%;
-    justify-content: space-between;
-    padding: 6px 10px;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    background: var(--card);
-  }
-
-  .reps-stepper input {
-    flex: 0 0 68px;
-    width: 68px;
-    min-height: 36px;
-    padding: 4px 8px;
-    text-align: center;
-  }
-
-  .quick-food-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .quick-food-btn {
-    padding: 11px 12px;
-  }
-
-  .schedule-edit-row,
-  .habits-track-page .schedule-edit-row {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-    padding: 12px;
-    border: 1px solid var(--line);
-    border-radius: var(--r-sm);
-    background: var(--paper);
-  }
-
-  .schedule-edit-row .check-circle {
-    order: 1;
-    margin-top: 0;
-  }
-
-  .schedule-edit-row .time-w {
-    order: 2;
-    flex: 1 1 110px;
-    width: auto;
-    min-height: 40px;
-    padding: 7px 12px;
-  }
-
-  .schedule-edit-row .status-pill {
-    order: 3;
-    margin-left: 0 !important;
-  }
-
-  .schedule-edit-row .danger-text {
-    order: 4;
-    margin-left: auto;
-  }
-
-  .schedule-edit-row .flex-1 {
-    order: 5;
-    flex: 1 1 100%;
-    width: 100%;
-  }
-
-  .reset-log {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .reset-log-date {
-    min-width: 0;
-  }
-
-  .trigger-row {
-    grid-template-columns: 105px minmax(0, 1fr) 26px;
-    gap: 8px;
-    font-size: .82rem;
-  }
-
-  .accordion-head {
-    padding: 15px 16px;
-  }
-
-  .accordion-body {
-    padding: 0 16px 16px;
-  }
-
-  .timer-strip {
-    display: grid;
-    justify-items: stretch;
-    gap: 12px;
-    padding: 14px;
-    text-align: center;
-  }
-
-  .timer-readout {
-    font-size: 2.1rem;
-  }
-
-  .timer-btns {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
-    width: 100%;
-    gap: 8px;
-  }
-
-  .timer-btns .btn {
-    width: 100%;
-    min-height: 44px;
-  }
-
-  .breath-orb {
-    width: min(160px, 50vw);
-    height: min(160px, 50vw);
-  }
-
-  .yoga-pose-card {
-    gap: 14px;
-    padding: 15px;
-    border-radius: 20px;
-  }
-
-  .yoga-title-group h3 {
-    font-size: 1.05rem;
-  }
-
-  .prescription-bar {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px 12px;
-    padding: 11px 13px;
-    font-size: .8rem;
-  }
-
-  .yoga-steps-box,
-  .yoga-benefits-box {
-    padding: 13px 14px;
-  }
-
-  .yoga-pose-footer {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .yoga-pose-footer .heading-btn-group {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .yoga-pose-footer .btn {
-    width: 100%;
-    min-height: 44px;
-  }
-
-  .timer-preset-row {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: none;
-  }
-
-  .timer-preset-row::-webkit-scrollbar {
-    display: none;
-  }
-
-  .preset-chip {
-    flex: 0 0 auto;
-    min-height: 38px;
-    padding: 6px 13px;
-  }
-
-  .modern-svg-chart {
-    max-height: 240px;
-  }
-
-  .modern-donut-layout {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 16px;
-  }
-
-  .modern-donut-layout > .donut-svg-box,
-  .modern-donut-layout > svg {
-    max-width: 210px;
-    margin-inline: auto;
-  }
-
-  .modal-backdrop {
-    place-items: end center;
-    padding: 0;
-  }
-
-  .modal {
-    width: 100%;
-    max-height: 92vh;
-    max-height: 92dvh;
-    padding: 0 16px calc(22px + env(safe-area-inset-bottom, 0px));
-    border-radius: 26px 26px 0 0;
-    border-bottom: 0;
-    overscroll-behavior: contain;
-    animation: sheet-up .34s var(--ease);
-  }
-
-  .modal-head {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    margin: 0 -16px 10px;
-    padding: 24px 16px 12px;
-    background: var(--paper);
-    border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
-  }
-
-  .modal-head::before {
-    content: "";
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    width: 38px;
-    height: 4px;
-    transform: translateX(-50%);
-    border-radius: 999px;
-    background: var(--line-strong);
-  }
-
-  .modal-head h2 {
-    font-size: 1.35Yahan `.tracker-sections .habit-list` ke bilkul aage ka **complete continuation code** (Section 17 ka bacha hua hissa + Section 18 Motion + Section 19 Upgraded Phone Responsiveness + Section 20 Accessibility) hai. Isko aap seedha apne code ke aage paste kar sakte ho:
-
-```css
-.tracker-sections .habit-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-.tracker-sections .habit-info {
-  flex: 1 1 140px;
-  min-width: 0;
-  overflow-wrap: break-word;
-}
-
-.tracker-sections .habit-info strong,
-.tracker-sections .habit-info small {
-  display: block;
-  line-height: 1.45;
-}
-
-.tracker-sections .check-circle {
-  flex-shrink: 0;
-}
-
-.tracker-sections .section-head {
-  margin-bottom: 14px;
-}
-
-.tracker-sections .category-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.tracker-sections .inline-add-row {
-  display: flex;
-  align-items: stretch;
-  gap: 8px;
-  min-width: 0;
-}
-
-.tracker-sections .inline-add-row input {
-  flex: 1;
-  width: 100%;
-}
-
-.tracker-sections .tracker-saved-wins {
-  margin-top: 12px;
-}
-
-.tracker-sections input,
-.tracker-sections textarea {
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-.tracker-sections textarea {
-  width: 100%;
-  resize: vertical;
-}
-
-/* 18 · MOTION ============================================================= */
-.content-wrap > *:not(.toast):not(.modal-backdrop) {
-  animation: rise .7s var(--ease) backwards;
-}
-
-.content-wrap > :nth-child(2) {
-  animation-delay: .07s;
-}
-
-.content-wrap > :nth-child(3) {
-  animation-delay: .14s;
-}
-
-.content-wrap > :nth-child(4) {
-  animation-delay: .21s;
-}
-
-.content-wrap > :nth-child(n+5) {
-  animation-delay: .28s;
-}
-
-.page-swipe {
-  touch-action: pan-y pinch-zoom;
-  overflow-x: clip;
-}
-
-/* 1. Give .page-view the exact same grid layout & gap as .content-wrap */
-.page-view {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: clamp(16px, 2vw, 26px);
-  min-width: 0;
-  width: 100%;
-  max-width: 100%;
-}
-
-.page-view > * {
-  min-width: 0;
-  max-width: 100%;
-}
-
-.page-view > .tabs,
-.page-view > .status-pill,
-.page-view > .category-pills {
-  justify-self: start;
-  max-width: 100%;
-}
-
-/* 2. Beat .content-wrap > * specificity so swipe animation always runs */
-.content-wrap > .page-view {
-  animation: page-in-next 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.content-wrap > .page-view[data-dir="-1"] {
-  animation-name: page-in-prev;
-}
-
-/* Staggered rise for cards inside the swiped page */
-.page-view > * {
-  animation: rise 0.55s var(--ease) backwards;
-}
-
-.page-view > :nth-child(2) {
-  animation-delay: 0.05s;
-}
-
-.page-view > :nth-child(3) {
-  animation-delay: 0.1s;
-}
-
-.page-view > :nth-child(n + 4) {
-  animation-delay: 0.14s;
-}
-
-@keyframes page-in-next {
-  from {
-    opacity: 0;
-    transform: translateX(28px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes page-in-prev {
-  from {
-    opacity: 0;
-    transform: translateX(-28px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@supports (animation-timeline: scroll()) {
-  .site-header {
-    border-bottom-color: transparent;
-    animation: header-settle linear both;
-    animation-timeline: scroll(root block);
-    animation-range: 0 120px;
-  }
-}
-
-@keyframes header-settle {
-  to {
-    border-bottom-color: var(--line);
-    box-shadow: 0 14px 40px -22px rgb(20 22 27 / 30%);
-  }
-}
-
-@keyframes breathe {
-  0%,
-  100% {
-    transform: scale(.8);
-  }
-  29%,
-  57% {
-    transform: scale(1.08);
-  }
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-}
-
-@keyframes fade {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes toastin {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 10px);
-  }
-}
-
-@keyframes check-pop {
-  0% {
-    transform: scale(.78);
-  }
-  60% {
-    transform: scale(1.12);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
-@keyframes comeback-dot-drift {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: calc(var(--dot) * 6) calc(var(--dot) * 6);
-  }
-}
-
-@keyframes sheet-up {
-  from {
-    transform: translateY(100%);
-  }
-}
-
-/* 19 · RESPONSIVE (Tuned for Poco X7 Pro 5G & Mobile Devices) ============= */
-@media (min-width: 1500px) {
-  .content-wrap {
-    width: min(100% - 48px, 1380px);
-    max-width: 1380px;
-  }
-}
-
-@media (min-width: 1700px) {
-  .content-wrap {
-    width: min(100% - 48px, 1480px);
-    max-width: 1480px;
-  }
-}
-
-@media (max-width: 1200px) {
-  .site-link {
-    padding-inline: 11px;
-  }
-
-  .content-wrap {
-    width: min(100% - 40px, 1120px);
-  }
-}
-
-@media (max-width: 1040px) {
-  .content-wrap {
-    width: min(100% - 32px, 960px);
-  }
-
-  .dashboard-grid,
-  .lower-grid,
-  .insight-grid,
-  .macro-progress-grid,
-  .habits-track-page .dashboard-grid,
-  .habits-track-page .lower-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .stats-grid,
-  .four-col-grid,
-  .form-grid.four-col-grid,
-  .habits-track-page .mini-stat-row,
-  .habits-track-page .form-grid.four-col-grid,
-  .tracker-layout .tracker-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* ---------- <= 900px · Phone & Tablet Layout ----------------------------- */
-@media (max-width: 900px) {
-  html {
-    scroll-padding-top: calc(74px + env(safe-area-inset-top, 0px));
-  }
-
-  .site-header {
-    min-height: calc(58px + env(safe-area-inset-top, 0px));
-    padding:
-      calc(8px + env(safe-area-inset-top, 0px))
-      max(14px, env(safe-area-inset-right, 0px))
-      8px
-      max(14px, env(safe-area-inset-left, 0px));
-    gap: 10px;
-    -webkit-backdrop-filter: saturate(1.6) blur(16px);
-    backdrop-filter: saturate(1.6) blur(16px);
-  }
-
-  .site-nav {
-    display: none;
-  }
-
-  .content-wrap {
-    width: 100%;
-    max-width: 100%;
-    padding:
-      6px
-      max(14px, env(safe-area-inset-right, 0px))
-      calc(116px + env(safe-area-inset-bottom, 0px))
-      max(14px, env(safe-area-inset-left, 0px));
-    gap: 16px;
-  }
-
-  .page-heading {
-    margin: 18px 0 4px;
-    gap: 14px;
-  }
-
-  .page-heading h1 {
-    font-size: clamp(1.95rem, 6.2vw, 2.9rem);
-    letter-spacing: -.045em;
-  }
-
-  .heading-action {
-    width: 100%;
-  }
-
-  .page-heading .heading-btn-group {
-    width: 100%;
-  }
-
-  .page-heading .heading-btn-group .btn {
-    flex: 1 1 auto;
-  }
-
-  .habit-row .heading-btn-group,
-  .record-top .heading-btn-group,
-  .routine-step-box .heading-btn-group,
-  .clean-table .heading-btn-group {
-    width: auto;
-    flex-wrap: nowrap;
-  }
-
-  .habit-row .heading-btn-group .btn,
-  .clean-table .heading-btn-group .btn {
-    flex: 0 0 auto;
-  }
-
-  .tasks-panel .section-head .heading-btn-group {
-    width: 100%;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-  }
-
-  .tasks-panel .section-head .heading-btn-group .tabs {
-    width: auto;
-    flex: 1 1 auto;
-  }
-
-  .hero-banner {
-    --dot: 18px;
-    min-height: 0;
-    padding: 42px 18px 36px;
-    border-radius: 26px;
-    gap: 18px;
-  }
-
-  .hero-banner::before {
-    animation: none;
-  }
-
-  .hero-banner::after {
-    top: -110px;
-    height: 160px;
-    filter: blur(54px);
-    opacity: .14;
-    animation: none;
-  }
-
-  .hero-copy h2 {
-    font-size: clamp(2.1rem, 8.2vw, 3.8rem);
-    letter-spacing: -.045em;
-    line-height: 1.04;
-  }
-
-  .hero-cta-row {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .hero-link {
-    width: 100%;
-  }
-
-  .lifestyle-banner,
-  .reset-banner,
-  .intro-callout {
-    padding: 20px;
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .card {
-    padding: 18px;
-    border-radius: 24px;
-  }
-
-  .tabs,
-  .content-wrap > .tabs {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-self: stretch;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .tabs::-webkit-scrollbar {
-    display: none;
-  }
-
-  .tabs button {
-    flex: 0 0 auto;
-    min-height: 40px;
-    padding: 8px 16px;
-    scroll-snap-align: start;
-    white-space: nowrap;
-  }
-
-  .tracker-sections,
-  .tracker-habits-grid,
-  .tracker-bottom-grid,
-  .record-grid.three-col-grid,
-  .three-col-grid,
-  .form-grid.three-col-grid,
-  .yoga-anatomy-grid,
-  .yoga-details-grid,
-  .journal-entry {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .weekday-selector-grid {
-    display: flex;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
-    gap: 8px;
-    padding-bottom: 4px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .weekday-selector-grid::-webkit-scrollbar {
-    display: none;
-  }
-
-  .weekday-pill {
-    flex: 0 0 104px;
-    scroll-snap-align: start;
-    padding: 11px 8px;
-  }
-
-  .heatmap-grid {
-    grid-template-columns: repeat(10, minmax(0, 1fr));
-    gap: 5px;
-  }
-
-  .heat-cell {
-    border-radius: 7px;
-  }
-
-  .chart-axis-text {
-    font-size: 13px;
-  }
-
-  .yoga-pose-card {
-    padding: 18px;
-  }
-
-  .clean-table {
-    min-width: 520px;
-  }
-
-  .clean-table th,
-  .clean-table td {
-    padding: 11px 12px;
-    font-size: .84rem;
-  }
-
-  .clean-table th:first-child:not([style*="width"]),
-  .clean-table td:first-child:not(:has(.check-circle)) {
-    position: sticky;
-    left: 0;
-    z-index: 2;
-    max-width: 155px;
-    white-space: normal;
-    line-height: 1.3;
-    background: var(--paper);
-    box-shadow: 2px 0 6px rgb(0 0 0 / 5%);
-  }
-
-  .clean-table th:first-child:not([style*="width"]) {
-    background: var(--card);
-    z-index: 3;
-  }
-
-  .modal-backdrop {
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
-  }
-
-  .modal {
-    padding: 22px;
-    border-radius: 26px;
-  }
-
-  .mobile-nav {
-    display: flex;
-    align-items: stretch;
-    gap: 4px;
-    position: fixed;
-    z-index: 50;
-    left: max(10px, env(safe-area-inset-left, 0px));
-    right: max(10px, env(safe-area-inset-right, 0px));
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-    padding: 5px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    background: color-mix(in srgb, var(--paper) 90%, transparent);
-    -webkit-backdrop-filter: blur(18px) saturate(1.6);
-    backdrop-filter: blur(18px) saturate(1.6);
-    box-shadow: var(--shadow-float);
-  }
-
-  .mobile-nav::-webkit-scrollbar {
-    display: none;
-  }
-
-  .mobile-nav button {
-    display: grid;
-    justify-items: center;
-    align-content: center;
-    flex: 1 0 58px;
-    min-height: 52px;
-    gap: 2px;
-    padding: 6px 4px;
-    border: 0;
-    border-radius: 19px;
-    background: none;
-    color: var(--mu);
-    scroll-snap-align: center;
-    transition: background .2s var(--ease), color .2s var(--ease), transform .15s var(--ease);
-  }
-
-  .mobile-nav button.active {
-    background: var(--btn);
-    color: var(--btn-tx);
-  }
-
-  .mobile-nav small {
-    color: inherit;
-    font-size: .625rem;
-    font-weight: 550;
-    line-height: 1.15;
-    white-space: nowrap;
-  }
-
-  .sos-fab {
-    display: grid;
-    place-items: center;
-    position: fixed;
-    right: max(14px, env(safe-area-inset-right, 0px));
-    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
-    z-index: 55;
-    width: 52px;
-    height: 52px;
-    border: 0;
-    border-radius: 50%;
-    background: var(--danger);
-    color: #fff;
-    font-size: .78rem;
-    font-weight: 600;
-    box-shadow: 0 8px 22px rgb(217 48 37 / 34%);
-    transition: transform .15s var(--ease);
-  }
-
-  .sos-fab:active {
-    transform: scale(.93);
-  }
-
-  .toast {
-    bottom: calc(86px + env(safe-area-inset-bottom, 0px));
-    max-width: calc(100vw - 28px);
-  }
-}
-
-/* ---------- <= 700px · Habits & Tracker Tightening ----------------------- */
-@media (max-width: 700px) {
-  .habits-track-page {
-    gap: 16px;
-  }
-
-  .habits-track-page .page-heading {
-    align-items: flex-start;
-    gap: 14px;
-    margin-top: 16px;
-  }
-
-  .habits-track-page .heading-btn-group {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .habits-track-page .heading-btn-group .date-picker-input {
-    flex: 1 1 140px;
-    min-width: 0;
-  }
-
-  .habits-track-page .heading-btn-group .btn {
-    flex: 1 1 auto;
-  }
-
-  .habits-track-page .mini-stat-row {
-    gap: 14px;
-    padding: 16px;
-  }
-
-  .habits-track-page .large-tabs {
-    border-radius: 18px;
-  }
-
-  .habits-track-page .large-tabs button {
-    padding: 8px 13px;
-  }
-
-  .habits-track-page .section-head {
-    align-items: flex-start;
-  }
-
-  .habits-track-page .toolbar {
-    align-items: stretch;
-  }
-
-  .habits-track-page .toolbar-right {
-    width: 100%;
-    flex: 1 1 100%;
-    justify-content: flex-start;
-  }
-}
-
-/* ---------- <= 560px · POCO X7 PRO 5G PRIMARY VIEWPORT (360px–440px) ----- */
-@media (max-width: 560px) {
-  .app-shell {
-    font-size: 14.5px;
-    line-height: 1.54;
-  }
-
-  .site-header {
-    padding-left: max(12px, env(safe-area-inset-left, 0px));
-    padding-right: max(12px, env(safe-area-inset-right, 0px));
-    gap: 6px;
-  }
-
-  .logo {
-    gap: 7px;
-  }
-
-  .logo-mark {
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
-    font-size: 13px;
-  }
-
-  .logo-text {
-    font-size: .94rem;
-  }
-
-  .header-actions {
-    gap: 5px;
-  }
-
-  .site-header .pill-solid,
-  .site-header .pill-outline,
-  .site-header .btn {
-    min-height: 35px;
-    padding: 6px 11px;
-    font-size: .76rem;
-    white-space: nowrap;
-  }
-
-  .site-header .icon-button {
-    width: 35px;
-    height: 35px;
-    font-size: .88rem;
-  }
-
-  .content-wrap {
-    padding-left: max(12px, env(safe-area-inset-left, 0px));
-    padding-right: max(12px, env(safe-area-inset-right, 0px));
-    gap: 14px;
-  }
-
-  .page-heading {
-    margin: 14px 0 2px;
-    gap: 12px;
-  }
-
-  .page-heading h1 {
-    font-size: clamp(1.85rem, 8.2vw, 2.35rem);
-    letter-spacing: -.04em;
-    line-height: 1.06;
-  }
-
-  .page-heading p {
-    margin-top: 8px;
-    font-size: .9rem;
-    line-height: 1.52;
-  }
-
-  /* Smart 2-column grid for multi-button page headers (e.g., Date Picker + Create Habit) */
-  .page-heading .heading-btn-group {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 8px;
-    width: 100%;
-  }
-
-  .page-heading .heading-btn-group > :only-child,
-  .page-heading .heading-btn-group > .btn.primary:last-child {
-    grid-column: 1 / -1;
-  }
-
-  .section-head {
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .section-head h2 {
-    font-size: 1.22rem;
-    letter-spacing: -.03em;
-  }
-
-  .section-head p {
-    font-size: .84rem;
-    margin-top: 4px;
-  }
-
-  .section-head .heading-btn-group {
-    width: 100%;
-    justify-content: flex-start;
-    margin-top: 4px;
-  }
-
-  .card {
-    padding: 15px;
-    gap: 14px;
-    border-radius: 20px;
-  }
-
-  .hero-banner {
-    --dot: 16px;
-    gap: 16px;
-    padding: 34px 15px 30px;
-    border-radius: 24px;
-  }
-
-  .hero-kicker {
-    padding: 5px 12px;
-    font-size: .74rem;
-  }
-
-  .hero-copy {
-    gap: 12px;
-  }
-
-  .hero-copy h2 {
-    font-size: clamp(1.95rem, 9.2vw, 2.65rem);
-    letter-spacing: -.042em;
-    line-height: 1.05;
-  }
-
-  .hero-copy > p {
-    font-size: .92rem;
-    line-height: 1.55;
-  }
-
-  .hero-link,
-  .hero-cta-row .btn {
-    min-height: 48px;
-    padding: 11px 18px;
-    white-space: normal;
-  }
-
-  .lifestyle-banner,
-  .reset-banner,
-  .intro-callout {
-    padding: 16px;
-    gap: 12px;
-    border-radius: 20px;
-  }
-
-  .lifestyle-banner h2,
-  .reset-banner h2 {
-    font-size: clamp(1.45rem, 6.8vw, 1.9rem);
-    letter-spacing: -.035em;
-  }
-
-  .btn,
-  .pill-outline,
-  .pill-solid {
-    white-space: normal;
-    text-align: center;
-    line-height: 1.25;
-    padding: 10px 16px;
-  }
-
-  /* 2-col stats grids + auto full-width span when last item is odd (3 or 5 cards) */
-  .stats-grid,
-  .mini-stat-row,
-  .goals-summary,
-  .habits-track-page .mini-stat-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-
-  .mini-stat-row > div:last-child:nth-child(odd),
-  .goals-summary > div:last-child:nth-child(odd),
-  .habits-track-page .mini-stat-row > div:last-child:nth-child(odd) {
-    grid-column: 1 / -1;
-  }
-
-  .tracker-layout .tracker-metrics {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 14px;
-  }
-
-  .tracker-layout .tracker-metrics .category-pills {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .tracker-layout .tracker-metrics .category-pills button {
-    width: 100%;
-    text-align: center;
-    justify-content: center;
-  }
-
-  .stat-card {
-    gap: 8px;
-    padding: 13px;
-    border-radius: 18px;
-  }
-
-  .stat-top {
-    align-items: center;
-    gap: 8px;
-    font-size: .76rem;
-    line-height: 1.25;
-  }
-
-  .stat-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 9px;
-  }
-
-  .stat-value,
-  .mini-stat-number,
-  .goals-summary span,
-  .habits-track-page .mini-stat-number {
-    font-size: 1.65rem;
-    letter-spacing: -.04em;
-  }
-
-  .stat-detail {
-    font-size: .74rem;
-  }
-
-  .mini-stat-row,
-  .goals-summary,
-  .habits-track-page .mini-stat-row {
-    padding: 15px;
-    border-radius: 20px;
-  }
-
-  .big-number {
-    font-size: 3rem;
-  }
-
-  .category-pills {
-    gap: 7px;
-  }
-
-  .category-pills button {
-    flex: 1 1 calc(50% - 7px);
-    min-height: 40px;
-    padding: 8px 12px;
-    font-size: .82rem;
-    white-space: normal;
-  }
-
-  .audit-q-box .category-pills {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 7px;
-  }
-
-  .audit-q-box .category-pills button {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
-  }
-
-  /* Routine & Height step headers on mobile (LooksPage.jsx) */
-  .routine-step-box > .row-between {
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .routine-step-box > .row-between > div:first-child {
-    flex: 1 1 calc(100% - 95px);
-    min-width: 0;
-  }
-
-  .habit-row,
-  .task-row,
-  .habits-track-page .habit-row,
-  .tracker-habits-grid .habit-row,
-  .tracker-sections .habit-row {
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 10px;
-    padding: 12px 13px;
-    border-radius: 16px;
-  }
-
-  .check-circle,
-  .task-check,
-  .habits-track-page .check-circle,
-  .tracker-habits-grid .check-circle,
-  .tracker-sections .check-circle {
-    flex: 0 0 26px;
-    width: 26px;
-    height: 26px;
-    margin-top: 2px;
-  }
-
-  .habit-info,
-  .task-main,
-  .habits-track-page .habit-info,
-  .tracker-habits-grid .habit-info,
-  .tracker-sections .habit-info {
-    flex: 1 1 calc(100% - 42px);
-    min-width: 0;
-  }
-
-  .habit-info strong,
-  .task-main strong {
-    font-size: .92rem;
-    line-height: 1.35;
-  }
-
-  .habit-info small,
-  .task-main small {
-    font-size: .79rem;
-    line-height: 1.4;
-  }
-
-  .habit-row > .check-circle ~ .status-pill,
-  .task-row > .task-check ~ .status-pill,
-  .habits-track-page .habit-row > .check-circle ~ .status-pill {
-    margin-left: 36px;
-    padding: 3px 9px;
-    font-size: .7rem;
-  }
-
-  .habit-row > .status-pill:first-child {
-    margin-left: 0 !important;
-    margin-top: 2px;
-  }
-
-  .habit-row > .heading-btn-group {
-    width: 100%;
-    flex-wrap: nowrap;
-    justify-content: flex-end;
-    align-items: center;
-    padding-top: 4px;
-    gap: 6px;
-  }
-
-  .habit-row > .heading-btn-group .btn {
-    flex: 0 0 auto;
-    min-height: 36px;
-    padding: 6px 12px;
-    font-size: .8rem;
-  }
-
-  .habit-row > .row-actions,
-  .task-row > .row-actions {
-    width: 100%;
-    justify-content: flex-end;
-    padding-top: 6px;
-    margin-top: 2px;
-    border-top: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
-  }
-
-  .row-actions button:not(.danger-text),
-  .dots-button {
-    min-height: 36px;
-    padding: 6px 10px;
-  }
-
-  .record-card .record-actions,
-  .goal-card .record-actions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    width: 100%;
-  }
-
-  .record-card .record-actions > .btn:first-child:nth-last-child(3),
-  .goal-card .record-actions > .btn:first-child:nth-last-child(3) {
-    grid-column: 1 / -1;
-  }
-
-  .side-quest-card {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 10px;
-  }
-
-  .side-quest-card > :last-child {
-    grid-column: 1 / -1;
-    justify-self: stretch;
-  }
-
-  .form-grid,
-  .form-grid.four-col-grid,
-  .habits-track-page .form-grid,
-  .habits-track-page .form-grid.four-col-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-  }
-
-  .toolbar {
-    align-items: stretch;
-  }
-
-  .toolbar-right {
-    width: 100%;
-  }
-
-  .toolbar-right > * {
-    flex: 1 1 100%;
-  }
-
-  /* Keep input + button side-by-side when inside a Field (Custom Food & If-Then Rule) */
-  .field .inline-add-row {
-    flex-direction: row !important;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .field .inline-add-row input {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-
-  .field .inline-add-row .btn {
-    flex: 0 0 auto;
-    width: auto !important;
-    padding-inline: 16px;
-  }
-
-  .inline-add-row:not(.field .inline-add-row),
-  .habits-track-page .inline-add-row:not(.field .inline-add-row),
-  .tracker-bottom-grid .inline-add-row,
-  .tracker-sections .inline-add-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .inline-add-row:not(.field .inline-add-row) .clean-input,
-  .inline-add-row:not(.field .inline-add-row) input,
-  .inline-add-row:not(.field .inline-add-row) .btn,
-  .inline-add-row:not(.field .inline-add-row) button,
-  .tracker-bottom-grid .inline-add-row button,
-  .tracker-sections .inline-add-row button {
-    flex: 1 1 auto;
-    width: 100%;
-    max-width: 100% !important;
-    min-height: 46px;
-  }
-
-  .form-actions {
-    flex-wrap: nowrap;
-  }
-
-  .form-actions .btn {
-    flex: 1 1 0;
-  }
-
-  .mood-options {
-    gap: 6px;
-  }
-
-  .mood-option {
-    padding: 10px 2px;
-    border-radius: 14px;
-    font-size: 1.3rem;
-  }
-
-  .mood-option small {
-    font-size: .65rem;
-  }
-
-  .quest-week-row {
-    gap: 5px;
-  }
-
-  .quest-day-pill {
-    padding: 8px 2px;
-    border-radius: 13px;
-  }
-
-  /* Side-by-side 2-col layout for Reps & Load steppers on mobile (LifestyleAndBodyPage) */
   .home-ex-controls {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
