@@ -1213,7 +1213,7 @@ export default function App() {
               width="64"
               height="64"
               rx="14"
-              fill="#0A0A0A"
+              fill="#000000"
             />
             <path
               d="M 51 32 A 19 19 0 1 1 32 13"

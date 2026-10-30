@@ -80,10 +80,10 @@
 }
 
 .app-shell.theme-dark {
-  --bg: #0a0b0f;
+  --bg: #000000;
   --canvas: #0f1117;
   --paper: #161922;
-  --card: #10131a;
+  --card: #060607;
   --surface: #1a1e28;
   --hover: #222735;
   --line: #262c3a;
