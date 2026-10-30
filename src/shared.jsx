@@ -1,12 +1,20 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
 
 const STORAGE_KEY = "day-by-day-comeback90-unified-v1";
 
 const QUEST_KEY = "day-by-day-comeback90-quest-v1";
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 const WEEKDAY_KEYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/* ═══════════════════ DATE & MATH UTILITIES ═══════════════════ */
 
 const todayISO = (dateObj = new Date()) => {
   const d =
@@ -65,6 +73,8 @@ const safeNum = (val, fallback = 0) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
+const clamp = (val, min, max) => Math.max(min, Math.min(max, safeNum(val, min)));
+
 function discreetText(str, isDiscreet) {
   if (!isDiscreet || typeof str !== "string") return str;
   return str
@@ -80,33 +90,143 @@ function discreetText(str, isDiscreet) {
     .replace(/\burge\b/gi, "Craving");
 }
 
-/* Gentle Web Audio & Mobile Haptic Feedback Helper */
-function triggerCompletionFeedback() {
+/* ═══════════════════ SINGLETON WEB AUDIO & HAPTIC ENGINE ═══════════════════ */
+
+let sharedAudioCtx = null;
+let activeNoiseNode = null;
+let activeNoiseGain = null;
+
+function getAudioContext() {
+  if (typeof window === "undefined") return null;
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!sharedAudioCtx || sharedAudioCtx.state === "closed") {
+    sharedAudioCtx = new AudioCtx();
+  }
+  if (sharedAudioCtx.state === "suspended") {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx;
+}
+
+/**
+ * Upgraded multi-mode acoustic & haptic feedback.
+ * Modes: "success" (default 528Hz + 660Hz chord), "tick", "levelUp", "breatheIn", "breatheOut"
+ */
+function triggerCompletionFeedback(mode = "success") {
   try {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
-      navigator.vibrate([60, 40, 80]);
+      if (mode === "tick") navigator.vibrate(15);
+      else if (mode === "levelUp") navigator.vibrate([50, 40, 60, 40, 120]);
+      else navigator.vibrate([60, 40, 80]);
     }
   } catch {
     /* ignore vibration restriction */
   }
   try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(528, ctx.currentTime);
-    gain.gain.setValueAtTime(0.14, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.75);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.75);
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+
+    const playTone = (freq, startOffset, duration, peakGain = 0.12, type = "sine") => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now + startOffset);
+      gain.gain.setValueAtTime(0.0001, now + startOffset);
+      gain.gain.linearRampToValueAtTime(peakGain, now + startOffset + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0008, now + startOffset + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now + startOffset);
+      osc.stop(now + startOffset + duration + 0.02);
+    };
+
+    if (mode === "tick") {
+      playTone(880, 0, 0.06, 0.05, "triangle");
+    } else if (mode === "breatheIn") {
+      playTone(432, 0, 0.55, 0.06, "sine");
+    } else if (mode === "breatheOut") {
+      playTone(324, 0, 0.65, 0.06, "sine");
+    } else if (mode === "levelUp") {
+      playTone(523.25, 0, 0.18, 0.11); // C5
+      playTone(659.25, 0.12, 0.22, 0.11); // E5
+      playTone(783.99, 0.24, 0.28, 0.12); // G5
+      playTone(1046.5, 0.38, 0.6, 0.14); // C6
+    } else {
+      playTone(528, 0, 0.45, 0.11);
+      playTone(660, 0.09, 0.65, 0.09);
+    }
   } catch {
     /* ignore audio restriction */
   }
 }
+
+/**
+ * Pure Web-Audio Brown Noise Generator for Deep Focus (Apna Kaam) blocks.
+ * Requires zero external audio files and works 100% offline.
+ */
+const AmbientSoundEngine = {
+  startBrownNoise(volume = 0.08) {
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return false;
+      this.stop();
+      const bufferSize = ctx.sampleRate * 3;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = buffer.getChannelData(0);
+      let lastOut = 0.0;
+      for (let i = 0; i < bufferSize; i += 1) {
+        const white = Math.random() * 2 - 1;
+        output[i] = (lastOut + 0.02 * white) / 1.02;
+        lastOut = output[i];
+        output[i] *= 3.5;
+      }
+      const whiteNoise = ctx.createBufferSource();
+      whiteNoise.buffer = buffer;
+      whiteNoise.loop = true;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(420, ctx.currentTime);
+
+      const gainNode = ctx.createGain();
+      gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(
+        clamp(volume, 0.01, 0.3),
+        ctx.currentTime + 0.6
+      );
+
+      whiteNoise.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      whiteNoise.start(0);
+
+      activeNoiseNode = whiteNoise;
+      activeNoiseGain = gainNode;
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  stop() {
+    try {
+      if (activeNoiseNode) {
+        activeNoiseNode.stop();
+        activeNoiseNode.disconnect();
+        activeNoiseNode = null;
+      }
+      if (activeNoiseGain) {
+        activeNoiseGain.disconnect();
+        activeNoiseGain = null;
+      }
+    } catch {
+      /* ignore */
+    }
+  },
+};
+
+/* ═══════════════════ CORE CONSTANTS & PROTOCOLS ═══════════════════ */
 
 const DISCLAIMER_TEXT =
   "General information, not medical advice. For any symptom, pain or health doubt, please see a qualified doctor.";
@@ -1625,1290 +1745,6 @@ const SUPPLEMENT_TIERS = [
   },
 ];
 
-function createEmptyDay() {
-  return {
-    c: {},
-    life: {},
-    loops: {},
-    face: {},
-    steps: 0,
-    waterL: 0,
-    screenH: 0,
-    sleepH: 0,
-    mood: 3,
-    energy: 3,
-    activity: { id: "", moodAfter: 3 },
-    journal: "",
-    wins: [],
-    dietItems: [],
-    homeWorkoutLog: {
-      setsDone: {},
-      repsByEx: {},
-      loadByEx: {},
-      totalSets: 0,
-      totalReps: 0,
-      totalTonnageKg: 0,
-      completed: false,
-    },
-    yogaLog: {
-      setsDone: 0,
-      posesDone: 0,
-      deskBreaks: 0,
-    },
-    skinCareSteps: {
-      amCleanse: false,
-      amSpf: false,
-      pmWash: false,
-      pmMoist: false,
-    },
-    scheduleDone: {},
-    stacksDone: {},
-    slip: false,
-    doneForToday: false,
-  };
-}
-
-function createInitialData() {
-  const today = todayISO();
-  return {
-    version: SCHEMA_VERSION,
-    onboarded: true,
-    badDayMode: false,
-    profile: {
-      name: "Bhai",
-      started: today,
-      startDate: today,
-      age: 22,
-      heightCm: 172,
-      weightKg: 56,
-      goal: "quit_porn_reduce_m",
-      activity: "1.375",
-      calcGoal: "gain",
-      bedtime: "23:00",
-      wakeTime: "07:00",
-      phoneEstH: 5,
-      workoutDays: ["Mon", "Wed", "Fri"],
-      targets: { steps: 8000, waterL: 3, screenH: 3 },
-      discreet: false,
-    },
-    /* App 1 (day by day) collections */
-    habits: [
-      {
-        id: "h-1",
-        name: "Morning sunlight walk (15m)",
-        kind: "build",
-        category: "Body & Mind",
-        target: "15 mins",
-        schedule: "daily",
-        doneDate: "",
-        archived: false,
-      },
-      {
-        id: "h-2",
-        name: "Read 5 pages of a book",
-        kind: "build",
-        category: "Mind",
-        target: "5 pages",
-        schedule: "daily",
-        doneDate: "",
-        archived: false,
-      },
-      {
-        id: "h-3",
-        name: "No late-night reels in bed",
-        kind: "quit",
-        category: "Sleep",
-        target: "Phone outside bedroom",
-        schedule: "daily",
-        doneDate: "",
-        archived: false,
-      },
-    ],
-    tasks: [
-      {
-        id: "t-1",
-        title: "Complete 25-min deep work block (Apna Kaam)",
-        notes: "Keep phone in another room",
-        due: today,
-        priority: "high",
-        done: false,
-        archived: false,
-      },
-      {
-        id: "t-2",
-        title: "Hit daily protein target (milk, soya/paneer/eggs, dal)",
-        notes: "",
-        due: today,
-        priority: "normal",
-        done: false,
-        archived: false,
-      },
-    ],
-    moods: [],
-    goals: [
-      {
-        id: "g-1",
-        title: "Gain 4 kg lean mass & improve shoulder posture",
-        why: "Fill out my frame and feel confident in fitted clothes",
-        target: "60",
-        unit: "kg",
-        due: addDaysISO(today, 90),
-        progress: 25,
-        archived: false,
-      },
-    ],
-    journals: [],
-    routines: [
-      {
-        id: "r-1",
-        name: "AM & PM Skincare + Hygiene",
-        category: "face",
-        schedule: "daily",
-        description: "Keep skin clear, hydrated and protected from UV tan.",
-        steps: [
-          { id: "s-1", title: "Gentle face cleanser", duration: "1 min" },
-          { id: "s-2", title: "Lightweight moisturizer", duration: "1 min" },
-          { id: "s-3", title: "SPF 50 PA+++ sunscreen (AM)", duration: "1 min" },
-        ],
-        logs: [],
-      },
-    ],
-    metrics: [
-      {
-        id: "m-1",
-        name: "Daily Protein Intake",
-        category: "nutrition",
-        unit: "grams",
-        target: 100,
-        description: "Aim for 1.6-2.0g per kg body weight",
-        logs: [],
-      },
-    ],
-    resetLogs: [],
-    checkins: [],
-    milestones: [
-      {
-        id: "ms-1",
-        goalId: "g-1",
-        title: "Complete first 14 days without missing workouts",
-        due: addDaysISO(today, 14),
-        done: false,
-      },
-    ],
-    measurements: [],
-
-    /* App 2 (Comeback 90) collections */
-    days: { [today]: createEmptyDay() },
-    schedule: DEFAULT_SCHEDULE.map((x) => ({ ...x })),
-    habitStacks: [
-      {
-        id: "stk-default-1",
-        anchor: "Subah uth kar paani peene ke turant baad",
-        action: "Main bistar saaf karunga aur 15 min dhoop mein walk karunga",
-        category: "Morning Anchor",
-      },
-    ],
-    urges: [],
-    ifThen: [
-      {
-        id: "ift-1",
-        trigger: "I feel like scrolling on my phone alone in bed at night",
-        action:
-          "I will charge the phone outside the room and drink 1 glass of water",
-      },
-    ],
-    measures: [
-      {
-        date: addDaysISO(today, -14),
-        weight: 55,
-        waist: 74,
-        chest: 86,
-        arm: 27,
-        neck: 35,
-        shoulder: 103,
-      },
-      {
-        date: today,
-        weight: 56,
-        waist: 74,
-        chest: 87,
-        arm: 27.5,
-        neck: 35.5,
-        shoulder: 105,
-      },
-    ],
-    ladder: {},
-    thoughts: [],
-    mentalCheckins: [],
-    env: {},
-    groom: {
-      skinType: "oily",
-      faceShape: "oval",
-      quickWins: {},
-      weeklyChecks: {},
-      ownedWardrobe: {},
-      fitChecks: {},
-      lastHaircutDate: "",
-    },
-    faceAudit: { answers: {}, updatedAt: "" },
-    roadmapProgress: {},
-    labResults: {},
-    aptWallTest: "mild",
-    focusSessions: [],
-    weeklyReviews: [],
-    settings: {
-      activeLoops: ["junk", "lateCaff", "doomscroll"],
-      activePlan: "home",
-    },
-  };
-}
-
-function readUnifiedStore() {
-  const def = createInitialData();
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return def;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return def;
-    return {
-      ...def,
-      ...parsed,
-      profile: {
-        ...def.profile,
-        ...(parsed.profile || {}),
-        targets: {
-          ...def.profile.targets,
-          ...((parsed.profile && parsed.profile.targets) || {}),
-        },
-      },
-      days: { ...def.days, ...(parsed.days || {}) },
-      groom: { ...def.groom, ...(parsed.groom || {}) },
-      settings: { ...def.settings, ...(parsed.settings || {}) },
-    };
-  } catch {
-    return def;
-  }
-}
-
-function calcDailyScoreBreakdown(dayObj, profile) {
-  if (!dayObj || typeof dayObj !== "object") {
-    return {
-      total: 0,
-      coreClean: 0,
-      fitnessBody: 0,
-      sleepScreen: 0,
-      mindCare: 0,
-    };
-  }
-  const c = dayObj.c || {};
-  const targets = (profile && profile.targets) || {
-    steps: 8000,
-    waterL: 3,
-    screenH: 3,
-  };
-
-  /* 1. Core Clean Streak (20 pts) */
-  let coreClean = 0;
-  if (c.noPorn && !dayObj.slip) coreClean += 20;
-
-  /* 2. Fitness, Steps, Protein & Hydration (32 pts) */
-  let fitnessBody = 0;
-  const workoutSetsDone = safeNum(dayObj.homeWorkoutLog?.totalSets, 0);
-  const yogaSetsDone = safeNum(dayObj.yogaLog?.setsDone, 0);
-  if (c.workout || workoutSetsDone >= 6 || yogaSetsDone >= 5) {
-    fitnessBody += 12;
-  } else if (workoutSetsDone > 0 || yogaSetsDone > 0) {
-    const combinedSets = workoutSetsDone + yogaSetsDone;
-    fitnessBody += Math.min(1, combinedSets / 6) * 12;
-  }
-
-  const targetSteps = Math.max(1000, safeNum(targets.steps, 8000));
-  const actualSteps = Math.max(0, safeNum(dayObj.steps, 0));
-  if (c.steps) fitnessBody += 8;
-  else if (actualSteps > 0)
-    fitnessBody += Math.min(1, actualSteps / targetSteps) * 8;
-
-  const targetProteinMin = Math.round(
-    Math.max(40, safeNum(profile?.weightKg, 56)) * 1.6
-  );
-  const loggedProteinG = Array.isArray(dayObj.dietItems)
-    ? dayObj.dietItems.reduce((sum, item) => sum + safeNum(item.protein, 0), 0)
-    : 0;
-  if (c.protein || loggedProteinG >= targetProteinMin) {
-    fitnessBody += 8;
-  } else if (loggedProteinG > 0) {
-    fitnessBody += Math.min(1, loggedProteinG / targetProteinMin) * 8;
-  }
-
-  const targetWater = Math.max(1, safeNum(targets.waterL, 3));
-  const actualWater = Math.max(0, safeNum(dayObj.waterL, 0));
-  if (c.water) fitnessBody += 4;
-  else if (actualWater > 0)
-    fitnessBody += Math.min(1, actualWater / targetWater) * 4;
-
-  /* 3. Sleep & Screen Anchor (35 pts) */
-  let sleepScreen = 0;
-  if (c.wakeOnTime || safeNum(dayObj.sleepH, 0) >= 7) sleepScreen += 8;
-  if (c.sunlight) sleepScreen += 8;
-  const targetScreen = Math.max(0.5, safeNum(targets.screenH, 3));
-  const actualScreen = Math.max(0, safeNum(dayObj.screenH, 0));
-  if (c.screenUnderLimit) sleepScreen += 8;
-  else if (actualScreen > 0 && actualScreen <= targetScreen) sleepScreen += 8;
-  if (c.bedOnTime) sleepScreen += 6;
-  if (c.phoneOutside) sleepScreen += 5;
-
-  /* 4. Mind, Skincare & Social Care (13 pts) */
-  let mindCare = 0;
-  const skinStepsCount = dayObj.skinCareSteps
-    ? Object.values(dayObj.skinCareSteps).filter(Boolean).length
-    : 0;
-  if (c.skincare || skinStepsCount >= 2) mindCare += 5;
-  else if (skinStepsCount === 1) mindCare += 2.5;
-
-  if (c.braveSocial) mindCare += 4;
-  if (
-    c.journal ||
-    (typeof dayObj.journal === "string" && dayObj.journal.trim().length > 3)
-  ) {
-    mindCare += 4;
-  }
-
-  const total = Math.min(
-    100,
-    Math.round(coreClean + fitnessBody + sleepScreen + mindCare)
-  );
-  return {
-    total,
-    coreClean: Math.round(coreClean),
-    fitnessBody: Math.round(fitnessBody),
-    sleepScreen: Math.round(sleepScreen),
-    mindCare: Math.round(mindCare),
-  };
-}
-
-function calcDailyScore(dayObj, profile) {
-  return calcDailyScoreBreakdown(dayObj, profile).total;
-}
-
-function calcStreaks(daysMap, profile, currentISO = todayISO()) {
-  const map = daysMap || {};
-  const startISO = (profile && profile.startDate) || currentISO;
-  const allDates = Array.from(
-    new Set([...Object.keys(map), currentISO])
-  ).sort();
-  const earliestISO = allDates[0] < startISO ? allDates[0] : startISO;
-  const totalSpan = Math.max(0, dayDiff(earliestISO, currentISO));
-
-  let totalClean = 0;
-  let cleanLast30 = 0;
-  let bestClean = 0;
-  let runningClean = 0;
-  let bestRoutine = 0;
-  let runningRoutine = 0;
-
-  for (let i = 0; i <= totalSpan; i += 1) {
-    const dISO = addDaysISO(earliestISO, i);
-    const dObj = map[dISO];
-    const isClean = Boolean(dObj && dObj.c && dObj.c.noPorn && !dObj.slip);
-    const isSlip = Boolean(dObj && dObj.slip);
-    const score = dObj ? calcDailyScore(dObj, profile) : 0;
-
-    if (isClean) {
-      totalClean += 1;
-      runningClean += 1;
-      if (runningClean > bestClean) bestClean = runningClean;
-    } else if (isSlip || dISO < currentISO) {
-      runningClean = 0;
-    }
-    if (dayDiff(dISO, currentISO) < 30 && isClean) cleanLast30 += 1;
-
-    if (score >= 60) {
-      runningRoutine += 1;
-      if (runningRoutine > bestRoutine) bestRoutine = runningRoutine;
-    } else if (dISO < currentISO) {
-      runningRoutine = 0;
-    }
-  }
-
-  const todayObj = map[currentISO];
-  const todayLoggedClean = Boolean(
-    todayObj && todayObj.c && todayObj.c.noPorn && !todayObj.slip
-  );
-  const todaySlipped = Boolean(todayObj && todayObj.slip);
-
-  let currentClean = 0;
-  if (!todaySlipped) {
-    let cursor = todayLoggedClean ? currentISO : addDaysISO(currentISO, -1);
-    while (cursor >= earliestISO) {
-      const obj = map[cursor];
-      if (obj && obj.c && obj.c.noPorn && !obj.slip) {
-        currentClean += 1;
-        cursor = addDaysISO(cursor, -1);
-      } else break;
-    }
-  }
-
-  let currentRoutine = 0;
-  const todayScore = todayObj ? calcDailyScore(todayObj, profile) : 0;
-  let rCursor = todayScore >= 60 ? currentISO : addDaysISO(currentISO, -1);
-  while (rCursor >= earliestISO) {
-    const obj = map[rCursor];
-    const sc = obj ? calcDailyScore(obj, profile) : 0;
-    if (sc >= 60) {
-      currentRoutine += 1;
-      rCursor = addDaysISO(rCursor, -1);
-    } else break;
-  }
-
-  return {
-    currentClean,
-    bestClean: Math.max(bestClean, currentClean),
-    totalClean,
-    cleanLast30,
-    currentRoutine,
-    bestRoutine: Math.max(bestRoutine, currentRoutine),
-  };
-}
-
-function calcBodyMetrics(profile, measures = []) {
-  const heightCm = Math.max(
-    120,
-    Math.min(230, safeNum(profile?.heightCm, 172))
-  );
-  const weightKg = Math.max(
-    30,
-    Math.min(200, safeNum(profile?.weightKg, 56))
-  );
-  const age = Math.max(16, Math.min(80, safeNum(profile?.age, 22)));
-  const mult = Math.max(1.2, Math.min(1.9, safeNum(profile?.activity, 1.375)));
-  const requestedGoal = profile?.calcGoal || "gain";
-
-  const heightM = heightCm / 100;
-  const bmi = +(weightKg / (heightM * heightM)).toFixed(1);
-  const isUnderweight = bmi < 18.5;
-
-  let bmiCategory = "Normal weight";
-  if (bmi < 18.5) bmiCategory = "Underweight (BMI below 18.5)";
-  else if (bmi >= 25 && bmi < 30) bmiCategory = "Overweight";
-  else if (bmi >= 30) bmiCategory = "Obese";
-
-  const bmr = Math.round(10 * weightKg + 6.25 * heightCm - 5 * age + 5);
-  const tdee = Math.round(bmr * mult);
-
-  const loseBlocked = isUnderweight && requestedGoal === "lose";
-  const effectiveGoal = loseBlocked ? "gain" : requestedGoal;
-
-  let calMin = tdee;
-  let calMax = tdee;
-  if (effectiveGoal === "gain") {
-    calMin = tdee + 300;
-    calMax = tdee + 400;
-  } else if (effectiveGoal === "lose") {
-    calMin = Math.max(1400, tdee - 500);
-    calMax = Math.max(1500, tdee - 400);
-  }
-
-  let swRatio = null;
-  let waistCm = 74;
-  let neckCm = 35.5;
-  let shoulderCm = 105;
-
-  if (Array.isArray(measures) && measures.length > 0) {
-    const latest = measures[measures.length - 1];
-    const sh = safeNum(latest.shoulder, 0);
-    const wa = safeNum(latest.waist, 0);
-    if (sh > 0) shoulderCm = sh;
-    if (wa > 0) waistCm = wa;
-    if (safeNum(latest.neck, 0) > 0) neckCm = safeNum(latest.neck, 35.5);
-    if (sh > 0 && wa > 0) swRatio = +(sh / wa).toFixed(2);
-  }
-
-  const diff = Math.max(12, waistCm - neckCm);
-  const rawBf =
-    495 /
-      (1.0324 -
-        0.19077 * Math.log10(diff) +
-        0.15456 * Math.log10(heightCm)) -
-    450;
-  const bodyFatPct = +Math.max(5, Math.min(40, rawBf)).toFixed(1);
-  const leanMassKg = +(weightKg * (1 - bodyFatPct / 100)).toFixed(1);
-  const ffmi = +(leanMassKg / (heightM * heightM)).toFixed(1);
-  const idealShoulderCm = +(waistCm * 1.45).toFixed(1);
-  const waterRecommendedL = +(weightKg * 0.04).toFixed(1);
-
-  return {
-    heightCm,
-    weightKg,
-    age,
-    bmi,
-    bmiCategory,
-    isUnderweight,
-    loseBlocked,
-    effectiveGoal,
-    bmr,
-    tdee,
-    calMin,
-    calMax,
-    proteinMin: Math.round(weightKg * 1.6),
-    proteinMax: Math.round(weightKg * 2.0),
-    swRatio,
-    bodyFatPct,
-    leanMassKg,
-    ffmi,
-    shoulderCm,
-    idealShoulderCm,
-    waterRecommendedL,
-  };
-}
-
-function buildSmoothSvgPath(points) {
-  if (!points || points.length === 0) return "";
-  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
-  let d = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 0; i < points.length - 1; i += 1) {
-    const p0 = points[i];
-    const p1 = points[i + 1];
-    const cpx1 = p0.x + (p1.x - p0.x) * 0.45;
-    const cpy1 = p0.y;
-    const cpx2 = p0.x + (p1.x - p0.x) * 0.55;
-    const cpy2 = p1.y;
-    d += ` C ${cpx1} ${cpy1}, ${cpx2} ${cpy2}, ${p1.x} ${p1.y}`;
-  }
-  return d;
-}
-
-function ModernAreaChart({
-  data = [],
-  maxVal = 100,
-  unit = "",
-  color = "#3f6952",
-  secondaryData = null,
-  secondaryUnit = "",
-  secondaryColor = "#c89572",
-  height = 200,
-}) {
-  const [hoverIdx, setHoverIdx] = useState(null);
-  const svgRef = useRef(null);
-  const w = 620;
-  const h = height;
-  const padL = 36;
-  const padR = 18;
-  const padT = 22;
-  const padB = 30;
-  const plotW = w - padL - padR;
-  const plotH = h - padT - padB;
-
-  const safeMax = useMemo(() => {
-    const vals = data.map((d) => safeNum(d.value, 0));
-    return Math.max(maxVal || 10, ...vals, 1);
-  }, [data, maxVal]);
-
-  const coords = useMemo(
-    () =>
-      data.map((d, i) => {
-        const val = Math.max(0, safeNum(d.value, 0));
-        const x =
-          data.length <= 1
-            ? padL + plotW / 2
-            : padL + (i / (data.length - 1)) * plotW;
-        const y = padT + plotH - Math.min(1, val / safeMax) * plotH;
-        return { ...d, x, y, val };
-      }),
-    [data, plotW, plotH, safeMax]
-  );
-
-  const avgY = useMemo(() => {
-    if (!coords.length) return null;
-    const sum = coords.reduce((acc, c) => acc + c.val, 0);
-    const avg = sum / coords.length;
-    if (avg <= 0) return null;
-    return padT + plotH - Math.min(1, avg / safeMax) * plotH;
-  }, [coords, plotH, safeMax]);
-
-const secCoords = useMemo(() => {
-    if (!secondaryData || !secondaryData.length) return [];
-    const vals = secondaryData.map((d) => safeNum(d.value, 0));
-    const minS = Math.min(...vals, 0);
-    const maxS = Math.max(...vals, 1);
-    const span = maxS - minS || 1;
-    return secondaryData.map((d, i) => {
-      const val = safeNum(d.value, 0);
-      const x =
-        secondaryData.length <= 1
-          ? padL + plotW / 2
-          : padL + (i / (secondaryData.length - 1)) * plotW;
-      const y = padT + plotH - ((val - minS) / span) * plotH;
-      return { ...d, x, y, val };
-    });
-  }, [secondaryData, plotW, plotH]);
-
-  const linePath = useMemo(() => buildSmoothSvgPath(coords), [coords]);
-  const secPath = useMemo(() => buildSmoothSvgPath(secCoords), [secCoords]);
-
-  const areaPath = useMemo(() => {
-    if (!coords.length) return "";
-    const first = coords[0];
-    const last = coords[coords.length - 1];
-    return `${linePath} L ${last.x} ${padT + plotH} L ${first.x} ${padT + plotH} Z`;
-  }, [coords, linePath, plotH]);
-
-  const gradId = useMemo(
-    () => `area-grad-${Math.random().toString(36).slice(2, 7)}`,
-    []
-  );
-
-  /* Mobile touch scrub helper so finger drag works smoothly on Poco X7 Pro 5G */
-  const handleTouchMove = useCallback(
-    (e) => {
-      if (!svgRef.current || !coords.length) return;
-      const touch = e.touches && e.touches[0];
-      if (!touch) return;
-      const rect = svgRef.current.getBoundingClientRect();
-      if (!rect.width) return;
-      const relX = ((touch.clientX - rect.left) / rect.width) * w;
-      let closestIdx = 0;
-      let minDist = Infinity;
-      coords.forEach((pt, idx) => {
-        const dist = Math.abs(pt.x - relX);
-        if (dist < minDist) {
-          minDist = dist;
-          closestIdx = idx;
-        }
-      });
-      setHoverIdx(closestIdx);
-    },
-    [coords]
-  );
-
-  if (!data.length) {
-    return <div className="empty-chart">No data points recorded yet.</div>;
-  }
-
-  const activePoint =
-    hoverIdx !== null && coords[hoverIdx] ? coords[hoverIdx] : null;
-  const activeSec =
-    hoverIdx !== null && secCoords[hoverIdx] ? secCoords[hoverIdx] : null;
-
-  return (
-    <div className="modern-chart-wrap">
-      {activePoint && (
-        <div className="modern-chart-tooltip">
-          <span>{activePoint.fullLabel || activePoint.label}</span>
-          <strong>
-            {activePoint.val}
-            {unit}
-          </strong>
-          {activeSec && (
-            <em style={{ color: secondaryColor }}>
-              · {activeSec.val}
-              {secondaryUnit}
-            </em>
-          )}
-        </div>
-      )}
-      <svg
-        ref={svgRef}
-        viewBox={`0 0 ${w} ${h}`}
-        className="modern-svg-chart"
-        onMouseLeave={() => setHoverIdx(null)}
-        onTouchStart={handleTouchMove}
-        onTouchMove={handleTouchMove}
-      >
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.28" />
-            <stop offset="100%" stopColor={color} stopOpacity="0.01" />
-          </linearGradient>
-        </defs>
-
-        {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-          const y = padT + plotH * (1 - ratio);
-          const labelVal = Math.round(safeMax * ratio);
-          return (
-            <g key={idx}>
-              <line
-                x1={padL}
-                y1={y}
-                x2={w - padR}
-                y2={y}
-                stroke="var(--line)"
-                strokeDasharray={ratio === 0 ? undefined : "4 4"}
-              />
-              <text
-                x={padL - 8}
-                y={y + 3}
-                textAnchor="end"
-                className="chart-axis-text"
-              >
-                {labelVal}
-              </text>
-            </g>
-          );
-        })}
-
-        {avgY !== null && (
-          <line
-            x1={padL}
-            y1={avgY}
-            x2={w - padR}
-            y2={avgY}
-            stroke={color}
-            strokeOpacity="0.22"
-            strokeDasharray="2 4"
-          />
-        )}
-
-        <path d={areaPath} fill={`url(#${gradId})`} />
-        <path
-          d={linePath}
-          fill="none"
-          stroke={color}
-          strokeWidth="2.8"
-          strokeLinecap="round"
-        />
-
-        {secCoords.length > 1 && (
-          <path
-            d={secPath}
-            fill="none"
-            stroke={secondaryColor}
-            strokeWidth="2.2"
-            strokeDasharray="5 4"
-            strokeLinecap="round"
-          />
-        )}
-
-        {activePoint && (
-          <line
-            x1={activePoint.x}
-            y1={padT}
-            x2={activePoint.x}
-            y2={padT + plotH}
-            stroke={color}
-            strokeOpacity="0.35"
-            strokeDasharray="3 3"
-          />
-        )}
-
-        {coords.map((pt, i) => (
-          <g
-            key={pt.key || i}
-            onMouseEnter={() => setHoverIdx(i)}
-            onClick={() => setHoverIdx(i)}
-            style={{ cursor: "pointer" }}
-          >
-            <rect
-              x={pt.x - plotW / Math.max(2, coords.length) / 2}
-              y={padT}
-              width={plotW / Math.max(1, coords.length)}
-              height={plotH}
-              fill="transparent"
-            />
-            <circle
-              cx={pt.x}
-              cy={pt.y}
-              r={hoverIdx === i ? 6 : 4}
-              fill="var(--paper)"
-              stroke={color}
-              strokeWidth={hoverIdx === i ? 3 : 2}
-            />
-            {(coords.length <= 10 ||
-              i % Math.ceil(coords.length / 8) === 0 ||
-              i === coords.length - 1) && (
-              <text
-                x={pt.x}
-                y={h - 8}
-                textAnchor="middle"
-                className="chart-axis-text"
-              >
-                {pt.label}
-              </text>
-            )}
-          </g>
-        ))}
-      </svg>
-    </div>
-  );
-}
-
-function ModernDonutChart({ breakdown }) {
-  const safeBreakdown = breakdown || {
-    total: 0,
-    coreClean: 0,
-    fitnessBody: 0,
-    sleepScreen: 0,
-    mindCare: 0,
-  };
-
-  const segments = [
-    {
-      label: "Clean Streak Core",
-      value: safeNum(safeBreakdown.coreClean, 0),
-      max: 20,
-      color: "#3f6952",
-    },
-    {
-      label: "Workout, Steps & Diet",
-      value: safeNum(safeBreakdown.fitnessBody, 0),
-      max: 32,
-      color: "#689677",
-    },
-    {
-      label: "Sleep & Screen Anchor",
-      value: safeNum(safeBreakdown.sleepScreen, 0),
-      max: 35,
-      color: "#c89572",
-    },
-    {
-      label: "Skincare, Social & Journal",
-      value: safeNum(safeBreakdown.mindCare, 0),
-      max: 13,
-      color: "#7d8ec4",
-    },
-  ];
-
-  const size = 160;
-  const stroke = 16;
-  const center = size / 2;
-  const radius = center - stroke;
-  const circumference = 2 * Math.PI * radius;
-
-  let accumulatedPercent = 0;
-
-  return (
-    <div className="modern-donut-layout">
-      <div className="donut-svg-box">
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-          <circle
-            cx={center}
-            cy={center}
-            r={radius}
-            fill="transparent"
-            stroke="var(--sage-soft)"
-            strokeWidth={stroke}
-          />
-          {segments.map((seg, i) => {
-            const pct = Math.max(0, Math.min(1, seg.value / 100));
-            const dash = pct * circumference;
-            const offset = circumference - accumulatedPercent * circumference;
-            accumulatedPercent += pct;
-            if (seg.value <= 0) return null;
-            return (
-              <circle
-                key={i}
-                cx={center}
-                cy={center}
-                r={radius}
-                fill="transparent"
-                stroke={seg.color}
-                strokeWidth={stroke}
-                strokeDasharray={`${dash} ${circumference}`}
-                strokeDashoffset={offset}
-                strokeLinecap="round"
-                transform={`rotate(-90 ${center} ${center})`}
-              />
-            );
-          })}
-          <text
-            x="50%"
-            y="46%"
-            textAnchor="middle"
-            className="donut-score-big"
-          >
-            {safeNum(safeBreakdown.total, 0)}
-          </text>
-          <text
-            x="50%"
-            y="63%"
-            textAnchor="middle"
-            className="donut-score-sub"
-          >
-            / 100 PTS
-          </text>
-        </svg>
-      </div>
-      <div className="donut-legend-list">
-        {segments.map((seg, i) => (
-          <div key={i} className="donut-legend-item">
-            <span className="donut-dot" style={{ background: seg.color }} />
-            <div className="donut-legend-copy">
-              <span>{seg.label}</span>
-              <strong>
-                {seg.value}/{seg.max} pts
-              </strong>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ModernRadarChart({ axes = [] }) {
-  const size = 240;
-  const center = size / 2;
-  const radius = 76;
-  const count = axes.length || 6;
-
-  const getPoint = (idx, ratio) => {
-    const angle = (Math.PI * 2 * idx) / count - Math.PI / 2;
-    return {
-      x: center + radius * ratio * Math.cos(angle),
-      y: center + radius * ratio * Math.sin(angle),
-    };
-  };
-
-  const polygonPoints = axes
-    .map((ax, i) => {
-      const ratio = Math.max(0.08, Math.min(1, safeNum(ax.value, 0) / 100));
-      const pt = getPoint(i, ratio);
-      return `${pt.x},${pt.y}`;
-    })
-    .join(" ");
-
-  return (
-    <div className="modern-radar-wrap">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {[0.25, 0.5, 0.75, 1].map((lvl, idx) => (
-          <polygon
-            key={idx}
-            points={axes
-              .map((_, i) => {
-                const p = getPoint(i, lvl);
-                return `${p.x},${p.y}`;
-              })
-              .join(" ")}
-            fill="none"
-            stroke="var(--line)"
-            strokeDasharray={lvl === 1 ? undefined : "3 3"}
-          />
-        ))}
-        {axes.map((ax, i) => {
-          const outer = getPoint(i, 1);
-          const labelPt = getPoint(i, 1.24);
-          return (
-            <g key={i}>
-              <line
-                x1={center}
-                y1={center}
-                x2={outer.x}
-                y2={outer.y}
-                stroke="var(--line)"
-              />
-              <text
-                x={labelPt.x}
-                y={labelPt.y + 3}
-                textAnchor="middle"
-                className="radar-label-text"
-              >
-                {ax.label} ({Math.round(safeNum(ax.value, 0))}%)
-              </text>
-            </g>
-          );
-        })}
-        <polygon
-          points={polygonPoints}
-          fill="rgba(63, 105, 82, 0.24)"
-          stroke="var(--sage)"
-          strokeWidth="2.2"
-        />
-        {axes.map((ax, i) => {
-          const ratio = Math.max(0.08, Math.min(1, safeNum(ax.value, 0) / 100));
-          const pt = getPoint(i, ratio);
-          return (
-            <circle key={i} cx={pt.x} cy={pt.y} r="3.8" fill="var(--sage)" />
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
-
-function Icon({ children }) {
-  return (
-    <span className="icon" aria-hidden="true">
-      {children}
-    </span>
-  );
-}
-
-function Button({ children, kind = "secondary", className = "", ...props }) {
-  return (
-    <button
-      type="button"
-      className={`btn ${kind} ${className}`.trim()}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
-
-function Card({ children, className = "", ...props }) {
-  return (
-    <section className={`card ${className}`.trim()} {...props}>
-      {children}
-    </section>
-  );
-}
-
-function Heading({ eyebrow, title, description, action }) {
-  return (
-    <div className="page-heading">
-      <div>
-        <div className="eyebrow">{eyebrow}</div>
-        <h1>{title}</h1>
-        {description && <p>{description}</p>}
-      </div>
-      {action && <div className="heading-action">{action}</div>}
-    </div>
-  );
-}
-
-function Empty({ icon = "✳", title, description, action }) {
-  return (
-    <div className="empty">
-      <div className="empty-icon">{icon}</div>
-      <h3>{title}</h3>
-      <p>{description}</p>
-      {action}
-    </div>
-  );
-}
-
-function Progress({ value = 0 }) {
-  const clamped = Math.max(0, Math.min(100, safeNum(value, 0)));
-  return (
-    <div
-      className="progress"
-      role="progressbar"
-      aria-valuenow={Math.round(clamped)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-    >
-      <span style={{ width: `${clamped}%` }} />
-    </div>
-  );
-}
-
-function Field({ label, children, hint }) {
-  return (
-    <label className="field">
-      <span>{label}</span>
-      {children}
-      {hint && <small>{hint}</small>}
-    </label>
-  );
-}
-
-function Modal({ title, onClose, children }) {
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "Escape" && typeof onClose === "function") {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return (
-    <div
-      className="modal-backdrop"
-      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
-        <div className="modal-head">
-          <h2>{title}</h2>
-          <button
-            type="button"
-            className="icon-button"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function Stat({ icon, label, value, detail, color }) {
-  return (
-    <Card className={`stat-card ${color || ""}`.trim()}>
-      <div className="stat-top">
-        <span className="stat-icon">{icon}</span>
-        <span className="stat-label">{label}</span>
-      </div>
-      <div className="stat-value">{value}</div>
-      <div className="stat-detail">{detail}</div>
-    </Card>
-  );
-}
-
-function Accordion({ title, badge, defaultOpen = false, children }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className={`accordion-box ${open ? "open" : ""}`}>
-      <button
-        type="button"
-        className="accordion-head"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-      >
-        <strong>{title}</strong>
-        <div className="accordion-right">
-          {badge && <span className="status-pill complete">{badge}</span>}
-          <span>{open ? "−" : "+"}</span>
-        </div>
-      </button>
-      {open && <div className="accordion-body">{children}</div>}
-    </div>
-  );
-}
-
-function CountdownTimer({
-  defaultSeconds = 600,
-  label = "Timer",
-  onComplete,
-}) {
-  const [secondsLeft, setSecondsLeft] = useState(defaultSeconds);
-  const [running, setRunning] = useState(false);
-  const completeRef = useRef(onComplete);
-
-  useEffect(() => {
-    completeRef.current = onComplete;
-  }, [onComplete]);
-
-  useEffect(() => {
-    setSecondsLeft(defaultSeconds);
-    setRunning(false);
-  }, [defaultSeconds]);
-
-  useEffect(() => {
-    if (!running) return undefined;
-    const id = window.setInterval(() => {
-      setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, [running]);
-
-  useEffect(() => {
-    if (running && secondsLeft === 0) {
-      setRunning(false);
-      triggerCompletionFeedback();
-      if (typeof completeRef.current === "function") completeRef.current();
-    }
-  }, [secondsLeft, running]);
-
-  const mins = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
-  const secs = String(secondsLeft % 60).padStart(2, "0");
-  const elapsedPct =
-    defaultSeconds > 0
-      ? Math.round(((defaultSeconds - secondsLeft) / defaultSeconds) * 100)
-      : 0;
-
-  return (
-    <div className="timer-strip">
-      <div style={{ flex: "1 1 180px", minWidth: 0 }}>
-        <small className="eyebrow">{label}</small>
-        <div className="timer-readout">
-          {mins}:{secs}
-        </div>
-        {running && (
-          <div style={{ marginTop: 6 }}>
-            <Progress value={elapsedPct} />
-          </div>
-        )}
-      </div>
-      <div className="timer-btns">
-        <Button kind="primary" onClick={() => setRunning((r) => !r)}>
-          {running ? "Pause" : "Start"}
-        </Button>
-        {running && (
-          <Button
-            onClick={() => setSecondsLeft((s) => s + 60)}
-            title="Add 1 minute"
-          >
-            +1m
-          </Button>
-        )}
-        <Button
-          onClick={() => {
-            setRunning(false);
-            setSecondsLeft(defaultSeconds);
-          }}
-        >
-          Reset
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-function Heatmap90({
-  startDate,
-  daysMap,
-  profile,
-  selectedDate,
-  onSelectDate,
-}) {
-  const cells = useMemo(() => {
-    const start = startDate || todayISO();
-    return Array.from({ length: 90 }, (_, i) => {
-      const iso = addDaysISO(start, i);
-      const dayObj = daysMap && daysMap[iso];
-      const score = dayObj ? calcDailyScore(dayObj, profile) : 0;
-      let lvl = 0;
-      if (score >= 75) lvl = 3;
-      else if (score >= 50) lvl = 2;
-      else if (score > 0) lvl = 1;
-      return {
-        dayNum: i + 1,
-        iso,
-        score,
-        lvl,
-        slip: Boolean(dayObj && dayObj.slip),
-      };
-    });
-  }, [startDate, daysMap, profile]);
-
-  return (
-    <div>
-      <div
-        className="heatmap-grid"
-        role="group"
-        aria-label="90-day comeback heatmap"
-      >
-        {cells.map((cell) => (
-          <button
-            key={cell.iso}
-            type="button"
-            className={`heat-cell lvl-${cell.lvl} ${
-              cell.slip ? "slip-day" : ""
-            } ${selectedDate === cell.iso ? "selected" : ""}`}
-            onClick={() => onSelectDate(cell.iso)}
-            title={`Day ${cell.dayNum} (${cell.iso}): ${cell.score}/100 pts`}
-          >
-            {cell.dayNum}
-          </button>
-        ))}
-      </div>
-      <div className="heat-legend">
-        <span className="status-pill">0 pts</span>
-        <span className="status-pill complete">1–49 pts</span>
-        <span className="status-pill complete">50–74 pts</span>
-        <span className="status-pill complete">75–100 pts</span>
-        <span className="status-pill peach-pill">
-          Orange border = slip logged
-        </span>
-      </div>
-    </div>
-  );
-}
-
 const NAV = [
   ["Today", "⌂", "Daily overview, 90-day score & modern charts"],
   ["Habits", "◉", "Custom habits + full Comeback 90 daily tracker"],
@@ -3260,6 +2096,2203 @@ const QUICK_PROTEIN_FOODS = [
   { id: "pf-peanuts", name: "Handful Peanuts (30g)", protein: 7, kcal: 170 },
 ];
 
+/* ═══════════════════ STORE INITIALIZATION & PERSISTENCE ═══════════════════ */
+
+function createEmptyDay() {
+  return {
+    c: {},
+    life: {},
+    loops: {},
+    face: {},
+    steps: 0,
+    waterL: 0,
+    screenH: 0,
+    sleepH: 0,
+    mood: 3,
+    energy: 3,
+    activity: { id: "", moodAfter: 3 },
+    journal: "",
+    wins: [],
+    dietItems: [],
+    homeWorkoutLog: {
+      setsDone: {},
+      repsByEx: {},
+      loadByEx: {},
+      totalSets: 0,
+      totalReps: 0,
+      totalTonnageKg: 0,
+      completed: false,
+    },
+    yogaLog: {
+      setsDone: 0,
+      posesDone: 0,
+      deskBreaks: 0,
+    },
+    skinCareSteps: {
+      amCleanse: false,
+      amSpf: false,
+      pmWash: false,
+      pmMoist: false,
+    },
+    scheduleDone: {},
+    stacksDone: {},
+    slip: false,
+    doneForToday: false,
+  };
+}
+
+function createInitialData() {
+  const today = todayISO();
+  return {
+    version: SCHEMA_VERSION,
+    onboarded: true,
+    badDayMode: false,
+    profile: {
+      name: "Bhai",
+      started: today,
+      startDate: today,
+      age: 22,
+      heightCm: 172,
+      weightKg: 56,
+      goal: "quit_porn_reduce_m",
+      activity: "1.375",
+      calcGoal: "gain",
+      bedtime: "23:00",
+      wakeTime: "07:00",
+      phoneEstH: 5,
+      workoutDays: ["Mon", "Wed", "Fri"],
+      targets: { steps: 8000, waterL: 3, screenH: 3 },
+      discreet: false,
+    },
+    habits: [
+      {
+        id: "h-1",
+        name: "Morning sunlight walk (15m)",
+        kind: "build",
+        category: "Body & Mind",
+        target: "15 mins",
+        schedule: "daily",
+        doneDate: "",
+        archived: false,
+      },
+      {
+        id: "h-2",
+        name: "Read 5 pages of a book",
+        kind: "build",
+        category: "Mind",
+        target: "5 pages",
+        schedule: "daily",
+        doneDate: "",
+        archived: false,
+      },
+      {
+        id: "h-3",
+        name: "No late-night reels in bed",
+        kind: "quit",
+        category: "Sleep",
+        target: "Phone outside bedroom",
+        schedule: "daily",
+        doneDate: "",
+        archived: false,
+      },
+    ],
+    tasks: [
+      {
+        id: "t-1",
+        title: "Complete 25-min deep work block (Apna Kaam)",
+        notes: "Keep phone in another room",
+        due: today,
+        priority: "high",
+        done: false,
+        archived: false,
+      },
+      {
+        id: "t-2",
+        title: "Hit daily protein target (milk, soya/paneer/eggs, dal)",
+        notes: "",
+        due: today,
+        priority: "normal",
+        done: false,
+        archived: false,
+      },
+    ],
+    moods: [],
+    goals: [
+      {
+        id: "g-1",
+        title: "Gain 4 kg lean mass & improve shoulder posture",
+        why: "Fill out my frame and feel confident in fitted clothes",
+        target: "60",
+        unit: "kg",
+        due: addDaysISO(today, 90),
+        progress: 25,
+        archived: false,
+      },
+    ],
+    journals: [],
+    routines: [
+      {
+        id: "r-1",
+        name: "AM & PM Skincare + Hygiene",
+        category: "face",
+        schedule: "daily",
+        description: "Keep skin clear, hydrated and protected from UV tan.",
+        steps: [
+          { id: "s-1", title: "Gentle face cleanser", duration: "1 min" },
+          { id: "s-2", title: "Lightweight moisturizer", duration: "1 min" },
+          { id: "s-3", title: "SPF 50 PA+++ sunscreen (AM)", duration: "1 min" },
+        ],
+        logs: [],
+      },
+    ],
+    metrics: [
+      {
+        id: "m-1",
+        name: "Daily Protein Intake",
+        category: "nutrition",
+        unit: "grams",
+        target: 100,
+        description: "Aim for 1.6-2.0g per kg body weight",
+        logs: [],
+      },
+    ],
+    resetLogs: [],
+    checkins: [],
+    milestones: [
+      {
+        id: "ms-1",
+        goalId: "g-1",
+        title: "Complete first 14 days without missing workouts",
+        due: addDaysISO(today, 14),
+        done: false,
+      },
+    ],
+    measurements: [],
+
+    /* App 2 (Comeback 90) collections */
+    days: { [today]: createEmptyDay() },
+    schedule: DEFAULT_SCHEDULE.map((x) => ({ ...x })),
+    habitStacks: [
+      {
+        id: "stk-default-1",
+        anchor: "Subah uth kar paani peene ke turant baad",
+        action: "Main bistar saaf karunga aur 15 min dhoop mein walk karunga",
+        category: "Morning Anchor",
+      },
+    ],
+    urges: [],
+    ifThen: [
+      {
+        id: "ift-1",
+        trigger: "I feel like scrolling on my phone alone in bed at night",
+        action:
+          "I will charge the phone outside the room and drink 1 glass of water",
+      },
+    ],
+    measures: [
+      {
+        date: addDaysISO(today, -14),
+        weight: 55,
+        waist: 74,
+        chest: 86,
+        arm: 27,
+        neck: 35,
+        shoulder: 103,
+      },
+      {
+        date: today,
+        weight: 56,
+        waist: 74,
+        chest: 87,
+        arm: 27.5,
+        neck: 35.5,
+        shoulder: 105,
+      },
+    ],
+    ladder: {},
+    thoughts: [],
+    mentalCheckins: [],
+    env: {},
+    groom: {
+      skinType: "oily",
+      faceShape: "oval",
+      quickWins: {},
+      weeklyChecks: {},
+      ownedWardrobe: {},
+      fitChecks: {},
+      lastHaircutDate: "",
+    },
+    faceAudit: { answers: {}, updatedAt: "" },
+    roadmapProgress: {},
+    labResults: {},
+    aptWallTest: "mild",
+    focusSessions: [],
+    distractionNotes: [],
+    weeklyReviews: [],
+    settings: {
+      activeLoops: ["junk", "lateCaff", "doomscroll"],
+      activePlan: "home",
+    },
+  };
+}
+
+function readUnifiedStore() {
+  const def = createInitialData();
+  try {
+    if (typeof window === "undefined" || !window.localStorage) return def;
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return def;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return def;
+    return {
+      ...def,
+      ...parsed,
+      version: SCHEMA_VERSION,
+      profile: {
+        ...def.profile,
+        ...(parsed.profile || {}),
+        targets: {
+          ...def.profile.targets,
+          ...((parsed.profile && parsed.profile.targets) || {}),
+        },
+      },
+      days: { ...def.days, ...(parsed.days || {}) },
+      groom: { ...def.groom, ...(parsed.groom || {}) },
+      settings: { ...def.settings, ...(parsed.settings || {}) },
+    };
+  } catch {
+    return def;
+  }
+}
+
+function writeUnifiedStore(nextData) {
+  try {
+    if (typeof window === "undefined" || !window.localStorage) return false;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function exportStoreBackup(dataObj) {
+  const payload = {
+    app: "day-by-day-comeback90",
+    exportedAt: new Date().toISOString(),
+    schemaVersion: SCHEMA_VERSION,
+    data: dataObj || readUnifiedStore(),
+  };
+  return JSON.stringify(payload, null, 2);
+}
+
+function importStoreBackup(jsonString) {
+  try {
+    const parsed = JSON.parse(jsonString);
+    const rawData = parsed && parsed.data ? parsed.data : parsed;
+    if (!rawData || typeof rawData !== "object" || !rawData.profile) {
+      return { ok: false, error: "Invalid backup file structure." };
+    }
+    const def = createInitialData();
+    const merged = {
+      ...def,
+      ...rawData,
+      profile: { ...def.profile, ...(rawData.profile || {}) },
+      days: { ...def.days, ...(rawData.days || {}) },
+    };
+    writeUnifiedStore(merged);
+    return { ok: true, data: merged };
+  } catch (err) {
+    return { ok: false, error: err?.message || "Failed to parse JSON." };
+  }
+}
+
+/* ═══════════════════ SCORING, STREAKS & ANALYTICS ENGINES ═══════════════════ */
+
+function calcDailyScoreBreakdown(dayObj, profile) {
+  if (!dayObj || typeof dayObj !== "object") {
+    return {
+      total: 0,
+      coreClean: 0,
+      fitnessBody: 0,
+      sleepScreen: 0,
+      mindCare: 0,
+    };
+  }
+  const c = dayObj.c || {};
+  const targets = (profile && profile.targets) || {
+    steps: 8000,
+    waterL: 3,
+    screenH: 3,
+  };
+
+  /* 1. Core Clean Streak (20 pts) */
+  let coreClean = 0;
+  if (c.noPorn && !dayObj.slip) coreClean += 20;
+
+  /* 2. Fitness, Steps, Protein & Hydration (32 pts) */
+  let fitnessBody = 0;
+  const workoutSetsDone = safeNum(dayObj.homeWorkoutLog?.totalSets, 0);
+  const yogaSetsDone = safeNum(dayObj.yogaLog?.setsDone, 0);
+  if (c.workout || workoutSetsDone >= 6 || yogaSetsDone >= 5) {
+    fitnessBody += 12;
+  } else if (workoutSetsDone > 0 || yogaSetsDone > 0) {
+    const combinedSets = workoutSetsDone + yogaSetsDone;
+    fitnessBody += Math.min(1, combinedSets / 6) * 12;
+  }
+
+  const targetSteps = Math.max(1000, safeNum(targets.steps, 8000));
+  const actualSteps = Math.max(0, safeNum(dayObj.steps, 0));
+  if (c.steps) fitnessBody += 8;
+  else if (actualSteps > 0)
+    fitnessBody += Math.min(1, actualSteps / targetSteps) * 8;
+
+  const targetProteinMin = Math.round(
+    Math.max(40, safeNum(profile?.weightKg, 56)) * 1.6
+  );
+  const loggedProteinG = Array.isArray(dayObj.dietItems)
+    ? dayObj.dietItems.reduce((sum, item) => sum + safeNum(item.protein, 0), 0)
+    : 0;
+  if (c.protein || loggedProteinG >= targetProteinMin) {
+    fitnessBody += 8;
+  } else if (loggedProteinG > 0) {
+    fitnessBody += Math.min(1, loggedProteinG / targetProteinMin) * 8;
+  }
+
+  const targetWater = Math.max(1, safeNum(targets.waterL, 3));
+  const actualWater = Math.max(0, safeNum(dayObj.waterL, 0));
+  if (c.water) fitnessBody += 4;
+  else if (actualWater > 0)
+    fitnessBody += Math.min(1, actualWater / targetWater) * 4;
+
+  /* 3. Sleep & Screen Anchor (35 pts) */
+  let sleepScreen = 0;
+  if (c.wakeOnTime || safeNum(dayObj.sleepH, 0) >= 7) sleepScreen += 8;
+  if (c.sunlight) sleepScreen += 8;
+  const targetScreen = Math.max(0.5, safeNum(targets.screenH, 3));
+  const actualScreen = Math.max(0, safeNum(dayObj.screenH, 0));
+  if (c.screenUnderLimit) sleepScreen += 8;
+  else if (actualScreen > 0 && actualScreen <= targetScreen) sleepScreen += 8;
+  if (c.bedOnTime) sleepScreen += 6;
+  if (c.phoneOutside) sleepScreen += 5;
+
+  /* 4. Mind, Skincare & Social Care (13 pts) */
+  let mindCare = 0;
+  const skinStepsCount = dayObj.skinCareSteps
+    ? Object.values(dayObj.skinCareSteps).filter(Boolean).length
+    : 0;
+  if (c.skincare || skinStepsCount >= 2) mindCare += 5;
+  else if (skinStepsCount === 1) mindCare += 2.5;
+
+  if (c.braveSocial) mindCare += 4;
+  if (
+    c.journal ||
+    (typeof dayObj.journal === "string" && dayObj.journal.trim().length > 3)
+  ) {
+    mindCare += 4;
+  }
+
+  const total = Math.min(
+    100,
+    Math.round(coreClean + fitnessBody + sleepScreen + mindCare)
+  );
+  return {
+    total,
+    coreClean: Math.round(coreClean),
+    fitnessBody: Math.round(fitnessBody),
+    sleepScreen: Math.round(sleepScreen),
+    mindCare: Math.round(mindCare),
+  };
+}
+
+function calcDailyScore(dayObj, profile) {
+  return calcDailyScoreBreakdown(dayObj, profile).total;
+}
+
+function calcStreaks(daysMap, profile, currentISO = todayISO()) {
+  const map = daysMap || {};
+  const startISO = (profile && profile.startDate) || currentISO;
+  const allDates = Array.from(
+    new Set([...Object.keys(map), currentISO])
+  ).sort();
+  const earliestISO = allDates[0] < startISO ? allDates[0] : startISO;
+  const totalSpan = Math.max(0, dayDiff(earliestISO, currentISO));
+
+  let totalClean = 0;
+  let cleanLast30 = 0;
+  let bestClean = 0;
+  let runningClean = 0;
+  let bestRoutine = 0;
+  let runningRoutine = 0;
+  let minDaysHitLast14 = 0;
+
+  const scoresLast7 = [];
+  const scoresLast30 = [];
+
+  for (let i = 0; i <= totalSpan; i += 1) {
+    const dISO = addDaysISO(earliestISO, i);
+    const dObj = map[dISO];
+    const isClean = Boolean(dObj && dObj.c && dObj.c.noPorn && !dObj.slip);
+    const isSlip = Boolean(dObj && dObj.slip);
+    const score = dObj ? calcDailyScore(dObj, profile) : 0;
+    const daysAgo = dayDiff(dISO, currentISO);
+
+    if (daysAgo >= 0 && daysAgo < 7) scoresLast7.push(score);
+    if (daysAgo >= 0 && daysAgo < 30) scoresLast30.push(score);
+    if (daysAgo >= 0 && daysAgo < 14 && dObj && dObj.c) {
+      const minDone = MINIMUM_DAY_IDS.every((id) => Boolean(dObj.c[id]));
+      if (minDone) minDaysHitLast14 += 1;
+    }
+
+    if (isClean) {
+      totalClean += 1;
+      runningClean += 1;
+      if (runningClean > bestClean) bestClean = runningClean;
+    } else if (isSlip || dISO < currentISO) {
+      runningClean = 0;
+    }
+    if (daysAgo < 30 && isClean) cleanLast30 += 1;
+
+    if (score >= 60) {
+      runningRoutine += 1;
+      if (runningRoutine > bestRoutine) bestRoutine = runningRoutine;
+    } else if (dISO < currentISO) {
+      runningRoutine = 0;
+    }
+  }
+
+  const todayObj = map[currentISO];
+  const todayLoggedClean = Boolean(
+    todayObj && todayObj.c && todayObj.c.noPorn && !todayObj.slip
+  );
+  const todaySlipped = Boolean(todayObj && todayObj.slip);
+
+  let currentClean = 0;
+  if (!todaySlipped) {
+    let cursor = todayLoggedClean ? currentISO : addDaysISO(currentISO, -1);
+    while (cursor >= earliestISO) {
+      const obj = map[cursor];
+      if (obj && obj.c && obj.c.noPorn && !obj.slip) {
+        currentClean += 1;
+        cursor = addDaysISO(cursor, -1);
+      } else break;
+    }
+  }
+
+  let currentRoutine = 0;
+  const todayScore = todayObj ? calcDailyScore(todayObj, profile) : 0;
+  let rCursor = todayScore >= 60 ? currentISO : addDaysISO(currentISO, -1);
+  while (rCursor >= earliestISO) {
+    const obj = map[rCursor];
+    const sc = obj ? calcDailyScore(obj, profile) : 0;
+    if (sc >= 60) {
+      currentRoutine += 1;
+      rCursor = addDaysISO(rCursor, -1);
+    } else break;
+  }
+
+  const avg7 = scoresLast7.length
+    ? Math.round(scoresLast7.reduce((a, b) => a + b, 0) / scoresLast7.length)
+    : 0;
+  const avg30 = scoresLast30.length
+    ? Math.round(scoresLast30.reduce((a, b) => a + b, 0) / scoresLast30.length)
+    : 0;
+  const momentumDelta = avg7 - avg30;
+
+  return {
+    currentClean,
+    bestClean: Math.max(bestClean, currentClean),
+    totalClean,
+    cleanLast30,
+    currentRoutine,
+    bestRoutine: Math.max(bestRoutine, currentRoutine),
+    avg7,
+    avg30,
+    momentumDelta,
+    minDaysHitLast14,
+  };
+}
+
+/**
+ * Upgraded Sports-Science Body & Nutrition Engine
+ * Includes Normalized FFMI (1.80m standard), complete macro split, creatine & electrolytes,
+ * and Golden Ratio (1.618) vs Athletic (1.45) shoulder-to-waist targets.
+ */
+function calcBodyMetrics(profile, measures = []) {
+  const heightCm = clamp(profile?.heightCm, 120, 230);
+  const weightKg = clamp(profile?.weightKg, 30, 200);
+  const age = clamp(profile?.age, 16, 80);
+  const mult = clamp(profile?.activity, 1.2, 1.9);
+  const requestedGoal = profile?.calcGoal || "gain";
+
+  const heightM = heightCm / 100;
+  const bmi = +(weightKg / (heightM * heightM)).toFixed(1);
+  const isUnderweight = bmi < 18.5;
+
+  let bmiCategory = "Normal weight";
+  if (bmi < 18.5) bmiCategory = "Underweight (BMI below 18.5)";
+  else if (bmi >= 25 && bmi < 30) bmiCategory = "Overweight";
+  else if (bmi >= 30) bmiCategory = "Obese";
+
+  // Mifflin-St Jeor equation (Male baseline)
+  const bmr = Math.round(10 * weightKg + 6.25 * heightCm - 5 * age + 5);
+  const tdee = Math.round(bmr * mult);
+
+  const loseBlocked = isUnderweight && requestedGoal === "lose";
+  const effectiveGoal = loseBlocked ? "gain" : requestedGoal;
+
+  let calMin = tdee;
+  let calMax = tdee;
+  if (effectiveGoal === "gain") {
+    calMin = tdee + 300;
+    calMax = tdee + 450;
+  } else if (effectiveGoal === "lose") {
+    calMin = Math.max(1450, tdee - 500);
+    calMax = Math.max(1550, tdee - 350);
+  }
+
+  let swRatio = null;
+  let waistCm = 74;
+  let neckCm = 35.5;
+  let shoulderCm = 105;
+
+  if (Array.isArray(measures) && measures.length > 0) {
+    const latest = measures[measures.length - 1];
+    const sh = safeNum(latest.shoulder, 0);
+    const wa = safeNum(latest.waist, 0);
+    if (sh > 0) shoulderCm = sh;
+    if (wa > 0) waistCm = wa;
+    if (safeNum(latest.neck, 0) > 0) neckCm = safeNum(latest.neck, 35.5);
+    if (sh > 0 && wa > 0) swRatio = +(sh / wa).toFixed(2);
+  }
+
+  // US Navy Body Fat Formula
+  const diff = Math.max(12, waistCm - neckCm);
+  const rawBf =
+    495 /
+      (1.0324 -
+        0.19077 * Math.log10(diff) +
+        0.15456 * Math.log10(heightCm)) -
+    450;
+  const bodyFatPct = +clamp(rawBf, 5, 40).toFixed(1);
+  const leanMassKg = +(weightKg * (1 - bodyFatPct / 100)).toFixed(1);
+  const ffmi = +(leanMassKg / (heightM * heightM)).toFixed(1);
+  // Normalized FFMI adjusted to 1.80m stature
+  const normalizedFfmi = +(ffmi + 6.1 * (1.8 - heightM)).toFixed(1);
+
+  const idealShoulderCm = +(waistCm * 1.45).toFixed(1);
+  const goldenShoulderCm = +(waistCm * 1.618).toFixed(1);
+  const shoulderGapCm = +(idealShoulderCm - shoulderCm).toFixed(1);
+
+  const proteinMin = Math.round(weightKg * 1.6);
+  const proteinMax = Math.round(weightKg * 2.0);
+  const targetKcalMid = Math.round((calMin + calMax) / 2);
+  const proteinTargetG = Math.round((proteinMin + proteinMax) / 2);
+  const fatTargetG = Math.round((targetKcalMid * 0.25) / 9);
+  const carbsTargetG = Math.max(
+    100,
+    Math.round((targetKcalMid - proteinTargetG * 4 - fatTargetG * 9) / 4)
+  );
+
+  const waterRecommendedL = +(weightKg * 0.042).toFixed(1);
+  const creatineG = +(weightKg * 0.06).toFixed(1);
+
+  return {
+    heightCm,
+    weightKg,
+    age,
+    bmi,
+    bmiCategory,
+    isUnderweight,
+    loseBlocked,
+    effectiveGoal,
+    bmr,
+    tdee,
+    calMin,
+    calMax,
+    targetKcalMid,
+    proteinMin,
+    proteinMax,
+    macros: {
+      proteinG: proteinTargetG,
+      carbsG: carbsTargetG,
+      fatG: fatTargetG,
+    },
+    swRatio,
+    bodyFatPct,
+    leanMassKg,
+    ffmi,
+    normalizedFfmi,
+    shoulderCm,
+    waistCm,
+    idealShoulderCm,
+    goldenShoulderCm,
+    shoulderGapCm,
+    waterRecommendedL,
+    creatineG,
+  };
+}
+
+/**
+ * Calculates optimal bedtimes based on 90-minute ultradian sleep cycles
+ * and a 15-minute sleep onset latency.
+ */
+function calcSleepCycles(wakeTimeStr = "07:00") {
+  const parts = String(wakeTimeStr || "07:00")
+    .split(":")
+    .map(Number);
+  const wakeH = Number.isFinite(parts[0]) ? parts[0] : 7;
+  const wakeM = Number.isFinite(parts[1]) ? parts[1] : 0;
+  const wakeTotalMins = wakeH * 60 + wakeM;
+
+  // 6 cycles (9h), 5 cycles (7.5h - Ideal), 4 cycles (6h - Minimum)
+  return [6, 5, 4].map((cycles) => {
+    const sleepDurationMins = cycles * 90;
+    const fallAsleepBuffer = 15;
+    let bedMins = wakeTotalMins - sleepDurationMins - fallAsleepBuffer;
+    while (bedMins < 0) bedMins += 1440;
+    const hh = String(Math.floor(bedMins / 60) % 24).padStart(2, "0");
+    const mm = String(bedMins % 60).padStart(2, "0");
+    return {
+      cycles,
+      hours: +(sleepDurationMins / 60).toFixed(1),
+      bedtime: `${hh}:${mm}`,
+      label:
+        cycles === 5
+          ? "Optimal (5 Cycles · 7.5h)"
+          : cycles === 6
+          ? "Deep Recovery (6 Cycles · 9h)"
+          : "Minimum Anchor (4 Cycles · 6h)",
+    };
+  });
+}
+
+/**
+ * Calculates CNS & Daily Readiness Score (0-100) from recent sleep, mood, energy & screen hygiene.
+ */
+function calcRecoveryReadiness(daysMap = {}, currentISO = todayISO()) {
+  const todayObj = daysMap[currentISO] || {};
+  const yestObj = daysMap[addDaysISO(currentISO, -1)] || {};
+
+  const sleepH = safeNum(todayObj.sleepH || yestObj.sleepH, 7);
+  const sleepScore = clamp((sleepH / 7.5) * 40, 10, 40);
+
+  const mood = safeNum(todayObj.mood, 3);
+  const energy = safeNum(todayObj.energy, 3);
+  const stateScore = ((mood + energy) / 10) * 35;
+
+  const yestPhoneOut = Boolean(yestObj?.c?.phoneOutside || todayObj?.c?.phoneOutside);
+  const yestNoSlip = !yestObj?.slip && !todayObj?.slip;
+  const nervousSystemScore = (yestPhoneOut ? 12 : 4) + (yestNoSlip ? 13 : 3);
+
+  const readiness = Math.round(
+    clamp(sleepScore + stateScore + nervousSystemScore, 15, 100)
+  );
+
+  let status = "Prime — Push Progressive Overload Today";
+  let recommendation =
+    "Nervous system is well-recovered. Aim to add +1 rep or slow down the eccentric on your main lifts.";
+  if (readiness < 50) {
+    status = "Low Recovery — Prioritize Minimum Day & Sunlight";
+    recommendation =
+      "High fatigue detected. Stick to the 3 Minimum Day anchors, get 20m sunlight, and sleep on time tonight.";
+  } else if (readiness < 75) {
+    status = "Steady — Standard Training & Clean Routine";
+    recommendation =
+      "Good baseline readiness. Complete your scheduled workout with clean form (stop 2 reps shy of failure).";
+  }
+
+  return { readiness, status, recommendation };
+}
+
+/**
+ * Analyzes urge logs & slip days to detect the user's top trigger, location, and peak danger hour.
+ */
+function analyzeTriggerPatterns(urges = [], daysMap = {}) {
+  const triggerCounts = {};
+  const locationCounts = {};
+  const hourBuckets = {
+    "Morning (6am–12pm)": 0,
+    "Afternoon (12pm–6pm)": 0,
+    "Evening (6pm–10pm)": 0,
+    "Late Night (10pm–6am)": 0,
+  };
+
+  urges.forEach((u) => {
+    const trig = u.trigger || "Late night in bed";
+    const loc = u.location || "Bedroom (on bed)";
+    triggerCounts[trig] = (triggerCounts[trig] || 0) + 1;
+    locationCounts[loc] = (locationCounts[loc] || 0) + 1;
+
+    if (u.time || u.createdAt) {
+      const dt = new Date(u.time || u.createdAt);
+      const hr = Number.isNaN(dt.getHours()) ? 23 : dt.getHours();
+      if (hr >= 6 && hr < 12) hourBuckets["Morning (6am–12pm)"] += 1;
+      else if (hr >= 12 && hr < 18) hourBuckets["Afternoon (12pm–6pm)"] += 1;
+      else if (hr >= 18 && hr < 22) hourBuckets["Evening (6pm–10pm)"] += 1;
+      else hourBuckets["Late Night (10pm–6am)"] += 1;
+    }
+  });
+
+  const topEntry = (obj, fallback) => {
+    const entries = Object.entries(obj).sort((a, b) => b[1] - a[1]);
+    return entries.length ? entries[0][0] : fallback;
+  };
+
+  let lowSleepSlips = 0;
+  let totalSlips = 0;
+  Object.values(daysMap || {}).forEach((d) => {
+    if (d && d.slip) {
+      totalSlips += 1;
+      if (safeNum(d.sleepH, 7) > 0 && safeNum(d.sleepH, 7) < 6.5) {
+        lowSleepSlips += 1;
+      }
+    }
+  });
+
+  return {
+    totalUrgesLogged: urges.length,
+    totalSlips,
+    topTrigger: topEntry(triggerCounts, "Late night in bed"),
+    topLocation: topEntry(locationCounts, "Bedroom (on bed)"),
+    peakWindow: topEntry(hourBuckets, "Late Night (10pm–6am)"),
+    lowSleepCorrelationPct: totalSlips
+      ? Math.round((lowSleepSlips / totalSlips) * 100)
+      : 0,
+  };
+}
+
+/**
+ * Evaluates recent workout logs and provides a Double-Progression coaching cue.
+ */
+function calcWorkoutProgression(daysMap = {}, weekday = getWeekdayShort()) {
+  const plan = DAILY_HOME_WORKOUTS[weekday] || DAILY_HOME_WORKOUTS.Mon;
+  const dates = Object.keys(daysMap || {}).sort().reverse();
+  let lastSessionReps = 0;
+  let lastSessionDate = null;
+
+  for (let i = 0; i < dates.length; i += 1) {
+    const dISO = dates[i];
+    if (getWeekdayShort(dISO) === weekday) {
+      const reps = safeNum(daysMap[dISO]?.homeWorkoutLog?.totalReps, 0);
+      if (reps > 0) {
+        lastSessionReps = reps;
+        lastSessionDate = dISO;
+        break;
+      }
+    }
+  }
+
+  const targetReps = safeNum(plan.targetReps, 140);
+  const nextTargetReps =
+    lastSessionReps > 0
+      ? Math.max(targetReps, Math.round(lastSessionReps * 1.05))
+      : targetReps;
+
+  const overloadTip =
+    lastSessionReps >= targetReps
+      ? `Last ${plan.day} (${lastSessionDate}) you hit ${lastSessionReps} reps! Today aim for ${nextTargetReps} total reps OR add 1–2 books into your backpack.`
+      : `Target ${targetReps} total clean reps today. Stop 2 reps before form breakdown on every set.`;
+
+  return {
+    weekday,
+    planTitle: plan.title,
+    lastSessionDate,
+    lastSessionReps,
+    targetReps,
+    nextTargetReps,
+    overloadTip,
+  };
+}
+
+/* ═══════════════════ ZERO-OVERSHOOT MONOTONE CUBIC SPLINE & CHARTS ═══════════════════ */
+
+/**
+ * Fritsch-Carlson Monotone Cubic Hermite Interpolation.
+ * Guarantees smooth curves that NEVER overshoot below 0 or above the local extrema.
+ */
+function buildSmoothSvgPath(points) {
+  if (!points || points.length === 0) return "";
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  if (points.length === 2) {
+    return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+  }
+
+  const n = points.length;
+  const dx = [];
+  const dy = [];
+  const m = [];
+
+  for (let i = 0; i < n - 1; i += 1) {
+    dx[i] = points[i + 1].x - points[i].x;
+    dy[i] = points[i + 1].y - points[i].y;
+    m[i] = dx[i] !== 0 ? dy[i] / dx[i] : 0;
+  }
+
+  const tangents = new Array(n).fill(0);
+  tangents[0] = m[0];
+  tangents[n - 1] = m[n - 2];
+
+  for (let i = 1; i < n - 1; i += 1) {
+    if (m[i - 1] * m[i] <= 0) {
+      tangents[i] = 0;
+    } else {
+      tangents[i] = (m[i - 1] + m[i]) / 2;
+    }
+  }
+
+  for (let i = 0; i < n - 1; i += 1) {
+    if (m[i] === 0) {
+      tangents[i] = 0;
+      tangents[i + 1] = 0;
+    } else {
+      const alpha = tangents[i] / m[i];
+      const beta = tangents[i + 1] / m[i];
+      const hypot = Math.hypot(alpha, beta);
+      if (hypot > 3) {
+        const tau = 3 / hypot;
+        tangents[i] = tau * alpha * m[i];
+        tangents[i + 1] = tau * beta * m[i];
+      }
+    }
+  }
+
+  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for (let i = 0; i < n - 1; i += 1) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const segDx = dx[i] / 3;
+    const cpx1 = p0.x + segDx;
+    const cpy1 = p0.y + tangents[i] * segDx;
+    const cpx2 = p1.x - segDx;
+    const cpy2 = p1.y - tangents[i + 1] * segDx;
+    d += ` C ${cpx1.toFixed(1)} ${cpy1.toFixed(1)}, ${cpx2.toFixed(
+      1
+    )} ${cpy2.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+function ModernAreaChart({
+  data = [],
+  maxVal = 100,
+  unit = "",
+  color = "#3f6952",
+  secondaryData = null,
+  secondaryUnit = "",
+  secondaryColor = "#c89572",
+  showEMA = true,
+  height = 200,
+}) {
+  const [hoverIdx, setHoverIdx] = useState(null);
+  const svgRef = useRef(null);
+  const w = 620;
+  const h = height;
+  const padL = 36;
+  const padR = 18;
+  const padT = 22;
+  const padB = 30;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  const safeMax = useMemo(() => {
+    const vals = data.map((d) => safeNum(d.value, 0));
+    return Math.max(maxVal || 10, ...vals, 1);
+  }, [data, maxVal]);
+
+  const coords = useMemo(
+    () =>
+      data.map((d, i) => {
+        const val = Math.max(0, safeNum(d.value, 0));
+        const x =
+          data.length <= 1
+            ? padL + plotW / 2
+            : padL + (i / (data.length - 1)) * plotW;
+        const y = padT + plotH - Math.min(1, val / safeMax) * plotH;
+        return { ...d, x, y, val };
+      }),
+    [data, plotW, plotH, safeMax]
+  );
+
+  // 7-Point Exponential Moving Average (EMA) Trendline
+  const emaCoords = useMemo(() => {
+    if (!showEMA || coords.length < 3) return [];
+    const k = 2 / (Math.min(7, coords.length) + 1);
+    let ema = coords[0].val;
+    return coords.map((pt, idx) => {
+      ema = idx === 0 ? pt.val : pt.val * k + ema * (1 - k);
+      const y = padT + plotH - Math.min(1, ema / safeMax) * plotH;
+      return { x: pt.x, y, val: Math.round(ema * 10) / 10 };
+    });
+  }, [coords, showEMA, plotH, safeMax]);
+
+  const avgY = useMemo(() => {
+    if (!coords.length) return null;
+    const sum = coords.reduce((acc, c) => acc + c.val, 0);
+    const avg = sum / coords.length;
+    if (avg <= 0) return null;
+    return padT + plotH - Math.min(1, avg / safeMax) * plotH;
+  }, [coords, plotH, safeMax]);
+
+  const secCoords = useMemo(() => {
+    if (!secondaryData || !secondaryData.length) return [];
+    const vals = secondaryData.map((d) => safeNum(d.value, 0));
+    const minS = Math.min(...vals, 0);
+    const maxS = Math.max(...vals, 1);
+    const span = maxS - minS || 1;
+    return secondaryData.map((d, i) => {
+      const val = safeNum(d.value, 0);
+      const x =
+        secondaryData.length <= 1
+          ? padL + plotW / 2
+          : padL + (i / (secondaryData.length - 1)) * plotW;
+      const y = padT + plotH - ((val - minS) / span) * plotH;
+      return { ...d, x, y, val };
+    });
+  }, [secondaryData, plotW, plotH]);
+
+  const linePath = useMemo(() => buildSmoothSvgPath(coords), [coords]);
+  const emaPath = useMemo(() => buildSmoothSvgPath(emaCoords), [emaCoords]);
+  const secPath = useMemo(() => buildSmoothSvgPath(secCoords), [secCoords]);
+
+  const areaPath = useMemo(() => {
+    if (!coords.length) return "";
+    const first = coords[0];
+    const last = coords[coords.length - 1];
+    return `${linePath} L ${last.x} ${padT + plotH} L ${first.x} ${padT + plotH} Z`;
+  }, [coords, linePath, plotH]);
+
+  const gradId = useMemo(
+    () => `area-grad-${Math.random().toString(36).slice(2, 7)}`,
+    []
+  );
+
+  const handleTouchMove = useCallback(
+    (e) => {
+      if (!svgRef.current || !coords.length) return;
+      const touch = e.touches && e.touches[0];
+      if (!touch) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      if (!rect.width) return;
+      const relX = ((touch.clientX - rect.left) / rect.width) * w;
+      let closestIdx = 0;
+      let minDist = Infinity;
+      coords.forEach((pt, idx) => {
+        const dist = Math.abs(pt.x - relX);
+        if (dist < minDist) {
+          minDist = dist;
+          closestIdx = idx;
+        }
+      });
+      setHoverIdx(closestIdx);
+    },
+    [coords]
+  );
+
+  if (!data.length) {
+    return <div className="empty-chart">No data points recorded yet.</div>;
+  }
+
+  const activePoint =
+    hoverIdx !== null && coords[hoverIdx] ? coords[hoverIdx] : null;
+  const activeEma =
+    hoverIdx !== null && emaCoords[hoverIdx] ? emaCoords[hoverIdx] : null;
+  const activeSec =
+    hoverIdx !== null && secCoords[hoverIdx] ? secCoords[hoverIdx] : null;
+
+  return (
+    <div className="modern-chart-wrap">
+      {activePoint && (
+        <div className="modern-chart-tooltip">
+          <span>{activePoint.fullLabel || activePoint.label}</span>
+          <strong>
+            {activePoint.val}
+            {unit}
+          </strong>
+          {activeEma && (
+            <small style={{ opacity: 0.8 }}>
+              · Trend: {activeEma.val}
+              {unit}
+            </small>
+          )}
+          {activeSec && (
+            <em style={{ color: secondaryColor }}>
+              · {activeSec.val}
+              {secondaryUnit}
+            </em>
+          )}
+        </div>
+      )}
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${w} ${h}`}
+        className="modern-svg-chart"
+        onMouseLeave={() => setHoverIdx(null)}
+        onTouchStart={handleTouchMove}
+        onTouchMove={handleTouchMove}
+      >
+        <defs>
+          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.24" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.01" />
+          </linearGradient>
+        </defs>
+
+        {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+          const y = padT + plotH * (1 - ratio);
+          const labelVal = Math.round(safeMax * ratio);
+          return (
+            <g key={idx}>
+              <line
+                x1={padL}
+                y1={y}
+                x2={w - padR}
+                y2={y}
+                stroke="var(--line)"
+                strokeDasharray={ratio === 0 ? undefined : "4 4"}
+              />
+              <text
+                x={padL - 8}
+                y={y + 3}
+                textAnchor="end"
+                className="chart-axis-text"
+              >
+                {labelVal}
+              </text>
+            </g>
+          );
+        })}
+
+        {avgY !== null && (
+          <line
+            x1={padL}
+            y1={avgY}
+            x2={w - padR}
+            y2={avgY}
+            stroke={color}
+            strokeOpacity="0.22"
+            strokeDasharray="2 4"
+          />
+        )}
+
+        <path d={areaPath} fill={`url(#${gradId})`} />
+
+        {emaCoords.length > 2 && (
+          <path
+            d={emaPath}
+            fill="none"
+            stroke={color}
+            strokeOpacity="0.45"
+            strokeWidth="1.75"
+            strokeDasharray="3 3"
+          />
+        )}
+
+        <path
+          d={linePath}
+          fill="none"
+          stroke={color}
+          strokeWidth="2.8"
+          strokeLinecap="round"
+        />
+
+        {secCoords.length > 1 && (
+          <path
+            d={secPath}
+            fill="none"
+            stroke={secondaryColor}
+            strokeWidth="2.2"
+            strokeDasharray="5 4"
+            strokeLinecap="round"
+          />
+        )}
+
+        {activePoint && (
+          <line
+            x1={activePoint.x}
+            y1={padT}
+            x2={activePoint.x}
+            y2={padT + plotH}
+            stroke={color}
+            strokeOpacity="0.35"
+            strokeDasharray="3 3"
+          />
+        )}
+
+        {coords.map((pt, i) => (
+          <g
+            key={pt.key || i}
+            onMouseEnter={() => setHoverIdx(i)}
+            onClick={() => setHoverIdx(i)}
+            style={{ cursor: "pointer" }}
+          >
+            <rect
+              x={pt.x - plotW / Math.max(2, coords.length) / 2}
+              y={padT}
+              width={plotW / Math.max(1, coords.length)}
+              height={plotH}
+              fill="transparent"
+            />
+            <circle
+              cx={pt.x}
+              cy={pt.y}
+              r={hoverIdx === i ? 6 : 4}
+              fill="var(--paper)"
+              stroke={color}
+              strokeWidth={hoverIdx === i ? 3 : 2}
+            />
+            {(coords.length <= 10 ||
+              i % Math.ceil(coords.length / 8) === 0 ||
+              i === coords.length - 1) && (
+              <text
+                x={pt.x}
+                y={h - 8}
+                textAnchor="middle"
+                className="chart-axis-text"
+              >
+                {pt.label}
+              </text>
+            )}
+          </g>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function ModernDonutChart({ breakdown }) {
+  const safeBreakdown = breakdown || {
+    total: 0,
+    coreClean: 0,
+    fitnessBody: 0,
+    sleepScreen: 0,
+    mindCare: 0,
+  };
+
+  const segments = [
+    {
+      label: "Clean Streak Core",
+      value: safeNum(safeBreakdown.coreClean, 0),
+      max: 20,
+      color: "#3f6952",
+    },
+    {
+      label: "Workout, Steps & Diet",
+      value: safeNum(safeBreakdown.fitnessBody, 0),
+      max: 32,
+      color: "#689677",
+    },
+    {
+      label: "Sleep & Screen Anchor",
+      value: safeNum(safeBreakdown.sleepScreen, 0),
+      max: 35,
+      color: "#c89572",
+    },
+    {
+      label: "Skincare, Social & Journal",
+      value: safeNum(safeBreakdown.mindCare, 0),
+      max: 13,
+      color: "#7d8ec4",
+    },
+  ];
+
+  const size = 160;
+  const stroke = 16;
+  const center = size / 2;
+  const radius = center - stroke;
+  const circumference = 2 * Math.PI * radius;
+
+  let accumulatedPercent = 0;
+
+  return (
+    <div className="modern-donut-layout">
+      <div className="donut-svg-box">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+          <circle
+            cx={center}
+            cy={center}
+            r={radius}
+            fill="transparent"
+            stroke="var(--sage-soft)"
+            strokeWidth={stroke}
+          />
+          {segments.map((seg, i) => {
+            const pct = Math.max(0, Math.min(1, seg.value / 100));
+            const dash = pct * circumference;
+            const offset = circumference - accumulatedPercent * circumference;
+            accumulatedPercent += pct;
+            if (seg.value <= 0) return null;
+            return (
+              <circle
+                key={i}
+                cx={center}
+                cy={center}
+                r={radius}
+                fill="transparent"
+                stroke={seg.color}
+                strokeWidth={stroke}
+                strokeDasharray={`${dash} ${circumference}`}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                transform={`rotate(-90 ${center} ${center})`}
+              />
+            );
+          })}
+          <text
+            x="50%"
+            y="46%"
+            textAnchor="middle"
+            className="donut-score-big"
+          >
+            {safeNum(safeBreakdown.total, 0)}
+          </text>
+          <text
+            x="50%"
+            y="63%"
+            textAnchor="middle"
+            className="donut-score-sub"
+          >
+            / 100 PTS
+          </text>
+        </svg>
+      </div>
+      <div className="donut-legend-list">
+        {segments.map((seg, i) => (
+          <div key={i} className="donut-legend-item">
+            <span className="donut-dot" style={{ background: seg.color }} />
+            <div className="donut-legend-copy">
+              <span>{seg.label}</span>
+              <strong>
+                {seg.value}/{seg.max} pts
+              </strong>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ModernRadarChart({ axes = [] }) {
+  const size = 240;
+  const center = size / 2;
+  const radius = 76;
+  const count = axes.length || 6;
+
+  const getPoint = (idx, ratio) => {
+    const angle = (Math.PI * 2 * idx) / count - Math.PI / 2;
+    return {
+      x: center + radius * ratio * Math.cos(angle),
+      y: center + radius * ratio * Math.sin(angle),
+    };
+  };
+
+  const polygonPoints = axes
+    .map((ax, i) => {
+      const ratio = Math.max(0.08, Math.min(1, safeNum(ax.value, 0) / 100));
+      const pt = getPoint(i, ratio);
+      return `${pt.x},${pt.y}`;
+    })
+    .join(" ");
+
+  return (
+    <div className="modern-radar-wrap">
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        {[0.25, 0.5, 0.75, 1].map((lvl, idx) => (
+          <polygon
+            key={idx}
+            points={axes
+              .map((_, i) => {
+                const p = getPoint(i, lvl);
+                return `${p.x},${p.y}`;
+              })
+              .join(" ")}
+            fill="none"
+            stroke="var(--line)"
+            strokeDasharray={lvl === 1 ? undefined : "3 3"}
+          />
+        ))}
+        {axes.map((ax, i) => {
+          const outer = getPoint(i, 1);
+          const labelPt = getPoint(i, 1.24);
+          return (
+            <g key={i}>
+              <line
+                x1={center}
+                y1={center}
+                x2={outer.x}
+                y2={outer.y}
+                stroke="var(--line)"
+              />
+              <text
+                x={labelPt.x}
+                y={labelPt.y + 3}
+                textAnchor="middle"
+                className="radar-label-text"
+              >
+                {ax.label} ({Math.round(safeNum(ax.value, 0))}%)
+              </text>
+            </g>
+          );
+        })}
+        <polygon
+          points={polygonPoints}
+          fill="rgba(63, 105, 82, 0.24)"
+          stroke="var(--sage)"
+          strokeWidth="2.2"
+        />
+        {axes.map((ax, i) => {
+          const ratio = Math.max(0.08, Math.min(1, safeNum(ax.value, 0) / 100));
+          const pt = getPoint(i, ratio);
+          return (
+            <circle key={i} cx={pt.x} cy={pt.y} r="3.8" fill="var(--sage)" />
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+/* ═══════════════════ BASE UI PRIMITIVES ═══════════════════ */
+
+function Icon({ children }) {
+  return (
+    <span className="icon" aria-hidden="true">
+      {children}
+    </span>
+  );
+}
+
+function Button({ children, kind = "secondary", className = "", ...props }) {
+  return (
+    <button
+      type="button"
+      className={`btn ${kind} ${className}`.trim()}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Card({ children, className = "", ...props }) {
+  return (
+    <section className={`card ${className}`.trim()} {...props}>
+      {children}
+    </section>
+  );
+}
+
+function Heading({ eyebrow, title, description, action }) {
+  return (
+    <div className="page-heading">
+      <div>
+        <div className="eyebrow">{eyebrow}</div>
+        <h1>{title}</h1>
+        {description && <p>{description}</p>}
+      </div>
+      {action && <div className="heading-action">{action}</div>}
+    </div>
+  );
+}
+
+function Empty({ icon = "✳", title, description, action }) {
+  return (
+    <div className="empty">
+      <div className="empty-icon">{icon}</div>
+      <h3>{title}</h3>
+      <p>{description}</p>
+      {action}
+    </div>
+  );
+}
+
+function Progress({ value = 0 }) {
+  const clamped = Math.max(0, Math.min(100, safeNum(value, 0)));
+  return (
+    <div
+      className="progress"
+      role="progressbar"
+      aria-valuenow={Math.round(clamped)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <span style={{ width: `${clamped}%` }} />
+    </div>
+  );
+}
+
+function Field({ label, children, hint }) {
+  return (
+    <label className="field">
+      <span>{label}</span>
+      {children}
+      {hint && <small>{hint}</small>}
+    </label>
+  );
+}
+
+function Modal({ title, onClose, children }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape" && typeof onClose === "function") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="modal-backdrop"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="modal" role="dialog" aria-modal="true" aria-label={title}>
+        <div className="modal-head">
+          <h2>{title}</h2>
+          <button
+            type="button"
+            className="icon-button"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Stat({ icon, label, value, detail, color }) {
+  return (
+    <Card className={`stat-card ${color || ""}`.trim()}>
+      <div className="stat-top">
+        <span className="stat-icon">{icon}</span>
+        <span className="stat-label">{label}</span>
+      </div>
+      <div className="stat-value">{value}</div>
+      <div className="stat-detail">{detail}</div>
+    </Card>
+  );
+}
+
+function Accordion({ title, badge, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className={`accordion-box ${open ? "open" : ""}`}>
+      <button
+        type="button"
+        className="accordion-head"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <strong>{title}</strong>
+        <div className="accordion-right">
+          {badge && <span className="status-pill complete">{badge}</span>}
+          <span>{open ? "−" : "+"}</span>
+        </div>
+      </button>
+      {open && <div className="accordion-body">{children}</div>}
+    </div>
+  );
+}
+
+function CountdownTimer({
+  defaultSeconds = 600,
+  label = "Timer",
+  onComplete,
+}) {
+  const [secondsLeft, setSecondsLeft] = useState(defaultSeconds);
+  const [running, setRunning] = useState(false);
+  const completeRef = useRef(onComplete);
+
+  useEffect(() => {
+    completeRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    setSecondsLeft(defaultSeconds);
+    setRunning(false);
+  }, [defaultSeconds]);
+
+  useEffect(() => {
+    if (!running) return undefined;
+    const id = window.setInterval(() => {
+      setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [running]);
+
+  useEffect(() => {
+    if (running && secondsLeft === 0) {
+      setRunning(false);
+      triggerCompletionFeedback("success");
+      if (typeof completeRef.current === "function") completeRef.current();
+    }
+  }, [secondsLeft, running]);
+
+  const mins = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
+  const secs = String(secondsLeft % 60).padStart(2, "0");
+  const elapsedPct =
+    defaultSeconds > 0
+      ? Math.round(((defaultSeconds - secondsLeft) / defaultSeconds) * 100)
+      : 0;
+
+  return (
+    <div className="timer-strip">
+      <div style={{ flex: "1 1 180px", minWidth: 0 }}>
+        <small className="eyebrow">{label}</small>
+        <div className="timer-readout">
+          {mins}:{secs}
+        </div>
+        {running && (
+          <div style={{ marginTop: 6 }}>
+            <Progress value={elapsedPct} />
+          </div>
+        )}
+      </div>
+      <div className="timer-btns">
+        <Button kind="primary" onClick={() => setRunning((r) => !r)}>
+          {running ? "Pause" : "Start"}
+        </Button>
+        {running && (
+          <Button
+            onClick={() => setSecondsLeft((s) => s + 60)}
+            title="Add 1 minute"
+          >
+            +1m
+          </Button>
+        )}
+        <Button
+          onClick={() => {
+            setRunning(false);
+            setSecondsLeft(defaultSeconds);
+          }}
+        >
+          Reset
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function Heatmap90({
+  startDate,
+  daysMap,
+  profile,
+  selectedDate,
+  onSelectDate,
+}) {
+  const cells = useMemo(() => {
+    const start = startDate || todayISO();
+    return Array.from({ length: 90 }, (_, i) => {
+      const iso = addDaysISO(start, i);
+      const dayObj = daysMap && daysMap[iso];
+      const score = dayObj ? calcDailyScore(dayObj, profile) : 0;
+      let lvl = 0;
+      if (score >= 75) lvl = 3;
+      else if (score >= 50) lvl = 2;
+      else if (score > 0) lvl = 1;
+      return {
+        dayNum: i + 1,
+        iso,
+        score,
+        lvl,
+        slip: Boolean(dayObj && dayObj.slip),
+      };
+    });
+  }, [startDate, daysMap, profile]);
+
+  return (
+    <div>
+      <div
+        className="heatmap-grid"
+        role="group"
+        aria-label="90-day comeback heatmap"
+      >
+        {cells.map((cell) => (
+          <button
+            key={cell.iso}
+            type="button"
+            className={`heat-cell lvl-${cell.lvl} ${
+              cell.slip ? "slip-day" : ""
+            } ${selectedDate === cell.iso ? "selected" : ""}`}
+            onClick={() => onSelectDate(cell.iso)}
+            title={`Day ${cell.dayNum} (${cell.iso}): ${cell.score}/100 pts`}
+          >
+            {cell.dayNum}
+          </button>
+        ))}
+      </div>
+      <div className="heat-legend">
+        <span className="status-pill">0 pts</span>
+        <span className="status-pill complete">1–49 pts</span>
+        <span className="status-pill complete">50–74 pts</span>
+        <span className="status-pill complete">75–100 pts</span>
+        <span className="status-pill peach-pill">
+          Orange border = slip logged
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════ NEW ADVANCED INTERACTIVE COMPONENTS ═══════════════════ */
+
+const BREATH_PROTOCOLS = {
+  sigh: {
+    label: "Physiological Sigh (Fastest Urge & Anxiety Drop)",
+    phases: [
+      { name: "Deep Nose Inhale + Top-up Sip", sec: 4, scale: 1.35 },
+      { name: "Brief Hold", sec: 1, scale: 1.35 },
+      { name: "Long Slow Mouth Exhale", sec: 8, scale: 0.75 },
+    ],
+  },
+  relax478: {
+    label: "4-7-8 Parasympathetic Sleep & Urge Reset",
+    phases: [
+      { name: "Inhale Quietly Through Nose", sec: 4, scale: 1.32 },
+      { name: "Hold Breath Calmly", sec: 7, scale: 1.32 },
+      { name: "Slow Audible Exhale", sec: 8, scale: 0.75 },
+    ],
+  },
+  box: {
+    label: "Box Breathing 4-4-4-4 (Pre-Study Focus)",
+    phases: [
+      { name: "Inhale (Nose)", sec: 4, scale: 1.3 },
+      { name: "Hold Full", sec: 4, scale: 1.3 },
+      { name: "Exhale", sec: 4, scale: 0.78 },
+      { name: "Hold Empty", sec: 4, scale: 0.78 },
+    ],
+  },
+};
+
+function BreathingPacer({ onCycleComplete }) {
+  const [mode, setMode] = useState("sigh");
+  const [active, setActive] = useState(false);
+  const [phaseIdx, setPhaseIdx] = useState(0);
+  const [secInPhase, setSecInPhase] = useState(0);
+  const [cyclesDone, setCyclesDone] = useState(0);
+
+  const protocol = BREATH_PROTOCOLS[mode] || BREATH_PROTOCOLS.sigh;
+  const currentPhase = protocol.phases[phaseIdx] || protocol.phases[0];
+
+  useEffect(() => {
+    setPhaseIdx(0);
+    setSecInPhase(0);
+    setActive(false);
+  }, [mode]);
+
+  useEffect(() => {
+    if (!active) return undefined;
+    const timer = window.setInterval(() => {
+      setSecInPhase((prev) => {
+        if (prev + 1 < currentPhase.sec) {
+          return prev + 1;
+        }
+        const nextIdx = (phaseIdx + 1) % protocol.phases.length;
+        setPhaseIdx(nextIdx);
+        if (nextIdx === 0) {
+          setCyclesDone((c) => {
+            const nextC = c + 1;
+            if (typeof onCycleComplete === "function") onCycleComplete(nextC);
+            return nextC;
+          });
+          triggerCompletionFeedback("breatheIn");
+        } else if (
+          protocol.phases[nextIdx].name.toLowerCase().includes("exhale")
+        ) {
+          triggerCompletionFeedback("breatheOut");
+        }
+        return 0;
+      });
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [active, phaseIdx, currentPhase, protocol, onCycleComplete]);
+
+  const remainingSec = Math.max(0, currentPhase.sec - secInPhase);
+
+  return (
+    <Card className="breathing-pacer-card">
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
+          marginBottom: 14,
+        }}
+      >
+        <div>
+          <div className="eyebrow">NERVOUS SYSTEM VAGAL RESET</div>
+          <h3 style={{ margin: "4px 0 0" }}>{protocol.label}</h3>
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {Object.keys(BREATH_PROTOCOLS).map((k) => (
+            <Button
+              key={k}
+              kind={mode === k ? "primary" : "secondary"}
+              onClick={() => setMode(k)}
+            >
+              {k === "sigh" ? "Physiological Sigh" : k === "relax478" ? "4-7-8" : "Box 4-4-4-4"}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px 12px",
+          border: "1px solid var(--line, #e2e0d8)",
+          borderRadius: 12,
+          marginBottom: 12,
+        }}
+      >
+        <div
+          style={{
+            width: 118,
+            height: 118,
+            borderRadius: "50%",
+            border: "2px solid var(--sage, #3f6952)",
+            background: "var(--sage-soft, rgba(63,105,82,0.12))",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            transform: `scale(${active ? currentPhase.scale : 1})`,
+            transition: `transform ${currentPhase.sec}s ease-in-out`,
+          }}
+        >
+          <strong style={{ fontSize: "1.6rem" }}>{remainingSec}s</strong>
+          <small style={{ fontSize: "0.72rem", opacity: 0.85 }}>
+            Cycle #{cyclesDone + 1}
+          </small>
+        </div>
+        <p style={{ marginTop: 18, fontWeight: 600, textAlign: "center" }}>
+          {active ? currentPhase.name : "Press Start and follow the expanding circle"}
+        </p>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span className="status-pill complete">Completed: {cyclesDone} cycles</span>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Button
+            kind="primary"
+            onClick={() => {
+              if (!active) triggerCompletionFeedback("breatheIn");
+              setActive((a) => !a);
+            }}
+          >
+            {active ? "Pause Pacer" : "Start Breathing"}
+          </Button>
+          <Button
+            onClick={() => {
+              setActive(false);
+              setPhaseIdx(0);
+              setSecInPhase(0);
+              setCyclesDone(0);
+            }}
+          >
+            Reset
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/**
+ * Deep Work Pomodoro & Ultradian Studio with Offline Brown Noise & Distraction Catchpad.
+ */
+function PomodoroFocusStudio({ onSessionComplete }) {
+  const [presetMins, setPresetMins] = useState(25);
+  const [secondsLeft, setSecondsLeft] = useState(25 * 60);
+  const [running, setRunning] = useState(false);
+  const [brownNoiseOn, setBrownNoiseOn] = useState(false);
+  const [distractionInput, setDistractionInput] = useState("");
+  const [distractions, setDistractions] = useState([]);
+
+  useEffect(() => {
+    setSecondsLeft(presetMins * 60);
+    setRunning(false);
+  }, [presetMins]);
+
+  useEffect(() => {
+    if (!running) {
+      AmbientSoundEngine.stop();
+      setBrownNoiseOn(false);
+      return undefined;
+    }
+    const id = window.setInterval(() => {
+      setSecondsLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [running]);
+
+  useEffect(() => {
+    if (running && secondsLeft === 0) {
+      setRunning(false);
+      AmbientSoundEngine.stop();
+      setBrownNoiseOn(false);
+      triggerCompletionFeedback("levelUp");
+      if (typeof onSessionComplete === "function") {
+        onSessionComplete({
+          id: uid(),
+          durationMins: presetMins,
+          completedAt: new Date().toISOString(),
+          distractionsCaught: distractions.length,
+        });
+      }
+    }
+  }, [running, secondsLeft, presetMins, distractions.length, onSessionComplete]);
+
+  useEffect(() => () => AmbientSoundEngine.stop(), []);
+
+  const toggleNoise = () => {
+    if (brownNoiseOn) {
+      AmbientSoundEngine.stop();
+      setBrownNoiseOn(false);
+    } else {
+      const started = AmbientSoundEngine.startBrownNoise(0.08);
+      setBrownNoiseOn(started);
+    }
+  };
+
+  const addDistraction = (e) => {
+    e.preventDefault();
+    if (!distractionInput.trim()) return;
+    setDistractions((prev) => [
+      { id: uid(), text: distractionInput.trim(), time: new Date().toLocaleTimeString() },
+      ...prev,
+    ]);
+    setDistractionInput("");
+    triggerCompletionFeedback("tick");
+  };
+
+  const mins = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
+  const secs = String(secondsLeft % 60).padStart(2, "0");
+  const pct = Math.round(((presetMins * 60 - secondsLeft) / (presetMins * 60)) * 100);
+
+  return (
+    <Card className="pomodoro-studio-card">
+      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+        <div>
+          <div className="eyebrow">APNA KAAM · DEEP FOCUS ENGINE</div>
+          <h3 style={{ margin: "4px 0" }}>
+            {presetMins === 25
+              ? "25m Sprint (Pomodoro)"
+              : presetMins === 50
+              ? "50m Deep Block (GATE / Coding)"
+              : "90m Ultradian Peak Block"}
+          </h3>
+        </div>
+        <div style={{ display: "flex", gap: 6 }}>
+          {[25, 50, 90].map((m) => (
+            <Button
+              key={m}
+              kind={presetMins === m ? "primary" : "secondary"}
+              onClick={() => setPresetMins(m)}
+            >
+              {m}m
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ margin: "16px 0" }}>
+        <div className="timer-readout" style={{ fontSize: "2.4rem", fontWeight: 700 }}>
+          {mins}:{secs}
+        </div>
+        <Progress value={pct} />
+      </div>
+
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+        <Button kind="primary" onClick={() => setRunning((r) => !r)}>
+          {running ? "Pause Session" : "Start Focus Block"}
+        </Button>
+        <Button onClick={toggleNoise}>
+          {brownNoiseOn ? "🔊 Brown Noise: ON" : "🔇 Brown Noise: OFF"}
+        </Button>
+        <Button
+          onClick={() => {
+            setRunning(false);
+            AmbientSoundEngine.stop();
+            setBrownNoiseOn(false);
+            setSecondsLeft(presetMins * 60);
+          }}
+        >
+          Reset
+        </Button>
+      </div>
+
+      <form onSubmit={addDistraction} style={{ display: "flex", gap: 8 }}>
+        <input
+          type="text"
+          value={distractionInput}
+          onChange={(e) => setDistractionInput(e.target.value)}
+          placeholder="Urge or random thought? Dump it here & return to work..."
+          style={{ flex: 1 }}
+        />
+        <Button type="submit">Catch</Button>
+      </form>
+
+      {distractions.length > 0 && (
+        <div style={{ marginTop: 10, fontSize: "0.85rem" }}>
+          <small className="eyebrow">
+            Parked Thoughts ({distractions.length}) — Deal with these AFTER the timer:
+          </small>
+          <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+            {distractions.slice(0, 4).map((d) => (
+              <li key={d.id}>
+                {d.text} <small style={{ opacity: 0.6 }}>({d.time})</small>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+/**
+ * Keyboard-first Command Palette (Ctrl+K or Cmd+K) for instant navigation & logging.
+ */
+function CommandPalette({
+  isOpen,
+  onClose,
+  onNavigate,
+  onQuickAction,
+}) {
+  const [query, setQuery] = useState("");
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  const actions = useMemo(
+    () => [
+      ...NAV.map(([tab, icon, desc]) => ({
+        id: `nav-${tab}`,
+        title: `Go to ${tab}`,
+        sub: desc,
+        icon,
+        run: () => onNavigate && onNavigate(tab),
+      })),
+      {
+        id: "act-water",
+        title: "Log +0.5L Water Intake",
+        sub: "Instant hydration increment for today",
+        icon: "◌",
+        run: () => onQuickAction && onQuickAction("addWater", 0.5),
+      },
+      {
+        id: "act-steps",
+        title: "Log +1,000 Steps",
+        sub: "Add 1,000 steps to today's pedometer count",
+        icon: "↗",
+        run: () => onQuickAction && onQuickAction("addSteps", 1000),
+      },
+      {
+        id: "act-minDay",
+        title: "Mark Minimum Day Complete (Sunlight + Bed + Phone Out)",
+        sub: "Check off the 3 core biological anchors",
+        icon: "✦",
+        run: () => onQuickAction && onQuickAction("completeMinDay"),
+      },
+      {
+        id: "act-sos",
+        title: "Emergency Urge SOS Reset",
+        sub: "Jump straight to the 7-step urge surfer & breathing pacer",
+        icon: "↻",
+        run: () => onNavigate && onNavigate("Reset"),
+      },
+    ],
+    [onNavigate, onQuickAction]
+  );
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return actions;
+    return actions.filter(
+      (a) =>
+        a.title.toLowerCase().includes(q) || a.sub.toLowerCase().includes(q)
+    );
+  }, [actions, query]);
+
+  if (!isOpen) return null;
+
+  return (
+    <Modal title="Quick Command Launcher (Ctrl + K)" onClose={onClose}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <input
+          ref={inputRef}
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Type a tab name or action (e.g. Yoga, Water, SOS)..."
+        />
+        <div
+          style={{
+            maxHeight: 300,
+            overflowY: "auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: 6,
+          }}
+        >
+          {filtered.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className="btn secondary"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                textAlign: "left",
+                padding: "10px 12px",
+              }}
+              onClick={() => {
+                item.run();
+                onClose();
+              }}
+            >
+              <span>
+                <strong>
+                  {item.icon} {item.title}
+                </strong>
+                <small style={{ display: "block", opacity: 0.75 }}>
+                  {item.sub}
+                </small>
+              </span>
+              <span>↵</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+/**
+ * Data Vault Component for JSON Backup Export & Restore.
+ */
+function DataBackupCard({ storeData, onRestore }) {
+  const [statusMsg, setStatusMsg] = useState("");
+
+  const handleDownload = () => {
+    try {
+      const jsonStr = exportStoreBackup(storeData);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `comeback90-backup-${todayISO()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatusMsg("Backup JSON downloaded successfully.");
+      triggerCompletionFeedback("success");
+    } catch {
+      setStatusMsg("Could not export backup.");
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const res = importStoreBackup(String(ev.target?.result || ""));
+      if (res.ok) {
+        setStatusMsg("Backup restored! Reloading state...");
+        triggerCompletionFeedback("levelUp");
+        if (typeof onRestore === "function") onRestore(res.data);
+      } else {
+        setStatusMsg(res.error || "Invalid backup file.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  return (
+    <Card>
+      <div className="eyebrow">LOCAL DATA VAULT</div>
+      <h3 style={{ margin: "4px 0 8px" }}>Offline JSON Backup & Restore</h3>
+      <p style={{ margin: "0 0 12px", fontSize: "0.9rem" }}>
+        Your data stays 100% private in your browser. Export a snapshot weekly so
+        clearing browser cache never erases your 90-day streak.
+      </p>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+        <Button kind="primary" onClick={handleDownload}>
+          Export JSON Backup
+        </Button>
+        <label className="btn secondary" style={{ cursor: "pointer" }}>
+          Import JSON File
+          <input
+            type="file"
+            accept="application/json"
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+          />
+        </label>
+      </div>
+      {statusMsg && (
+        <small style={{ display: "block", marginTop: 8, fontWeight: 600 }}>
+          {statusMsg}
+        </small>
+      )}
+    </Card>
+  );
+}
+
+/**
+ * Custom React Hook with multi-tab synchronization & quick action helpers.
+ */
+function useComebackStore() {
+  const [store, setStore] = useState(() => readUnifiedStore());
+
+  useEffect(() => {
+    writeUnifiedStore(store);
+  }, [store]);
+
+  useEffect(() => {
+    const handleStorage = (e) => {
+      if (e.key === STORAGE_KEY) {
+        setStore(readUnifiedStore());
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  const updateDay = useCallback((dateISO, updater) => {
+    setStore((prev) => {
+      const existing = prev.days[dateISO] || createEmptyDay();
+      const updated =
+        typeof updater === "function" ? updater(existing) : { ...existing, ...updater };
+      return {
+        ...prev,
+        days: {
+          ...prev.days,
+          [dateISO]: updated,
+        },
+      };
+    });
+  }, []);
+
+  return { store, setStore, updateDay };
+}
+
 export {
   STORAGE_KEY,
   QUEST_KEY,
@@ -3275,8 +4308,10 @@ export {
   fmtDate,
   percent,
   safeNum,
+  clamp,
   discreetText,
   triggerCompletionFeedback,
+  AmbientSoundEngine,
   DISCLAIMER_TEXT,
   QUOTES,
   MINIMUM_DAY_IDS,
@@ -3319,10 +4354,17 @@ export {
   createEmptyDay,
   createInitialData,
   readUnifiedStore,
+  writeUnifiedStore,
+  exportStoreBackup,
+  importStoreBackup,
   calcDailyScoreBreakdown,
   calcDailyScore,
   calcStreaks,
   calcBodyMetrics,
+  calcSleepCycles,
+  calcRecoveryReadiness,
+  analyzeTriggerPatterns,
+  calcWorkoutProgression,
   buildSmoothSvgPath,
   ModernAreaChart,
   ModernDonutChart,
@@ -3339,6 +4381,11 @@ export {
   Accordion,
   CountdownTimer,
   Heatmap90,
+  BreathingPacer,
+  PomodoroFocusStudio,
+  CommandPalette,
+  DataBackupCard,
+  useComebackStore,
   NAV,
   DAILY_HOME_WORKOUTS,
   QUICK_PROTEIN_FOODS,
