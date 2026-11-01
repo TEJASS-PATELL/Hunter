@@ -6246,7 +6246,6 @@ body {
   color: var(--mu);
 }
 
-.hr-eyebrow,
 .hunter-reward-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -6263,41 +6262,20 @@ body {
 .hunter-rank-banner {
   position: relative;
   display: grid;
-  grid-template-columns: 1.45fr 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(20px, 3vw, 36px);
   padding: clamp(20px, 3vw, 32px);
   overflow: hidden;
   isolation: isolate;
-  background:
-    radial-gradient(
-      circle at 90% 40%,
-      color-mix(in srgb, var(--ac2) 12%, transparent),
-      transparent 42%
-    ),
-    linear-gradient(
-      120deg,
-      color-mix(in srgb, var(--ac) 6%, var(--paper)),
-      var(--paper) 58%,
-      color-mix(in srgb, var(--ac2) 5%, var(--paper))
-    );
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--ac) 6%, var(--paper)),
+    var(--paper) 58%,
+    color-mix(in srgb, var(--ac2) 5%, var(--paper))
+  );
   border: 1px solid color-mix(in srgb, var(--ac) 20%, var(--line));
   border-radius: var(--r);
   align-items: stretch;
-}
-
-.hunter-rank-banner::after {
-  position: absolute;
-  z-index: -1;
-  right: -120px;
-  bottom: -180px;
-  width: 360px;
-  aspect-ratio: 1;
-  border: 1px solid color-mix(in srgb, var(--ac) 12%, transparent);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 24px color-mix(in srgb, var(--ac) 3%, transparent),
-    0 0 0 52px color-mix(in srgb, var(--ac2) 4%, transparent);
-  content: "";
 }
 
 .hunter-rank-copy {
@@ -6404,37 +6382,6 @@ body {
   justify-content: space-between;
   color: var(--mu);
   font-size: 0.78rem;
-}
-
-/* ---------- Current Rank Spotlight ---------- */
-.hunter-rank-emblem {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.hr-spotlight-card {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: transparent;
-}
-
-.hr-spotlight-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.hr-spotlight-meta strong {
-  font-size: 1.08rem;
-  font-weight: 700;
-  color: var(--tx);
-}
-
-.hr-spotlight-meta small {
-  font-size: 0.82rem;
-  color: var(--mu);
 }
 
 /* ---------- 3-Column Stats Grid ---------- */
@@ -6645,40 +6592,44 @@ body {
 .hunter-class-ladder {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0 18px;
+  gap: 12px;
 }
 
 .hunter-class-step {
   display: flex;
-  flex-direction: row;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
   min-width: 0;
-  padding: 10px 6px;
+  min-height: 84px;
+  padding: 13px 15px;
   color: var(--tx);
   font: inherit;
   text-align: left;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
   cursor: pointer;
   transition:
+    transform 0.18s var(--ease),
     color 0.18s var(--ease),
-    border-color 0.18s var(--ease);
+    border-color 0.18s var(--ease),
+    background-color 0.18s var(--ease);
 }
 
 .hunter-class-step:hover {
+  transform: translateY(-2px);
   color: var(--ac);
   border-color: color-mix(in srgb, var(--ac) 42%, var(--line));
+  background: var(--hover);
 }
 
 .hunter-class-step.active {
   border-color: color-mix(in srgb, var(--ac) 58%, var(--line));
+  background: color-mix(in srgb, var(--ac) 5%, var(--paper));
 }
 
 .hunter-class-step.inspected {
-  color: var(--ac);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ac) 45%, transparent);
 }
 
 .hunter-class-step:focus-visible {
@@ -6774,6 +6725,11 @@ body {
   .hunter-rank-banner {
     grid-template-columns: 1fr;
     padding: 20px;
+  }
+
+  .hunter-class-ladder {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .hunter-rank-stats {
@@ -6880,26 +6836,13 @@ body {
     font-size: .78rem;
   }
 
-  .hr-spotlight-meta {
-    gap: 3px;
-  }
-
-  .hr-spotlight-meta strong {
-    font-size: .92rem;
-  }
-
-  .hr-spotlight-meta small {
-    font-size: .7rem;
-    line-height: 1.35;
-  }
-
   .hunter-class-ladder {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 12px;
   }
 
   .hunter-class-step {
-    padding: 10px 4px;
+    min-height: 78px;
+    padding: 11px 12px;
   }
 
   .hr-step-title-line strong {
@@ -6910,9 +6853,6 @@ body {
     font-size: .76rem;
   }
 
-  .hr-step-archetype {
-    font-size: .65rem;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

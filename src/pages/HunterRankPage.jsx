@@ -90,18 +90,6 @@ const RANK_ARCHETYPES = {
   },
 };
 
-const RANK_CARS = {
-  E: { name: "Vauxhall Corsa" },
-  D: { name: "BMW Sedan" },
-  C: { name: "Ford Mustang" },
-  B: { name: "Porsche 911" },
-  A: { name: "Aston Martin" },
-  S: { name: "Ferrari" },
-  SS: { name: "Lamborghini Huracan" },
-  SSS: { name: "McLaren" },
-  X: { name: "Bugatti Veyron" },
-};
-
 const dateFromOffset = (today, offset) => {
   const date = new Date(`${today}T12:00:00`);
   date.setDate(date.getDate() + offset);
@@ -269,16 +257,6 @@ function HunterRankPage({ game, setGame, today, notify }) {
           </div>
         </div>
 
-        {/* CURRENT RANK SPOTLIGHT */}
-        <div className="hunter-rank-emblem">
-          <div className="hr-spotlight-card">
-            <div className="hr-spotlight-meta">
-              <span className="hr-eyebrow">CURRENT CLASS</span>
-              <strong>{currentClass.rank}-Rank · {RANK_CARS[currentClass.rank].name}</strong>
-              <small>{currentArchetype.focus}</small>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* STATS GRID */}
@@ -412,7 +390,7 @@ function HunterRankPage({ game, setGame, today, notify }) {
               </span>
             </div>
             <h3>
-              {inspectedTier.title} Hunter <span>· {RANK_CARS[inspectedTier.rank].name}</span>
+              {inspectedTier.title} Hunter
             </h3>
             <p>{inspectedArchetype.focus}</p>
           </div>
@@ -449,10 +427,10 @@ function HunterRankPage({ game, setGame, today, notify }) {
               >
                 <div className="hunter-class-info">
                   <div className="hr-step-title-line">
-                    <strong>{tier.rank}-Rank · {tier.title}</strong>
+                    <strong>{tier.rank}-Rank</strong>
                     <small>LVL {tier.minLevel}</small>
                   </div>
-                  <span className="hr-step-class-title">{RANK_CARS[tier.rank].name}</span>
+                  <span className="hr-step-class-title">{tier.title}</span>
                   <small className={`hr-step-archetype ${active ? "is-current" : ""}`}>
                     {active ? "CURRENT RANK" : unlocked ? "UNLOCKED" : "LOCKED"}
                   </small>
