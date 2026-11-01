@@ -220,7 +220,7 @@ function GoalsAndRoadmapPage({
             </div>
           </div>
 
-          <div className="toolbar" style={{ marginBottom: 16 }}>
+          <div className="toolbar jsx-29b7980a" >
             <div className="tabs">
               <button
                 type="button"
@@ -303,7 +303,7 @@ function GoalsAndRoadmapPage({
                       </div>
                       <Progress value={pct} />
                       {paceText && (
-                        <small className="muted-text" style={{ marginTop: 4 }}>
+                        <small className="muted-text jsx-6b1f0d97" >
                           {paceText}
                         </small>
                       )}
@@ -404,7 +404,7 @@ function GoalsAndRoadmapPage({
                   </span>
                 </div>
 
-                <div style={{ marginBottom: 14 }}>
+                <div className="jsx-a0d4a037">
                   <Progress value={pct} />
                 </div>
 
@@ -445,8 +445,8 @@ function GoalsAndRoadmapPage({
 
             {/* Automated Weekly Snapshot Box */}
             <div
-              className="mini-stat-row"
-              style={{ marginTop: 12, marginBottom: 16 }}
+              className="mini-stat-row jsx-156c83db"
+              
             >
               <div>
                 <span className="mini-stat-number">
@@ -509,7 +509,7 @@ function GoalsAndRoadmapPage({
                 description="Spend 3 minutes every Sunday reviewing your week."
               />
             ) : (
-              <div className="stack-col" style={{ marginTop: 12 }}>
+              <div className="stack-col jsx-4bb90035" >
                 {weeklyReviews.map((w) => (
                   <div key={w.id || w.week} className="routine-step-box">
                     <div className="row-between">

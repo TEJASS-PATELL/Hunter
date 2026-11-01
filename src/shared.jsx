@@ -1755,6 +1755,7 @@ const NAV = [
   ["Reset", "↻", "Urge SOS, breathing guide, blockers & private logs"],
   ["Goals", "⚑", "Goals, milestones, 90-day roadmap & weekly review"],
   ["Reflection", "▤", "Mood charts, journals, social ladder, CBT & PHQ-9"],
+  ["Speak", "◉", "Daily English speaking, communication practice & confidence ladder"],
   ["More", "⚙", "Control panel, Sleep & Pomodoro, Health tests & Help"],
 ];
 
@@ -3109,13 +3110,13 @@ function ModernAreaChart({
             {unit}
           </strong>
           {activeEma && (
-            <small style={{ opacity: 0.8 }}>
+            <small className="jsx-3b426722">
               · Trend: {activeEma.val}
               {unit}
             </small>
           )}
           {activeSec && (
-            <em style={{ color: secondaryColor }}>
+            <em className="modern-chart-secondary">
               · {activeSec.val}
               {secondaryUnit}
             </em>
@@ -3223,7 +3224,7 @@ function ModernAreaChart({
             key={pt.key || i}
             onMouseEnter={() => setHoverIdx(i)}
             onClick={() => setHoverIdx(i)}
-            style={{ cursor: "pointer" }}
+            className="jsx-74fa97c2"
           >
             <rect
               x={pt.x - plotW / Math.max(2, coords.length) / 2}
@@ -3304,9 +3305,19 @@ function ModernDonutChart({ breakdown }) {
   let accumulatedPercent = 0;
 
   return (
-    <div className="modern-donut-layout">
+    <div
+      className="modern-donut-layout"
+      role="group"
+      aria-label={`Today's score: ${safeNum(safeBreakdown.total, 0)} out of 100 points`}
+    >
       <div className="donut-svg-box">
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <svg
+          width={size}
+          height={size}
+          viewBox={`0 0 ${size} ${size}`}
+          role="img"
+          aria-label={`Score breakdown donut chart, ${safeNum(safeBreakdown.total, 0)} of 100 points`}
+        >
           <circle
             cx={center}
             cy={center}
@@ -3358,12 +3369,21 @@ function ModernDonutChart({ breakdown }) {
       <div className="donut-legend-list">
         {segments.map((seg, i) => (
           <div key={i} className="donut-legend-item">
-            <span className="donut-dot" style={{ background: seg.color }} />
+            <span className={`donut-dot donut-dot-${i}`} />
             <div className="donut-legend-copy">
-              <span>{seg.label}</span>
-              <strong>
-                {seg.value}/{seg.max} pts
-              </strong>
+              <div className="donut-legend-heading">
+                <span>{seg.label}</span>
+                <strong>{seg.value}/{seg.max} pts</strong>
+              </div>
+              <progress
+                className={`donut-category-meter donut-category-meter-${i}`}
+                value={Math.min(seg.max, Math.max(0, seg.value))}
+                max={seg.max}
+                aria-label={`${seg.label} progress`}
+              />
+              <small>
+                {Math.max(0, seg.max - seg.value)} pts to target
+              </small>
             </div>
           </div>
         ))}
@@ -3388,7 +3408,7 @@ function ModernRadarChart({ axes = [] }) {
 
   const polygonPoints = axes
     .map((ax, i) => {
-      const ratio = Math.max(0.08, Math.min(1, safeNum(ax.value, 0) / 100));
+      const ratio = Math.max(0, Math.min(1, safeNum(ax.value, 0) / 100));
       const pt = getPoint(i, ratio);
       return `${pt.x},${pt.y}`;
     })
@@ -3396,20 +3416,39 @@ function ModernRadarChart({ axes = [] }) {
 
   return (
     <div className="modern-radar-wrap">
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label={`Holistic balance radar: ${axes
+          .map(
+            (axis) =>
+              `${axis.label} ${Math.round(safeNum(axis.value, 0))} percent`
+          )
+          .join(", ")}`}
+      >
         {[0.25, 0.5, 0.75, 1].map((lvl, idx) => (
-          <polygon
-            key={idx}
-            points={axes
-              .map((_, i) => {
-                const p = getPoint(i, lvl);
-                return `${p.x},${p.y}`;
-              })
-              .join(" ")}
-            fill="none"
-            stroke="var(--line)"
-            strokeDasharray={lvl === 1 ? undefined : "3 3"}
-          />
+          <g key={idx}>
+            <polygon
+              points={axes
+                .map((_, i) => {
+                  const p = getPoint(i, lvl);
+                  return `${p.x},${p.y}`;
+                })
+                .join(" ")}
+              fill="none"
+              stroke="var(--line)"
+              strokeDasharray={lvl === 1 ? undefined : "3 3"}
+            />
+            <text
+              x={center + 3}
+              y={center - radius * lvl - 3}
+              className="radar-scale-text"
+            >
+              {Math.round(lvl * 100)}
+            </text>
+          </g>
         ))}
         {axes.map((ax, i) => {
           const outer = getPoint(i, 1);
@@ -3441,7 +3480,7 @@ function ModernRadarChart({ axes = [] }) {
           strokeWidth="2.2"
         />
         {axes.map((ax, i) => {
-          const ratio = Math.max(0.08, Math.min(1, safeNum(ax.value, 0) / 100));
+          const ratio = Math.max(0, Math.min(1, safeNum(ax.value, 0) / 100));
           const pt = getPoint(i, ratio);
           return (
             <circle key={i} cx={pt.x} cy={pt.y} r="3.8" fill="var(--sage)" />
@@ -3508,17 +3547,7 @@ function Empty({ icon = "✳", title, description, action }) {
 
 function Progress({ value = 0 }) {
   const clamped = Math.max(0, Math.min(100, safeNum(value, 0)));
-  return (
-    <div
-      className="progress"
-      role="progressbar"
-      aria-valuenow={Math.round(clamped)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-    >
-      <span style={{ width: `${clamped}%` }} />
-    </div>
-  );
+  return <progress className="progress-meter" value={clamped} max={100} />;
 }
 
 function Field({ label, children, hint }) {
@@ -3642,13 +3671,13 @@ function CountdownTimer({
 
   return (
     <div className="timer-strip">
-      <div style={{ flex: "1 1 180px", minWidth: 0 }}>
+      <div className="jsx-1bbd7a1c">
         <small className="eyebrow">{label}</small>
         <div className="timer-readout">
           {mins}:{secs}
         </div>
         {running && (
-          <div style={{ marginTop: 6 }}>
+          <div className="jsx-a5595d11">
             <Progress value={elapsedPct} />
           </div>
         )}
@@ -3817,20 +3846,13 @@ function BreathingPacer({ onCycleComplete }) {
   return (
     <Card className="breathing-pacer-card">
       <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-          marginBottom: 14,
-        }}
+        className="jsx-a76f9757"
       >
         <div>
           <div className="eyebrow">NERVOUS SYSTEM VAGAL RESET</div>
-          <h3 style={{ margin: "4px 0 0" }}>{protocol.label}</h3>
+          <h3 className="jsx-d59d3084">{protocol.label}</h3>
         </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <div className="jsx-454c221e">
           {Object.keys(BREATH_PROTOCOLS).map((k) => (
             <Button
               key={k}
@@ -3843,46 +3865,24 @@ function BreathingPacer({ onCycleComplete }) {
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "24px 12px",
-          border: "1px solid var(--line, #e2e0d8)",
-          borderRadius: 12,
-          marginBottom: 12,
-        }}
-      >
+      <div className="breathing-pacer-stage">
         <div
-          style={{
-            width: 118,
-            height: 118,
-            borderRadius: "50%",
-            border: "2px solid var(--sage, #3f6952)",
-            background: "var(--sage-soft, rgba(63,105,82,0.12))",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            transform: `scale(${active ? currentPhase.scale : 1})`,
-            transition: `transform ${currentPhase.sec}s ease-in-out`,
-          }}
+          className={`breathing-pacer-orb ${active ? "is-active" : ""} ${currentPhase.scale > 1 ? "phase-expand" : "phase-contract"}`}
+          data-duration={currentPhase.sec}
         >
-          <strong style={{ fontSize: "1.6rem" }}>{remainingSec}s</strong>
-          <small style={{ fontSize: "0.72rem", opacity: 0.85 }}>
+          <strong className="jsx-df273fd7">{remainingSec}s</strong>
+          <small className="jsx-c55e460c">
             Cycle #{cyclesDone + 1}
           </small>
         </div>
-        <p style={{ marginTop: 18, fontWeight: 600, textAlign: "center" }}>
+        <p className="jsx-710f531a">
           {active ? currentPhase.name : "Press Start and follow the expanding circle"}
         </p>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="jsx-f120801a">
         <span className="status-pill complete">Completed: {cyclesDone} cycles</span>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div className="jsx-b9b7b537">
           <Button
             kind="primary"
             onClick={() => {
@@ -3982,10 +3982,10 @@ function PomodoroFocusStudio({ onSessionComplete }) {
 
   return (
     <Card className="pomodoro-studio-card">
-      <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
+      <div className="jsx-08c2f232">
         <div>
           <div className="eyebrow">APNA KAAM · DEEP FOCUS ENGINE</div>
-          <h3 style={{ margin: "4px 0" }}>
+          <h3 className="jsx-d5945cb3">
             {presetMins === 25
               ? "25m Sprint (Pomodoro)"
               : presetMins === 50
@@ -3993,7 +3993,7 @@ function PomodoroFocusStudio({ onSessionComplete }) {
               : "90m Ultradian Peak Block"}
           </h3>
         </div>
-        <div style={{ display: "flex", gap: 6 }}>
+        <div className="jsx-fabd50d3">
           {[25, 50, 90].map((m) => (
             <Button
               key={m}
@@ -4006,14 +4006,14 @@ function PomodoroFocusStudio({ onSessionComplete }) {
         </div>
       </div>
 
-      <div style={{ margin: "16px 0" }}>
-        <div className="timer-readout" style={{ fontSize: "2.4rem", fontWeight: 700 }}>
+      <div className="jsx-a90da117">
+        <div className="timer-readout jsx-239fead9" >
           {mins}:{secs}
         </div>
         <Progress value={pct} />
       </div>
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+      <div className="jsx-21a5d782">
         <Button kind="primary" onClick={() => setRunning((r) => !r)}>
           {running ? "Pause Session" : "Start Focus Block"}
         </Button>
@@ -4032,26 +4032,26 @@ function PomodoroFocusStudio({ onSessionComplete }) {
         </Button>
       </div>
 
-      <form onSubmit={addDistraction} style={{ display: "flex", gap: 8 }}>
+      <form onSubmit={addDistraction} className="jsx-b9b7b537">
         <input
           type="text"
           value={distractionInput}
           onChange={(e) => setDistractionInput(e.target.value)}
           placeholder="Urge or random thought? Dump it here & return to work..."
-          style={{ flex: 1 }}
+          className="jsx-634a28be"
         />
         <Button type="submit">Catch</Button>
       </form>
 
       {distractions.length > 0 && (
-        <div style={{ marginTop: 10, fontSize: "0.85rem" }}>
+        <div className="jsx-bbf384f4">
           <small className="eyebrow">
             Parked Thoughts ({distractions.length}) — Deal with these AFTER the timer:
           </small>
-          <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
+          <ul className="jsx-d8d1425a">
             {distractions.slice(0, 4).map((d) => (
               <li key={d.id}>
-                {d.text} <small style={{ opacity: 0.6 }}>({d.time})</small>
+                {d.text} <small className="jsx-31127fe2">({d.time})</small>
               </li>
             ))}
           </ul>
@@ -4133,7 +4133,7 @@ function CommandPalette({
 
   return (
     <Modal title="Quick Command Launcher (Ctrl + K)" onClose={onClose}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="jsx-90543b1c">
         <input
           ref={inputRef}
           type="search"
@@ -4142,26 +4142,14 @@ function CommandPalette({
           placeholder="Type a tab name or action (e.g. Yoga, Water, SOS)..."
         />
         <div
-          style={{
-            maxHeight: 300,
-            overflowY: "auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: 6,
-          }}
+          className="jsx-5592537a"
         >
           {filtered.map((item) => (
             <button
               key={item.id}
               type="button"
-              className="btn secondary"
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                textAlign: "left",
-                padding: "10px 12px",
-              }}
+              className="btn secondary jsx-95d0747e"
+              
               onClick={() => {
                 item.run();
                 onClose();
@@ -4171,7 +4159,7 @@ function CommandPalette({
                 <strong>
                   {item.icon} {item.title}
                 </strong>
-                <small style={{ display: "block", opacity: 0.75 }}>
+                <small className="jsx-c9f78508">
                   {item.sub}
                 </small>
               </span>
@@ -4227,27 +4215,27 @@ function DataBackupCard({ storeData, onRestore }) {
   return (
     <Card>
       <div className="eyebrow">LOCAL DATA VAULT</div>
-      <h3 style={{ margin: "4px 0 8px" }}>Offline JSON Backup & Restore</h3>
-      <p style={{ margin: "0 0 12px", fontSize: "0.9rem" }}>
+      <h3 className="jsx-0d966aa3">Offline JSON Backup & Restore</h3>
+      <p className="jsx-6f020693">
         Your data stays 100% private in your browser. Export a snapshot weekly so
         clearing browser cache never erases your 90-day streak.
       </p>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+      <div className="jsx-49f60068">
         <Button kind="primary" onClick={handleDownload}>
           Export JSON Backup
         </Button>
-        <label className="btn secondary" style={{ cursor: "pointer" }}>
+        <label className="btn secondary jsx-74fa97c2" >
           Import JSON File
           <input
             type="file"
             accept="application/json"
             onChange={handleFileChange}
-            style={{ display: "none" }}
+            className="jsx-5790ffba"
           />
         </label>
       </div>
       {statusMsg && (
-        <small style={{ display: "block", marginTop: 8, fontWeight: 600 }}>
+        <small className="jsx-88f62893">
           {statusMsg}
         </small>
       )}

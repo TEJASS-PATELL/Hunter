@@ -180,7 +180,7 @@ function ModernWorkoutBarLineChart({ data = [], height = 210 }) {
           <g
             key={pt.key || i}
             onMouseEnter={() => setHoverIdx(i)}
-            style={{ cursor: "pointer" }}
+            className="jsx-74fa97c2"
           >
             <rect
               x={pt.x - pt.barW / 2}
@@ -691,7 +691,6 @@ function LifestyleAndBodyPage({
   return (
     <>
       <Heading
-        eyebrow="CARE & TRAINING SYSTEM"
         title="Body, daily home workouts & nutrition"
         description="7-day home workout split with live volume graph, progressive overload engine, TDEE & Navy body-fat analytics, Indian diet tracker, and care routines."
         action={
@@ -844,8 +843,8 @@ function LifestyleAndBodyPage({
                 )}
               </div>
 
-              <div style={{ marginTop: 14 }}>
-                <div className="category-pills" style={{ marginBottom: 8 }}>
+              <div className="jsx-dffc4db2">
+                <div className="category-pills jsx-16949d4d" >
                   {[60, 90, 120].map((sec) => (
                     <button
                       type="button"
@@ -972,8 +971,8 @@ function LifestyleAndBodyPage({
                               {ex.name}{" "}
                               {overloadReady && (
                                 <span
-                                  className="status-pill peach-pill"
-                                  style={{ marginLeft: 6 }}
+                                  className="status-pill peach-pill jsx-8cdcd88b"
+                                  
                                 >
                                   🔥 Overload Unlocked (+2 reps / +2kg next
                                   time)
@@ -1048,7 +1047,7 @@ function LifestyleAndBodyPage({
                   <p>
                     Stop 2 reps before failure. Focus on clean form and posture.
                   </p>
-                  <div className="habit-list" style={{ marginTop: 12 }}>
+                  <div className="habit-list jsx-4bb90035" >
                     {HOME_WORKOUT_PLAN.weeks1to2.map((ex, i) => (
                       <div className="habit-row" key={i}>
                         <div className="habit-info">
@@ -1069,7 +1068,7 @@ function LifestyleAndBodyPage({
                     Once basic sets feel easy, switch to these harder
                     variations.
                   </p>
-                  <div className="habit-list" style={{ marginTop: 12 }}>
+                  <div className="habit-list jsx-4bb90035" >
                     {HOME_WORKOUT_PLAN.weeks3to4.map((ex, i) => (
                       <div className="habit-row" key={i}>
                         <div className="habit-info">
@@ -1105,7 +1104,7 @@ function LifestyleAndBodyPage({
                       <div className="eyebrow">GYM SESSION {sessKey}</div>
                       <h2>Full-Body {sessKey}</h2>
                       <p>{GYM_WORKOUT_PLAN.restNote}</p>
-                      <div className="habit-list" style={{ marginTop: 12 }}>
+                      <div className="habit-list jsx-4bb90035" >
                         {list.map((ex, i) => (
                           <div className="habit-row" key={i}>
                             <div className="habit-info">
@@ -1140,7 +1139,7 @@ function LifestyleAndBodyPage({
                   </span>
                 </div>
 
-                <div className="form-grid" style={{ maxWidth: 460 }}>
+                <div className="form-grid jsx-0d93308a" >
                   <Field label="Weight Lifted (kg)">
                     <input
                       type="number"
@@ -1171,8 +1170,8 @@ function LifestyleAndBodyPage({
                 </div>
 
                 <div
-                  className="mini-stat-row"
-                  style={{ marginTop: 14, marginBottom: 0 }}
+                  className="mini-stat-row jsx-99bf9265"
+                  
                 >
                   <div>
                     <span className="mini-stat-number">{estOneRepMax} kg</span>
@@ -1248,7 +1247,7 @@ function LifestyleAndBodyPage({
             <Card>
               <div className="eyebrow">MIFFLIN-ST JEOR CALCULATOR</div>
               <h2>Calorie surplus &amp; protein calculator</h2>
-              <div className="form-grid" style={{ marginTop: 14 }}>
+              <div className="form-grid jsx-dffc4db2" >
                 <Field label="Height (cm)">
                   <input
                     type="number"
@@ -1299,7 +1298,7 @@ function LifestyleAndBodyPage({
                 </Field>
               </div>
 
-              <div className="category-pills" style={{ marginTop: 12 }}>
+              <div className="category-pills jsx-4bb90035" >
                 {[
                   ["gain", "Lean Bulk (+350 kcal)"],
                   ["maintain", "Maintenance (TDEE)"],
@@ -1320,8 +1319,8 @@ function LifestyleAndBodyPage({
 
               {bodyMetrics.loseBlocked && (
                 <p
-                  className="muted-text"
-                  style={{ marginTop: 8, color: "#c89572" }}
+                  className="muted-text jsx-6caf2eb0"
+                  
                 >
                   ⚠️ BMI is under 18.5 (Underweight). Calorie deficit is
                   automatically locked to Lean Bulk for bone &amp; hormone
@@ -1330,8 +1329,8 @@ function LifestyleAndBodyPage({
               )}
 
               <div
-                className="mini-stat-row"
-                style={{ marginTop: 18, marginBottom: 0 }}
+                className="mini-stat-row jsx-35b765e6"
+                
               >
                 <div>
                   <span className="mini-stat-number">
@@ -1358,8 +1357,8 @@ function LifestyleAndBodyPage({
               <div className="eyebrow">MONTHLY TAPE MEASUREMENTS</div>
               <h2>Log weight, arms, chest &amp; V-taper (cm)</h2>
               <div
-                className="form-grid three-col-grid"
-                style={{ marginTop: 14 }}
+                className="form-grid three-col-grid jsx-dffc4db2"
+                
               >
                 <Field label="Weight (kg)">
                   <input
@@ -1435,8 +1434,8 @@ function LifestyleAndBodyPage({
                 </Field>
               </div>
               <div
-                className="row-between"
-                style={{ marginTop: 14, flexWrap: "wrap", gap: 10 }}
+                className="row-between jsx-6c7e27be"
+                
               >
                 <Button kind="primary" onClick={handleSaveMeasurement}>
                   Save measurement entry
@@ -1528,7 +1527,7 @@ function LifestyleAndBodyPage({
 
             <div className="macro-progress-grid">
               <div>
-                <div className="row-between" style={{ marginBottom: 6 }}>
+                <div className="row-between jsx-e7b13069" >
                   <strong>Protein Progress ({loggedProteinToday}g)</strong>
                   <span>Target: {bodyMetrics.proteinMin}g+</span>
                 </div>
@@ -1537,7 +1536,7 @@ function LifestyleAndBodyPage({
                 />
               </div>
               <div>
-                <div className="row-between" style={{ marginBottom: 6 }}>
+                <div className="row-between jsx-e7b13069" >
                   <strong>Logged Calories ({loggedKcalToday} kcal)</strong>
                   <span>Target: {bodyMetrics.calMin} kcal</span>
                 </div>
@@ -1565,8 +1564,8 @@ function LifestyleAndBodyPage({
 
             {/* CUSTOM INDIAN MEAL / SNACK ENTRY */}
             <div
-              className="form-grid three-col-grid"
-              style={{ marginTop: 16 }}
+              className="form-grid three-col-grid jsx-4c0544d5"
+              
             >
               <Field label="Custom Food / Ghar ka Khana">
                 <input
@@ -1590,7 +1589,7 @@ function LifestyleAndBodyPage({
                 />
               </Field>
               <Field label="Calories (kcal)">
-                <div className="inline-add-row" style={{ marginTop: 0 }}>
+                <div className="inline-add-row jsx-ec0f7ffa" >
                   <input
                     type="number"
                     min="0"
@@ -1609,31 +1608,22 @@ function LifestyleAndBodyPage({
 
             {/* TODAY'S EATEN ITEMS LIST */}
             {todayDietLog.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <div className="eyebrow" style={{ marginBottom: 8 }}>
+              <div className="jsx-4c0544d5">
+                <div className="eyebrow jsx-16949d4d" >
                   TODAY&apos;S LOGGED MEALS ({todayDietLog.length} ITEMS)
                 </div>
                 <div className="category-pills">
                   {todayDietLog.map((item) => (
                     <span
                       key={item.uid}
-                      className="status-pill complete"
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                      }}
+                      className="status-pill complete jsx-555249cc"
+                      
                     >
                       {item.name} ({item.protein}g P · {item.kcal} kcal)
                       <button
                         type="button"
                         onClick={() => removeFoodItemToday(item.uid)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          fontWeight: 700,
-                        }}
+                        className="jsx-e0c0acac"
                         title="Remove item"
                       >
                         ×
@@ -1649,7 +1639,7 @@ function LifestyleAndBodyPage({
             <Card>
               <div className="eyebrow">VEGETARIAN HIGH-PROTEIN PLAN</div>
               <h2>Sample Veg Day (~100g+ protein)</h2>
-              <div className="habit-list" style={{ marginTop: 12 }}>
+              <div className="habit-list jsx-4bb90035" >
                 {DIET_PLANS.veg.map((m, i) => (
                   <div className="habit-row" key={i}>
                     <div className="habit-info">
@@ -1663,7 +1653,7 @@ function LifestyleAndBodyPage({
             <Card>
               <div className="eyebrow">NON-VEG HIGH-PROTEIN PLAN</div>
               <h2>Sample Non-Veg Day (~108g+ protein)</h2>
-              <div className="habit-list" style={{ marginTop: 12 }}>
+              <div className="habit-list jsx-4bb90035" >
                 {DIET_PLANS.nonVeg.map((m, i) => (
                   <div className="habit-row" key={i}>
                     <div className="habit-info">
@@ -1680,7 +1670,7 @@ function LifestyleAndBodyPage({
             <Card>
               <div className="eyebrow">INDIAN PROTEIN REFERENCE</div>
               <h2>Approximate protein per serving</h2>
-              <div className="table-wrap" style={{ marginTop: 12 }}>
+              <div className="table-wrap jsx-4bb90035" >
                 <table className="clean-table">
                   <thead>
                     <tr>
@@ -1709,7 +1699,7 @@ function LifestyleAndBodyPage({
             <Card>
               <div className="eyebrow">HARDGAINER SURPLUS RULES</div>
               <h2>How to gain clean weight when appetite is low</h2>
-              <div className="habit-list" style={{ marginTop: 12 }}>
+              <div className="habit-list jsx-4bb90035" >
                 {WEIGHT_GAIN_TIPS.map((tip, i) => (
                   <div className="habit-row" key={i}>
                     <span className="status-pill complete">0{i + 1}</span>
@@ -1733,8 +1723,8 @@ function LifestyleAndBodyPage({
             <Card>
               <div className="eyebrow">THE HONEST TRUTH</div>
               <h2>Frame, bone structure &amp; visual width</h2>
-              <p style={{ marginTop: 8 }}>{FRAME_BONE_CONTENT.honestTruth}</p>
-              <div className="habit-list" style={{ marginTop: 14 }}>
+              <p className="jsx-0d69e4b1">{FRAME_BONE_CONTENT.honestTruth}</p>
+              <div className="habit-list jsx-dffc4db2" >
                 {FRAME_BONE_CONTENT.priorities.map((pr, i) => (
                   <div className="habit-row" key={i}>
                     <span className="status-pill complete">0{i + 1}</span>
@@ -1749,7 +1739,7 @@ function LifestyleAndBodyPage({
             <Card>
               <div className="eyebrow">BONE DENSITY &amp; HORMONAL BASE</div>
               <h2>Peak bone mass rules in your 20s</h2>
-              <div className="habit-list" style={{ marginTop: 12 }}>
+              <div className="habit-list jsx-4bb90035" >
                 {FRAME_BONE_CONTENT.boneHealth.map((bh, i) => (
                   <div className="habit-row" key={i}>
                     <span className="status-pill complete">✓</span>
@@ -1759,8 +1749,8 @@ function LifestyleAndBodyPage({
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop: 16 }}>
-                <div className="row-between" style={{ marginBottom: 6 }}>
+              <div className="jsx-4c0544d5">
+                <div className="row-between jsx-e7b13069" >
                   <strong>
                     Today&apos;s Calcium Check: {totalCalciumMg} / 1000 mg
                   </strong>
@@ -1787,7 +1777,7 @@ function LifestyleAndBodyPage({
                 </Button>
               )}
             </div>
-            <div className="table-wrap" style={{ marginTop: 12 }}>
+            <div className="table-wrap jsx-4bb90035" >
               <table className="clean-table">
                 <thead>
                   <tr>

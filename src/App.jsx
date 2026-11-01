@@ -94,6 +94,7 @@ import { GoalsAndRoadmapPage } from "./pages/GoalsAndRoadmapPage.jsx";
 import { ReflectionAndMindPage } from "./pages/ReflectionAndMindPage.jsx";
 import { MoreAndSettingsPage } from "./pages/MoreAndSettingsPage.jsx";
 import { YogaPage } from "./pages/YogaPage.jsx";
+import { CommunicationPage } from "./pages/CommunicationPage.jsx";
 import {
   UrgeSOSModal,
   ProfileModal,
@@ -114,6 +115,7 @@ const ALL_PAGES = [
   "Yoga",
   "Goals",
   "Reflection",
+  "Speak",
   "More",
 ];
 const PAGES = [...NAV.map(([name]) => name), ...ALL_PAGES].filter(
@@ -138,6 +140,7 @@ export default function App() {
   });
   const [today, setToday] = useState(todayISO);
   const [selectedISO, setSelectedISO] = useState(todayISO);
+  const mobileNavRef = useRef(null);
 
   const p = data.profile || {};
   const dm = useCallback(
@@ -154,6 +157,19 @@ export default function App() {
     navigate,
     enabled: !modal && !sosOpen && !cmdOpen, // no swiping while a popup is open
   });
+
+  useEffect(() => {
+    const activeLink = mobileNavRef.current?.querySelector(
+      '[aria-current="page"]'
+    );
+    activeLink?.scrollIntoView({
+      block: "nearest",
+      inline: "center",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+    });
+  }, [page]);
 
   /* Persist unified store */
   useEffect(() => {
@@ -1172,6 +1188,15 @@ export default function App() {
             notify={notify}
           />
         );
+      case "Speak":
+        return (
+          <CommunicationPage
+            data={data}
+            setData={setData}
+            today={today}
+            notify={notify}
+          />
+        );
       case "More":
         return (
           <MoreAndSettingsPage
@@ -1234,7 +1259,7 @@ export default function App() {
               cx="21"
               cy="43"
               r="3"
-              fill="#D9381E"
+              fill="#ff0000"
             />
           </svg>
         </button>
@@ -1303,8 +1328,8 @@ export default function App() {
         <div className="content-wrap">
           {data.badDayMode && (
             <div
-              className="row-between"
-              style={{ marginBottom: 12, flexWrap: "wrap", gap: 8 }}
+              className="row-between jsx-0b70baa6"
+              
             >
               <span className="status-pill peach-pill">
                 Bad Day Mode Active · Just finish 3 basics today (Sunlight, Phone
@@ -1391,14 +1416,14 @@ export default function App() {
               }}
             />
             <div
-              className="habit-list"
-              style={{ maxHeight: 340, overflowY: "auto", marginTop: 8 }}
+              className="habit-list jsx-cfef4a83"
+              
             >
               {commandItems.map((item) => (
                 <div
                   key={item.id}
-                  className="habit-row"
-                  style={{ cursor: "pointer" }}
+                  className="habit-row jsx-74fa97c2"
+                  
                   onClick={item.run}
                 >
                   <span className="status-pill complete">{item.icon}</span>
@@ -1423,12 +1448,13 @@ export default function App() {
         </div>
       )}
 
-      <nav className="mobile-nav" aria-label="Mobile">
+      <nav className="mobile-nav" aria-label="Mobile" ref={mobileNavRef}>
         {NAV.map(([name, icon]) => (
           <button
             type="button"
             key={name}
             className={page === name ? "active" : ""}
+            aria-current={page === name ? "page" : undefined}
             onClick={() => setPage(name)}
           >
             <Icon>{icon}</Icon>

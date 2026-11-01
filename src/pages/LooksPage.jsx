@@ -535,12 +535,11 @@ function LooksPage({ data, setData, notify }) {
   return (
     <>
       <Heading
-        eyebrow="PRACTICAL GROOMING · MAX 15 MIN/DAY"
         title="Looks, height posture & style"
         description="Focus on what actually works: posture, spinal decompression (+1–2 cm height), skin clarity, haircut framing, and well-fitted clothes."
       />
 
-      <div className="stats-grid" style={{ marginBottom: 18 }}>
+      <div className="stats-grid jsx-2f23af6b" >
         <Stat
           icon="◌"
           label="Today's Face Routine"
@@ -625,27 +624,18 @@ function LooksPage({ data, setData, notify }) {
                 </Button>
               </div>
 
-              <div className="stack-col" style={{ marginTop: 14 }}>
+              <div className="stack-col jsx-dffc4db2" >
                 {FACE_ROUTINE_STEPS.map((s) => {
                   const stepDone =
                     Boolean(doneRoutineSteps[s.id]) || isFaceRoutineLoggedToday;
                   return (
                     <div
                       key={s.id}
-                      className="routine-step-box"
-                      style={
-                        stepDone
-                          ? { borderLeft: "4px solid var(--sage)" }
-                          : undefined
-                      }
+                      className={`routine-step-box ${stepDone ? "routine-step-complete" : ""}`}
                     >
                       <div className="row-between">
                         <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                          }}
+                          className="jsx-f265ed37"
                         >
                           <button
                             type="button"
@@ -658,7 +648,7 @@ function LooksPage({ data, setData, notify }) {
                         </div>
                         <span className="status-pill complete">{s.reps}</span>
                       </div>
-                      <p style={{ marginTop: 6 }}>{s.instruction}</p>
+                      <p className="jsx-a5595d11">{s.instruction}</p>
                       <CountdownTimer
                         defaultSeconds={s.durationSec}
                         label={s.name}
@@ -682,7 +672,7 @@ function LooksPage({ data, setData, notify }) {
               <Card>
                 <div className="eyebrow">ORDERED BY REAL IMPACT</div>
                 <h2>What actually improves your face</h2>
-                <div className="habit-list" style={{ marginTop: 12 }}>
+                <div className="habit-list jsx-4bb90035" >
                   {FACE_SACH_CARD.impactOrder.map((item) => (
                     <div className="habit-row" key={item.rank}>
                       <span className="status-pill complete">#{item.rank}</span>
@@ -696,7 +686,7 @@ function LooksPage({ data, setData, notify }) {
               </Card>
 
               {auditSummary.dentistAlerts.length > 0 && (
-                <div className="intro-callout" style={{ marginBottom: 0 }}>
+                <div className="intro-callout jsx-50435ff2" >
                   <div className="callout-icon">⚠️</div>
                   <div>
                     <strong>
@@ -727,8 +717,8 @@ function LooksPage({ data, setData, notify }) {
                       <div key={q.id} className="audit-q-box">
                         <strong>{q.question}</strong>
                         <div
-                          className="category-pills"
-                          style={{ marginTop: 8 }}
+                          className="category-pills jsx-0d69e4b1"
+                          
                         >
                           {q.options.map((opt) => (
                             <button
@@ -745,10 +735,7 @@ function LooksPage({ data, setData, notify }) {
                         </div>
                         {currentAns && (
                           <small
-                            className="muted-text"
-                            style={
-                              isDentistFlag ? { color: "#c89572" } : undefined
-                            }
+                            className={`muted-text ${isDentistFlag ? "dentist-flag-note" : ""}`}
                           >
                             {isDentistFlag ? "⚠️ Dentist Note: " : "💡 Tip: "}
                             {q.tip}
@@ -814,27 +801,18 @@ function LooksPage({ data, setData, notify }) {
                 </Button>
               </div>
 
-              <div className="stack-col" style={{ marginTop: 12 }}>
+              <div className="stack-col jsx-4bb90035" >
                 {HEIGHT_DECOMPRESSION_STEPS.map((s) => {
                   const stepDone =
                     Boolean(doneHeightSteps[s.id]) || isHeightRoutineDoneToday;
                   return (
                     <div
                       key={s.id}
-                      className="routine-step-box"
-                      style={
-                        stepDone
-                          ? { borderLeft: "4px solid var(--sage)" }
-                          : undefined
-                      }
+                      className={`routine-step-box ${stepDone ? "routine-step-complete" : ""}`}
                     >
                       <div className="row-between">
                         <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 10,
-                          }}
+                          className="jsx-f265ed37"
                         >
                           <button
                             type="button"
@@ -889,7 +867,7 @@ function LooksPage({ data, setData, notify }) {
                   pelvic alignment:
                 </p>
 
-                <div className="stack-col" style={{ marginTop: 12 }}>
+                <div className="stack-col jsx-4bb90035" >
                   <Field label="1. Roz kitne ghante lagatar chair/bed par baith kar padhte ho?">
                     <select
                       value={heightAudit.sittingHours}
@@ -955,8 +933,8 @@ function LooksPage({ data, setData, notify }) {
                 </div>
 
                 <div
-                  className="mini-stat-row"
-                  style={{ marginTop: 14, marginBottom: 0 }}
+                  className="mini-stat-row jsx-99bf9265"
+                  
                 >
                   <div>
                     <span className="mini-stat-number">
@@ -991,7 +969,7 @@ function LooksPage({ data, setData, notify }) {
                   din bhar hold kar sako.
                 </p>
 
-                <div className="form-grid" style={{ marginTop: 12 }}>
+                <div className="form-grid jsx-4bb90035" >
                   <Field label="Morning Height (Right after waking up - cm)">
                     <input
                       type="number"
@@ -1021,8 +999,8 @@ function LooksPage({ data, setData, notify }) {
                 </div>
 
                 <div
-                  className="row-between"
-                  style={{ marginTop: 12, flexWrap: "wrap", gap: 10 }}
+                  className="row-between jsx-b08e79e1"
+                  
                 >
                   <Button kind="primary" onClick={handleSaveHeightLog}>
                     Save Height Measurement
@@ -1039,7 +1017,7 @@ function LooksPage({ data, setData, notify }) {
                 </div>
 
                 {(groom.heightLogs || []).length > 0 && (
-                  <div className="habit-list" style={{ marginTop: 12 }}>
+                  <div className="habit-list jsx-4bb90035" >
                     {(groom.heightLogs || []).slice(0, 4).map((hl) => (
                       <div key={hl.id} className="habit-row checked">
                         <div className="habit-info">
@@ -1062,7 +1040,7 @@ function LooksPage({ data, setData, notify }) {
                   INSTANT VISUAL HEIGHT (+2.5 TO 3.5 CM PERCEIVED)
                 </div>
                 <h2>5 Optical &amp; Footwear Rules to Look Taller Today</h2>
-                <div className="habit-list" style={{ marginTop: 12 }}>
+                <div className="habit-list jsx-4bb90035" >
                   {VISUAL_HEIGHT_HACKS.map((vh) => {
                     const checked = Boolean(visualHeightChecks[vh.id]);
                     return (
@@ -1115,7 +1093,7 @@ function LooksPage({ data, setData, notify }) {
                 </Button>
               </div>
 
-              <div className="category-pills" style={{ marginTop: 12 }}>
+              <div className="category-pills jsx-4bb90035" >
                 {Object.keys(FACE_SHAPES_GUIDE).map((shape) => (
                   <button
                     type="button"
@@ -1128,7 +1106,7 @@ function LooksPage({ data, setData, notify }) {
                 ))}
               </div>
 
-              <div className="intro-callout" style={{ marginBottom: 14 }}>
+              <div className="intro-callout jsx-a0d4a037" >
                 <div className="callout-icon">✂</div>
                 <div>
                   <strong>{FACE_SHAPES_GUIDE[selectedFaceShape].label}</strong>
@@ -1217,7 +1195,7 @@ function LooksPage({ data, setData, notify }) {
               <Card>
                 <div className="eyebrow">BARBER CHEAT-SHEET</div>
                 <h2>What to tell your barber</h2>
-                <div className="habit-list" style={{ marginTop: 12 }}>
+                <div className="habit-list jsx-4bb90035" >
                   <div className="habit-row">
                     <div className="habit-info">
                       <strong>Show 2 clear photos (front &amp; side)</strong>
@@ -1253,7 +1231,7 @@ function LooksPage({ data, setData, notify }) {
               <Card>
                 <div className="eyebrow">28-DAY GROOMING CYCLE</div>
                 <h2>Haircut &amp; neckline tracker</h2>
-                <div className="form-grid" style={{ marginTop: 12 }}>
+                <div className="form-grid jsx-4bb90035" >
                   <Field label="Last Haircut Date">
                     <input
                       type="date"
@@ -1266,7 +1244,7 @@ function LooksPage({ data, setData, notify }) {
                   </Field>
                 </div>
                 {haircutStatus && (
-                  <p style={{ marginTop: 12 }}>
+                  <p className="jsx-4bb90035">
                     • Days since last haircut:{" "}
                     <strong>{haircutStatus.daysSince} days</strong>
                     <br />• Recommended next trim (4-week cycle):{" "}
@@ -1314,7 +1292,7 @@ function LooksPage({ data, setData, notify }) {
               </span>
             </div>
 
-            <div className="form-grid" style={{ marginTop: 12 }}>
+            <div className="form-grid jsx-4bb90035" >
               {[
                 [
                   "amCleanse",
@@ -1363,7 +1341,7 @@ function LooksPage({ data, setData, notify }) {
           <Card>
             <div className="eyebrow">AM &amp; PM SKINCARE BUILDER</div>
             <h2>Select your skin type</h2>
-            <div className="category-pills" style={{ marginTop: 12 }}>
+            <div className="category-pills jsx-4bb90035" >
               {Object.keys(SKIN_ROUTINES).map((st) => (
                 <button
                   type="button"
@@ -1387,7 +1365,7 @@ function LooksPage({ data, setData, notify }) {
                 {SKIN_ROUTINES[selectedSkinType].pm.map((line, i) => (
                   <p key={i}>• {line}</p>
                 ))}
-                <p style={{ marginTop: 8 }}>
+                <p className="jsx-0d69e4b1">
                   <strong>Weekly:</strong>{" "}
                   {SKIN_ROUTINES[selectedSkinType].weekly}
                 </p>
@@ -1413,7 +1391,7 @@ function LooksPage({ data, setData, notify }) {
                   {quickWinsDoneCount}/{WEEK1_QUICK_WINS.length}
                 </span>
               </div>
-              <div className="habit-list" style={{ marginTop: 12 }}>
+              <div className="habit-list jsx-4bb90035" >
                 {WEEK1_QUICK_WINS.map((qw) => {
                   const checked = Boolean(
                     groom.quickWins && groom.quickWins[qw.id]
@@ -1463,7 +1441,7 @@ function LooksPage({ data, setData, notify }) {
                   )}
                 </div>
               </div>
-              <div className="habit-list" style={{ marginTop: 12 }}>
+              <div className="habit-list jsx-4bb90035" >
                 {WEEKLY_GROOM_CHECKS.map((wg) => {
                   const checked = Boolean(
                     groom.weeklyChecks && groom.weeklyChecks[wg.id]
@@ -1533,8 +1511,8 @@ function LooksPage({ data, setData, notify }) {
               </div>
             </div>
 
-            <div style={{ marginTop: 10, marginBottom: 14 }}>
-              <div className="row-between" style={{ marginBottom: 6 }}>
+            <div className="jsx-a1836c1d">
+              <div className="row-between jsx-e7b13069" >
                 <strong>Closet Readiness ({wardrobeSummary.pct}%)</strong>
                 <span>
                   Est. Remaining Upgrade Cost:{" "}
@@ -1547,11 +1525,11 @@ function LooksPage({ data, setData, notify }) {
               <Progress value={wardrobeSummary.pct} />
             </div>
 
-            <div className="table-wrap" style={{ marginTop: 12 }}>
+            <div className="table-wrap jsx-4bb90035" >
               <table className="clean-table">
                 <thead>
                   <tr>
-                    <th style={{ width: 64 }}>Owned</th>
+                    <th className="jsx-09bcefcf">Owned</th>
                     <th>
                       Capsule Item (Shoulder seam must sit on shoulder bone)
                     </th>
@@ -1600,7 +1578,7 @@ function LooksPage({ data, setData, notify }) {
           <Card>
             <div className="eyebrow">PROPORTION &amp; VISUAL STRUCTURE</div>
             <h2>4-Point clothing fit audit for slim frames</h2>
-            <div className="habit-list" style={{ marginTop: 12 }}>
+            <div className="habit-list jsx-4bb90035" >
               {FIT_RULES_CHECKLIST.map((rule) => {
                 const checked = Boolean(fitChecks[rule.id]);
                 return (

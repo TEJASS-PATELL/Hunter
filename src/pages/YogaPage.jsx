@@ -469,7 +469,7 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
         </section>
 
         {/* LIVE STATS */}
-        <section className="stats-grid" style={{ gap: "20px" }}>
+        <section className="stats-grid jsx-640705be" >
           <div className="card stat-card blue">
             <div className="stat-top">
               <span className="stat-icon" aria-hidden="true">
@@ -529,21 +529,17 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
 
             <div className="stat-value">{completionPct}%</div>
 
-            <div
-              className="progress"
-              role="progressbar"
+            <progress
+              className="progress-meter"
               aria-label="Today's yoga completion"
-              aria-valuenow={completionPct}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <span style={{ width: `${completionPct}%` }} />
-            </div>
+              value={completionPct}
+              max={100}
+            />
           </div>
         </section>
 
         {/* TIMER & ANATOMY DASHBOARD */}
-        <section className="dashboard-grid" style={{ gap: "20px" }}>
+        <section className="dashboard-grid jsx-640705be" >
           {/* GUIDED HOLD TIMER */}
           <div className="card">
             <div className="section-head">
@@ -660,39 +656,19 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
               </div>
             </div>
 
-            <div
-              className="progress"
-              role="progressbar"
+            <progress
+              className="progress-meter"
               aria-label="Hold timer progress"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={
+              value={
                 initialSec > 0
                   ? Math.min(
                     100,
-                    Math.max(
-                      0,
-                      ((initialSec - timerSec) / initialSec) * 100
-                    )
+                    Math.max(0, ((initialSec - timerSec) / initialSec) * 100)
                   )
                   : 0
               }
-            >
-              <span
-                style={{
-                  width: `${initialSec > 0
-                    ? Math.min(
-                      100,
-                      Math.max(
-                        0,
-                        ((initialSec - timerSec) / initialSec) * 100
-                      )
-                    )
-                    : 0
-                    }%`,
-                }}
-              />
-            </div>
+              max={100}
+            />
 
             <div className="row-between">
               <label className="archive-toggle">
@@ -747,7 +723,7 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
               </span>
             </div>
 
-            <div className="yoga-anatomy-grid" style={{ gap: "16px" }}>
+            <div className="yoga-anatomy-grid jsx-c73cf845" >
               <div className="anatomy-box tight-box">
                 <span className="status-pill peach-pill">
                   01 <span className="yoga-icon">✦</span> Mobility Focus
@@ -777,7 +753,7 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
               </div>
             </div>
 
-            <div className="quest-week-row" style={{ gap: "8px" }}>
+            <div className="quest-week-row jsx-f17001c3" >
               {recent7Days.map((d) => (
                 <div
                   key={d.iso}
@@ -888,11 +864,8 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
 
         {/* DETAILED POSE CARDS */}
         <section
-          className="yoga-pose-list"
-          style={{
-            display: "grid",
-            gap: "20px",
-          }}
+          className="yoga-pose-list jsx-cff380b4"
+          
         >
           {filteredPoses.map((pose, index) => {
             const isPoseComplete = Array.from({
@@ -987,10 +960,7 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
                           </span>
 
                           <p
-                            style={{
-                              color: "var(--tx)",
-                              fontSize: "0.875rem",
-                            }}
+                            className="jsx-7bcf194f"
                           >
                             {step}
                           </p>
@@ -1106,8 +1076,8 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
           {openAccordion && (
             <div className="accordion-body">
               <div
-                className="avoid-grid"
-                style={{ gap: "16px" }}
+                className="avoid-grid jsx-c73cf845"
+                
               >
                 {AVOID_IN_APT.map((item, idx) => (
                   <div key={idx} className="avoid-card">
@@ -1119,10 +1089,7 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
                     <small>{item.reason}</small>
 
                     <small
-                      style={{
-                        color: "var(--tx)",
-                        fontWeight: 500,
-                      }}
+                      className="jsx-0812d0c7"
                     >
                       <span className="yoga-icon">✓</span>
                       Alternative: {item.alternative}
@@ -1132,8 +1099,8 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
               </div>
 
               <div
-                className="routine-step-box"
-                style={{ marginTop: "8px" }}
+                className="routine-step-box jsx-0d69e4b1"
+                
               >
                 <strong>
 

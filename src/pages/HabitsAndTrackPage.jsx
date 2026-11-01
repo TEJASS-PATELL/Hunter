@@ -316,7 +316,6 @@ function HabitsAndTrackPage({
   return (
     <>
       <Heading
-        eyebrow="CONSISTENCY OVER INTENSITY"
         title="Habits & daily tracker"
         description="Track your 100-point Comeback core, custom habits, 7-day consistency matrix, habit stacks, and daily time blocks."
         action={
@@ -446,7 +445,7 @@ function HabitsAndTrackPage({
               </div>
             </div>
 
-            <div className="stats-grid" style={{ marginBottom: 16 }}>
+            <div className="stats-grid jsx-29b7980a" >
               <Stat
                 icon="🛡"
                 label="1. Clean Streak Core"
@@ -507,8 +506,8 @@ function HabitsAndTrackPage({
                         {dm(item.title)}{" "}
                         {isMin && (
                           <span
-                            className="status-pill peach-pill"
-                            style={{ marginLeft: 6 }}
+                            className="status-pill peach-pill jsx-8cdcd88b"
+                            
                           >
                             Minimum Day Basic
                           </span>
@@ -566,9 +565,9 @@ function HabitsAndTrackPage({
                     }}
                   />
                 </Field>
-                <div style={{ marginTop: 8 }}>
+                <div className="jsx-0d69e4b1">
                   <Progress value={percent(dayObj.steps || 0, targetSteps)} />
-                  <div className="category-pills" style={{ marginTop: 8 }}>
+                  <div className="category-pills jsx-0d69e4b1" >
                     {[1000, 2500, targetSteps].map((val) => (
                       <button
                         type="button"
@@ -613,9 +612,9 @@ function HabitsAndTrackPage({
                     }}
                   />
                 </Field>
-                <div style={{ marginTop: 8 }}>
+                <div className="jsx-0d69e4b1">
                   <Progress value={percent(dayObj.waterL || 0, targetWater)} />
-                  <div className="category-pills" style={{ marginTop: 8 }}>
+                  <div className="category-pills jsx-0d69e4b1" >
                     {[
                       [0.25, "+250ml"],
                       [0.5, "+500ml"],
@@ -668,7 +667,7 @@ function HabitsAndTrackPage({
                     }}
                   />
                 </Field>
-                <div style={{ marginTop: 8 }}>
+                <div className="jsx-0d69e4b1">
                   <Progress
                     value={
                       dayObj.screenH > 0
@@ -676,7 +675,7 @@ function HabitsAndTrackPage({
                         : 0
                     }
                   />
-                  <div className="category-pills" style={{ marginTop: 8 }}>
+                  <div className="category-pills jsx-0d69e4b1" >
                     {[1, 2, targetScreen].map((hr) => (
                       <button
                         type="button"
@@ -713,9 +712,9 @@ function HabitsAndTrackPage({
                     }
                   />
                 </Field>
-                <div style={{ marginTop: 8 }}>
+                <div className="jsx-0d69e4b1">
                   <Progress value={percent(dayObj.sleepH || 0, 8)} />
-                  <div className="category-pills" style={{ marginTop: 8 }}>
+                  <div className="category-pills jsx-0d69e4b1" >
                     {[6.5, 7.5, 8].map((sh) => (
                       <button
                         type="button"
@@ -1083,8 +1082,8 @@ function HabitsAndTrackPage({
 
                   {/* Mini 7-day strip on each habit card */}
                   <div
-                    className="quest-week-row"
-                    style={{ marginTop: 10, marginBottom: 10 }}
+                    className="quest-week-row jsx-88424d34"
+                    
                   >
                     {stats.last7.map((d) => (
                       <div
@@ -1205,8 +1204,8 @@ function HabitsAndTrackPage({
             </div>
 
             <div
-              className="heading-btn-group"
-              style={{ marginTop: 12, marginBottom: 16 }}
+              className="heading-btn-group jsx-156c83db"
+              
             >
               <Button
                 kind="primary"
@@ -1301,12 +1300,12 @@ function HabitsAndTrackPage({
                   <tr>
                     <th>Core Habit / Pillar</th>
                     {last7Dates.map((d) => (
-                      <th key={d.iso} style={{ textAlign: "center" }}>
+                      <th key={d.iso} className="jsx-65f9d5a3">
                         <div>{d.shortDay}</div>
                         <small>{d.dayNum}</small>
                       </th>
                     ))}
-                    <th style={{ textAlign: "center" }}>7d Rate</th>
+                    <th className="jsx-65f9d5a3">7d Rate</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1315,7 +1314,7 @@ function HabitsAndTrackPage({
                       <strong>Daily Total Comeback Score</strong>
                     </td>
                     {last7Dates.map((d) => (
-                      <td key={d.iso} style={{ textAlign: "center" }}>
+                      <td key={d.iso} className="jsx-65f9d5a3">
                         <span
                           className={`status-pill ${
                             d.score >= 60 ? "complete" : ""
@@ -1325,7 +1324,7 @@ function HabitsAndTrackPage({
                         </span>
                       </td>
                     ))}
-                    <td style={{ textAlign: "center" }}>
+                    <td className="jsx-65f9d5a3">
                       <strong>{avg7DayScore} pts</strong>
                     </td>
                   </tr>
@@ -1347,13 +1346,13 @@ function HabitsAndTrackPage({
                             d.dayObj.c && d.dayObj.c[chk.id]
                           );
                           return (
-                            <td key={d.iso} style={{ textAlign: "center" }}>
+                            <td key={d.iso} className="jsx-65f9d5a3">
                               <button
                                 type="button"
-                                className={`check-circle ${
+                                className={`jsx-2d92f77e ${`check-circle ${
                                   isChecked ? "checked" : ""
-                                }`}
-                                style={{ margin: "0 auto" }}
+                                }`}`}
+                                
                                 onClick={() => {
                                   updateDay(d.iso, (prev) => ({
                                     ...prev,
@@ -1370,7 +1369,7 @@ function HabitsAndTrackPage({
                             </td>
                           );
                         })}
-                        <td style={{ textAlign: "center" }}>
+                        <td className="jsx-65f9d5a3">
                           <strong>{percent(doneCount, 7)}%</strong>
                         </td>
                       </tr>
@@ -1415,16 +1414,7 @@ function HabitsAndTrackPage({
               return (
                 <div
                   key={blockId}
-                  className={`schedule-edit-row ${isDone ? "checked" : ""}`}
-                  style={
-                    isCurrentNow
-                      ? {
-                          border: "1.5px solid var(--sage)",
-                          borderRadius: 12,
-                          padding: "8px 10px",
-                        }
-                      : undefined
-                  }
+                  className={`schedule-edit-row ${isDone ? "checked" : ""} ${isCurrentNow ? "current-time-block" : ""}`}
                 >
                   <button
                     type="button"

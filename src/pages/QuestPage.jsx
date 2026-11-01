@@ -86,11 +86,12 @@ function QuestPage({ data, today, onNavigate, notify }) {
   const [game, setGame] = useState(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem(QUEST_KEY) || "{}");
-      return { xp: 0, completed: {}, days: {}, ...saved };
+      return { xp: 0, completed: {}, days: {}, sideCompleted: {}, ...saved };
     } catch {
-      return { xp: 0, completed: {}, days: {} };
+      return { xp: 0, completed: {}, days: {}, sideCompleted: {} };
     }
   });
+  const claimLockRef = useRef(new Set());
 
   useEffect(() => {
     try {
@@ -104,6 +105,9 @@ function QuestPage({ data, today, onNavigate, notify }) {
   const dayNumber = getDayIndex(startDate, today);
   const quest = QUESTS[(dayNumber - 1) % QUESTS.length];
   const completedToday = Boolean(game.completed && game.completed[today]);
+  const completedSideQuests = Array.isArray(game.sideCompleted?.[today])
+    ? game.sideCompleted[today]
+    : [];
   const xp = Number(game.xp) || 0;
   const level = Math.floor(xp / 100) + 1;
   const levelProgress = xp % 100;
@@ -131,33 +135,63 @@ function QuestPage({ data, today, onNavigate, notify }) {
 
   const completeQuest = (qItem = quest) => {
     const isMain = qItem.id === quest.id;
+    const claimKey = `${today}:${qItem.id}`;
     if (completedToday && isMain) {
       notify("Main mission already claimed for today!");
       return;
     }
+    if (
+      claimLockRef.current.has(claimKey) ||
+      (!isMain && completedSideQuests.includes(qItem.id))
+    ) {
+      notify("This side quest has already been claimed today.");
+      return;
+    }
+    claimLockRef.current.add(claimKey);
 
-    setGame((prev) => ({
-      ...prev,
-      xp: (Number(prev.xp) || 0) + qItem.xp,
-      completed: isMain
-        ? { ...(prev.completed || {}), [today]: qItem.id }
-        : prev.completed,
-      days: { ...(prev.days || {}), [today]: true },
-    }));
+    setGame((prev) => {
+      const previousSideQuests =
+        prev.sideCompleted &&
+        typeof prev.sideCompleted === "object" &&
+        !Array.isArray(prev.sideCompleted)
+          ? prev.sideCompleted
+          : {};
+      const previousSideList = Array.isArray(previousSideQuests[today])
+        ? previousSideQuests[today]
+        : [];
+      return {
+        ...prev,
+        xp: (Number(prev.xp) || 0) + qItem.xp,
+        completed: isMain
+          ? { ...(prev.completed || {}), [today]: qItem.id }
+          : prev.completed,
+        days: { ...(prev.days || {}), [today]: true },
+        sideCompleted: isMain
+          ? previousSideQuests
+          : {
+              ...previousSideQuests,
+              [today]: [...previousSideList, qItem.id],
+            },
+      };
+    });
     notify(`+${qItem.xp} XP earned! Mission cleared: ${qItem.title}`);
   };
 
   return (
     <>
       <Heading
-        eyebrow="YOUR REAL-LIFE ADVENTURE"
         title="Comeback Quest"
         description="Small real-world missions. Earn XP, level up, and build a life you love waking up to."
         action={
           <Button
             onClick={() => {
               if (window.confirm("Reset Quest XP and mission history?")) {
-                setGame({ xp: 0, completed: {}, days: {} });
+                setGame({
+                  xp: 0,
+                  completed: {},
+                  days: {},
+                  sideCompleted: {},
+                });
                 notify("Quest progress reset");
               }
             }}
@@ -180,7 +214,7 @@ function QuestPage({ data, today, onNavigate, notify }) {
           <p>
             {100 - levelProgress} XP needed to unlock Level {level + 1}.
           </p>
-          <div style={{ maxWidth: 320, marginTop: 12 }}>
+          <div className="jsx-07db415b">
             <Progress value={levelProgress} />
           </div>
         </div>
@@ -295,6 +329,7 @@ function QuestPage({ data, today, onNavigate, notify }) {
           <div>
             <div className="eyebrow">SIDE QUESTS</div>
             <h2>Bonus actions you can do anytime</h2>
+            <p>Each side quest can earn XP once per day.</p>
           </div>
         </div>
         <div className="record-grid">
@@ -303,10 +338,20 @@ function QuestPage({ data, today, onNavigate, notify }) {
               <span className="record-symbol sage">{item.icon}</span>
               <div className="habit-info">
                 <strong>{item.title}</strong>
-                <small>{item.detail}</small>
+                <small>
+                  {item.detail}
+                  {completedSideQuests.includes(item.id)
+                    ? " · Claimed today"
+                    : ""}
+                </small>
               </div>
-              <Button onClick={() => completeQuest(item)}>
-                +{item.xp} XP
+              <Button
+                disabled={completedSideQuests.includes(item.id)}
+                onClick={() => completeQuest(item)}
+              >
+                {completedSideQuests.includes(item.id)
+                  ? "✓ Claimed"
+                  : `+${item.xp} XP`}
               </Button>
             </div>
           ))}

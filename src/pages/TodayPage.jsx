@@ -188,27 +188,64 @@ function TodayPage({
     });
   }, [data.days, data.moods, chartMetric, p, today]);
 
+  const chartInsights = useMemo(() => {
+    const logged = chartSeries.filter((point) => point.value > 0);
+    const currentWeek = chartSeries.slice(-7).filter((point) => point.value > 0);
+    const previousWeek = chartSeries.slice(0, 7).filter((point) => point.value > 0);
+    const average = (points) =>
+      points.length
+        ? points.reduce((sum, point) => sum + point.value, 0) / points.length
+        : null;
+    const bestDay = logged.reduce(
+      (best, point) => (best === null || point.value > best.value ? point : best),
+      null
+    );
+    return {
+      average: average(logged),
+      currentWeekAverage: average(currentWeek),
+      previousWeekAverage: average(previousWeek),
+      bestDay,
+    };
+  }, [chartSeries]);
+
+  const formatChartValue = (value) =>
+    chartMetric === "steps"
+      ? Math.round(value).toLocaleString()
+      : Number(value.toFixed(1));
+  const chartUnit =
+    chartMetric === "score"
+      ? "pts"
+      : chartMetric === "mood"
+      ? "/5"
+      : chartMetric === "sleep"
+      ? "h"
+      : "steps";
+
   const radarAxes = useMemo(() => {
     const habitPct = todayHabits.length
       ? percent(doneHabits, todayHabits.length)
-      : 60;
-    const sleepPct = Math.min(
-      100,
-      Math.round((safeNum(todayDayObj.sleepH, 7) / 8) * 100)
-    );
+      : 0;
+    const sleepHours = safeNum(todayDayObj.sleepH, 0);
+    const sleepPct =
+      sleepHours > 0 ? Math.min(100, Math.round((sleepHours / 8) * 100)) : 0;
     const bodyPct = Math.min(
       100,
       Math.round((todayBreakdown.fitnessBody / 32) * 100)
     );
-    const cleanPct = Math.min(100, streaks.cleanLast30 * 4);
-    const looksPct = todayDayObj.c?.skincare ? 90 : 45;
-    const mindPct = todayMood ? Number(todayMood.score) * 20 : 65;
+    const cleanPct = Math.min(100, Math.round((streaks.cleanLast30 / 30) * 100));
+    const skinStepsCount = todayDayObj.skinCareSteps
+      ? Object.values(todayDayObj.skinCareSteps).filter(Boolean).length
+      : 0;
+    const looksPct = todayDayObj.c?.skincare
+      ? 100
+      : Math.min(100, skinStepsCount * 50);
+    const mindPct = todayMood ? Number(todayMood.score) * 20 : 0;
     return [
       { label: "Habits", value: habitPct },
-      { label: "Body", value: bodyPct },
+      { label: "Fitness", value: bodyPct },
       { label: "Sleep", value: sleepPct },
       { label: "Clean", value: cleanPct },
-      { label: "Looks", value: looksPct },
+      { label: "Care", value: looksPct },
       { label: "Mind", value: mindPct },
     ];
   }, [
@@ -223,6 +260,26 @@ function TodayPage({
   const displayedScoredChecks = data.badDayMode
     ? SCORED_CHECKS.filter((item) => MINIMUM_DAY_IDS.includes(item.id))
     : SCORED_CHECKS;
+
+  const nextSteps = useMemo(() => {
+    const destinations = {
+      workout: ["Lifestyle", "Open workout"],
+      protein: ["Lifestyle", "Open nutrition"],
+      skincare: ["Looks", "Open care routine"],
+      braveSocial: ["Speak", "Open speaking practice"],
+      journal: ["Reflection", "Open reflection"],
+    };
+    return SCORED_CHECKS.filter(
+      (item) => item.id !== "noPorn" && !todayDayObj.c?.[item.id]
+    )
+      .sort((a, b) => b.weight - a.weight)
+      .slice(0, 3)
+      .map((item) => ({
+        ...item,
+        destination: destinations[item.id]?.[0] || "Habits",
+        action: destinations[item.id]?.[1] || "Open daily tracker",
+      }));
+  }, [todayDayObj.c]);
 
   const activeControlLoops = useMemo(() => {
     const activeIds = data.settings?.activeLoops || [];
@@ -328,13 +385,6 @@ function TodayPage({
   return (
     <>
       <Heading
-        eyebrow={`${new Date()
-          .toLocaleDateString(undefined, {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })
-          .toUpperCase()} · DAY ${dayNumber} OF 90`}
         title={`${greeting}, ${p.name || "Bhai"}.`}
         description="A little structure. A little care. Your 90-day comeback, one day at a time."
         action={
@@ -415,16 +465,16 @@ function TodayPage({
       </div>
 
       {/* LIVE SCHEDULE ANCHOR & OPTIONAL INLINE 25M POMODORO */}
-      <Card style={{ marginBottom: 18 }}>
+      <Card className="jsx-2f23af6b">
         <div
-          className="row-between"
-          style={{ flexWrap: "wrap", gap: 12, alignItems: "center" }}
+          className="row-between jsx-391bc613"
+          
         >
           <div>
             <span className="eyebrow">
               LIVE SCHEDULE ANCHOR ({nowTimeStr}) · {todayWorkoutPlan.day.toUpperCase()}
             </span>
-            <h3 style={{ margin: "4px 0" }}>
+            <h3 className="jsx-d5945cb3">
               Now ({scheduleBlocks.current?.time}):{" "}
               {scheduleBlocks.current?.label}
             </h3>
@@ -450,11 +500,7 @@ function TodayPage({
 
         {showInlinePomodoro && (
           <div
-            style={{
-              marginTop: 14,
-              paddingTop: 14,
-              borderTop: "1px solid var(--line)",
-            }}
+            className="jsx-93c21d26"
           >
             <CountdownTimer
               defaultSeconds={1500}
@@ -482,7 +528,7 @@ function TodayPage({
       {yesterdayScore !== null &&
         yesterdayScore < 50 &&
         todayBreakdown.total < 50 && (
-          <div className="intro-callout" style={{ marginBottom: 18 }}>
+          <div className="intro-callout jsx-2f23af6b" >
             <div className="callout-icon">↻</div>
             <div>
               <strong>
@@ -523,7 +569,7 @@ function TodayPage({
         />
         <div
           onClick={onMood}
-          style={{ cursor: "pointer" }}
+          className="jsx-74fa97c2"
           title="Click to log mood & energy check-in"
         >
           <Stat
@@ -547,7 +593,7 @@ function TodayPage({
       </div>
 
       {/* QUICK BIOMETRIC & FUEL LOGGING STRIP */}
-      <Card style={{ marginBottom: 18 }}>
+      <Card className="jsx-2f23af6b">
         <div className="section-head">
           <div>
             <div className="eyebrow">ONE-TAP DAILY NUMBERS DOCK</div>
@@ -633,6 +679,51 @@ function TodayPage({
               ))}
             </div>
           </div>
+          <div className="chart-insights" aria-label="Trend summary">
+            <div className="chart-insight">
+              <span>14-day logged avg</span>
+              <strong>
+                {chartInsights.average === null
+                  ? "—"
+                  : `${formatChartValue(chartInsights.average)} ${chartUnit}`}
+              </strong>
+            </div>
+            <div className="chart-insight">
+              <span>Last 7-day avg</span>
+              <strong>
+                {chartInsights.currentWeekAverage === null
+                  ? "—"
+                  : `${formatChartValue(chartInsights.currentWeekAverage)} ${chartUnit}`}
+              </strong>
+            </div>
+            <div className="chart-insight">
+              <span>vs previous 7 days</span>
+              <strong>
+                {chartInsights.currentWeekAverage === null ||
+                chartInsights.previousWeekAverage === null
+                  ? "Need more data"
+                  : `${chartInsights.currentWeekAverage -
+                      chartInsights.previousWeekAverage >=
+                    0
+                      ? "+"
+                      : ""}${formatChartValue(
+                      chartInsights.currentWeekAverage -
+                        chartInsights.previousWeekAverage
+                    )} ${chartUnit}`}
+              </strong>
+            </div>
+            <div className="chart-insight">
+              <span>Best logged day</span>
+              <strong>
+                {chartInsights.bestDay
+                  ? `${formatChartValue(chartInsights.bestDay.value)} ${chartUnit}`
+                  : "—"}
+              </strong>
+              {chartInsights.bestDay && (
+                <small>{chartInsights.bestDay.fullLabel}</small>
+              )}
+            </div>
+          </div>
           <ModernAreaChart
             data={chartSeries}
             maxVal={
@@ -661,12 +752,47 @@ function TodayPage({
             <div>
               <div className="eyebrow">SCORE &amp; BALANCE</div>
               <h2>Today&apos;s 100-pt breakdown</h2>
-              <p>How your daily actions add up across 4 pillars.</p>
+              <p>Earned points, progress to each pillar target, and room to grow.</p>
             </div>
           </div>
           <ModernDonutChart breakdown={todayBreakdown} />
         </Card>
       </div>
+
+      <Card className="next-step-card">
+        <div className="section-head">
+          <div>
+            <div className="eyebrow">PICK ONE, NOT EVERYTHING</div>
+            <h2>Your next best steps</h2>
+            <p>Highest-point unfinished actions, based on today&apos;s check-ins.</p>
+          </div>
+          <span className="status-pill">{nextSteps.length} suggestions</span>
+        </div>
+        {nextSteps.length ? (
+          <div className="next-step-list">
+            {nextSteps.map((step) => (
+              <div className="next-step-item" key={step.id}>
+                <span className="next-step-points">+{step.weight}</span>
+                <div>
+                  <strong>{dm(step.title)}</strong>
+                  <small>{dm(step.sub)}</small>
+                </div>
+                <Button onClick={() => onNavigate(step.destination)}>
+                  {step.action} →
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="intro-callout">
+            <div className="callout-icon">✓</div>
+            <div>
+              <strong>All scored actions are checked off.</strong>
+              <p>Keep it steady; you don&apos;t need to add more today.</p>
+            </div>
+          </div>
+        )}
+      </Card>
 
       <div className="dashboard-grid">
         <Card className="habits-panel">
@@ -872,8 +998,8 @@ function TodayPage({
 
             {/* Inline Quick Task Input */}
             <form
-              className="inline-add-row"
-              style={{ marginBottom: 12 }}
+              className="inline-add-row jsx-5beb8fbe"
+              
               onSubmit={handleQuickAddTask}
             >
               <input
@@ -943,6 +1069,7 @@ function TodayPage({
               <div>
                 <div className="eyebrow">6-AXIS LIFE RADAR</div>
                 <h2>Holistic balance</h2>
+                <p>Unlogged areas show 0 · Clean reflects your last 30 days.</p>
               </div>
               {activeGoals && activeGoals.length > 0 && (
                 <button

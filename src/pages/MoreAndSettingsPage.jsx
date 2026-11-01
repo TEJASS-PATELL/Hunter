@@ -406,7 +406,7 @@ function MoreAndSettingsPage({
               <div className="eyebrow">DEEP WORK POMODORO</div>
               <h2>Distraction-free focus sprint</h2>
 
-              <div className="category-pills" style={{ marginTop: 10 }}>
+              <div className="category-pills jsx-e5a6d3c3" >
                 {POMODORO_PRESETS.map((pr) => (
                   <button
                     type="button"
@@ -430,7 +430,7 @@ function MoreAndSettingsPage({
                 />
               </Field>
 
-              <div style={{ marginTop: 14 }}>
+              <div className="jsx-dffc4db2">
                 <CountdownTimer
                   defaultSeconds={selectedPreset.sec}
                   label={taskName}
@@ -442,20 +442,16 @@ function MoreAndSettingsPage({
 
               {/* Manual offline study logger */}
               <div
-                className="inline-add-row"
-                style={{
-                  marginTop: 16,
-                  paddingTop: 12,
-                  borderTop: "1px solid var(--line)",
-                }}
+                className="inline-add-row jsx-d18d96ac"
+                
               >
                 <input
                   type="number"
                   min="5"
                   max="240"
                   step="5"
-                  className="clean-input"
-                  style={{ maxWidth: 110 }}
+                  className="clean-input jsx-068ccabc"
+                  
                   value={manualMins}
                   onChange={(e) => setManualMins(safeNum(e.target.value, 45))}
                 />
@@ -470,7 +466,7 @@ function MoreAndSettingsPage({
             <Card>
               <div className="eyebrow">CIRCADIAN SLEEP ANCHORS</div>
               <h2>Sleep window &amp; 90-min cycle planner</h2>
-              <div className="form-grid" style={{ marginTop: 12 }}>
+              <div className="form-grid jsx-4bb90035" >
                 <Field label="Fixed Wake Time">
                   <input
                     type="time"
@@ -490,8 +486,8 @@ function MoreAndSettingsPage({
               </div>
 
               <div
-                className="category-pills"
-                style={{ marginTop: 12, marginBottom: 8 }}
+                className="category-pills jsx-f6adec06"
+                
               >
                 <button
                   type="button"
@@ -511,7 +507,7 @@ function MoreAndSettingsPage({
                 </button>
               </div>
 
-              <p style={{ marginTop: 10 }}>
+              <p className="jsx-e5a6d3c3">
                 • <strong>Morning Sunlight:</strong> Step outside for 10–20 mins
                 before <strong>{sleepMetrics.sunlightWindowEnd}</strong>.
                 <br />• <strong>Caffeine Cutoff:</strong> Stop tea, coffee, and
@@ -614,7 +610,7 @@ function MoreAndSettingsPage({
               </div>
             </div>
 
-            <div className="habit-list" style={{ marginTop: 14 }}>
+            <div className="habit-list jsx-dffc4db2" >
               {CONTROL_LOOPS.map((item) => {
                 const active = activeLoops.includes(item.id);
                 return (
@@ -668,7 +664,7 @@ function MoreAndSettingsPage({
                 />
               </Field>
               <Field label="THEN (I will immediately...)">
-                <div className="inline-add-row" style={{ marginTop: 0 }}>
+                <div className="inline-add-row jsx-ec0f7ffa" >
                   <input
                     type="text"
                     placeholder="e.g. Put phone on the living room table & do 15 push-ups"
@@ -684,7 +680,7 @@ function MoreAndSettingsPage({
               </Field>
             </div>
 
-            <div className="habit-list" style={{ marginTop: 14 }}>
+            <div className="habit-list jsx-dffc4db2" >
               {(data.ifThen || []).map((rule) => (
                 <div className="habit-row checked" key={rule.id}>
                   <span className="status-pill complete">IF → THEN</span>
@@ -715,7 +711,7 @@ function MoreAndSettingsPage({
             <Card>
               <div className="eyebrow">TEST FIRST, DON&apos;T GUESS</div>
               <h2>Essential blood tests to discuss with a doctor</h2>
-              <div className="habit-list" style={{ marginTop: 12 }}>
+              <div className="habit-list jsx-4bb90035" >
                 {HEALTH_TESTS.map((t, i) => (
                   <div className="habit-row" key={i}>
                     <div className="habit-info">
@@ -730,7 +726,7 @@ function MoreAndSettingsPage({
             <Card>
               <div className="eyebrow">EVIDENCE-BASED SUPPLEMENT TIERS</div>
               <h2>What works vs. what to avoid</h2>
-              <div className="stack-col" style={{ marginTop: 12 }}>
+              <div className="stack-col jsx-4bb90035" >
                 {SUPPLEMENT_TIERS.map((st, i) => (
                   <div key={i} className="routine-step-box">
                     <strong>{st.tier}</strong>
@@ -763,7 +759,7 @@ function MoreAndSettingsPage({
               )}
             </div>
 
-            <div className="habit-list" style={{ marginTop: 12 }}>
+            <div className="habit-list jsx-4bb90035" >
               {LAB_MARKERS_GUIDE.map((m) => {
                 const rawVal = labValues[m.id] ?? "";
                 const st = getMarkerStatus(m, rawVal);
@@ -780,8 +776,8 @@ function MoreAndSettingsPage({
                       <input
                         type="number"
                         step="0.1"
-                        className="clean-input"
-                        style={{ width: 110 }}
+                        className="clean-input jsx-148b84d6"
+                        
                         placeholder={m.unit}
                         value={rawVal}
                         onChange={(e) => updateLabValue(m.id, e.target.value)}
@@ -807,7 +803,7 @@ function MoreAndSettingsPage({
             <Card>
               <div className="eyebrow">SYSTEM PREFERENCES &amp; PRIVACY</div>
               <h2>Discreet mode, Bad Day mode &amp; daily targets</h2>
-              <div className="habit-list" style={{ marginTop: 12 }}>
+              <div className="habit-list jsx-4bb90035" >
                 <div
                   className={`habit-row ${p.discreet ? "checked" : ""}`}
                 >
@@ -855,8 +851,8 @@ function MoreAndSettingsPage({
               </div>
 
               <div
-                className="form-grid three-col-grid"
-                style={{ marginTop: 14 }}
+                className="form-grid three-col-grid jsx-dffc4db2"
+                
               >
                 <Field label="Daily Steps Target">
                   <input
@@ -909,22 +905,22 @@ function MoreAndSettingsPage({
             <Card>
               <div className="eyebrow">100% OFFLINE LOCAL DATA VAULT</div>
               <h2>Backup, restore or reset your data</h2>
-              <p style={{ marginTop: 8 }}>
+              <p className="jsx-0d69e4b1">
                 All your habits, logs, journals, and metrics stay privately in
                 your browser&apos;s local storage. Export a JSON backup anytime.
               </p>
 
-              <div className="record-actions" style={{ marginTop: 16 }}>
+              <div className="record-actions jsx-4c0544d5" >
                 <Button kind="primary" onClick={exportData}>
                   ⬇ Export JSON Backup
                 </Button>
 
-                <label className="btn secondary" style={{ cursor: "pointer" }}>
+                <label className="btn secondary jsx-74fa97c2" >
                   ⬆ Restore from Backup
                   <input
                     type="file"
                     accept="application/json,.json"
-                    style={{ display: "none" }}
+                    className="jsx-5790ffba"
                     onChange={(e) => importData(e.target.files?.[0])}
                   />
                 </label>
@@ -933,8 +929,8 @@ function MoreAndSettingsPage({
               </div>
 
               <small
-                className="muted-text"
-                style={{ display: "block", marginTop: 14 }}
+                className="muted-text jsx-bd6f9cbb"
+                
               >
                 {DISCLAIMER_TEXT}
               </small>

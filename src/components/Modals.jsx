@@ -127,7 +127,7 @@ function UrgeSOSModal({ data, setData, today, dm, updateDay, onClose, notify }) 
   return (
     <Modal title={dm("🛡 Urge SOS — 10-Minute Rescue")} onClose={onClose}>
       <div className="record-form">
-        <div className="tabs" style={{ marginBottom: 14 }}>
+        <div className="tabs jsx-a0d4a037" >
           <button
             type="button"
             className={mode === "sos" ? "selected" : ""}
@@ -318,7 +318,7 @@ function ProfileModal({ profile, onClose, onSave }) {
             />
           </Field>
         </div>
-        <label className="archive-toggle" style={{ marginTop: 14 }}>
+        <label className="archive-toggle jsx-dffc4db2" >
           <input
             type="checkbox"
             checked={form.discreet}

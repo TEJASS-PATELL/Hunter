@@ -404,10 +404,11 @@ function ResetAndSOSPage({
                     <div className="trigger-row" key={label}>
                       <span>{dm(label)}</span>
                       <div className="trigger-track">
-                        <span
-                          style={{
-                            width: `${percent(count, triggers[0][1])}%`,
-                          }}
+                        <progress
+                          className="trigger-meter"
+                          value={percent(count, triggers[0][1])}
+                          max={100}
+                          aria-label={`${label} frequency`}
                         />
                       </div>
                       <b>{count}</b>
@@ -415,27 +416,19 @@ function ResetAndSOSPage({
                   ))}
 
                   {locationPatterns.length > 0 && (
-                    <div
-                      style={{
-                        marginTop: 18,
-                        paddingTop: 12,
-                        borderTop: "1px solid var(--line)",
-                      }}
-                    >
-                      <div className="eyebrow" style={{ marginBottom: 8 }}>
+                    <div className="location-patterns">
+                      <div className="eyebrow jsx-16949d4d" >
                         HIGH-RISK LOCATIONS TO GUARD
                       </div>
                       {locationPatterns.map(([loc, cnt]) => (
                         <div className="trigger-row" key={loc}>
                           <span>📍 {loc}</span>
                           <div className="trigger-track">
-                            <span
-                              style={{
-                                width: `${percent(
-                                  cnt,
-                                  locationPatterns[0][1]
-                                )}%`,
-                              }}
+                            <progress
+                              className="trigger-meter"
+                              value={percent(cnt, locationPatterns[0][1])}
+                              max={100}
+                              aria-label={`${loc} frequency`}
                             />
                           </div>
                           <b>{cnt}</b>
@@ -471,7 +464,7 @@ function ResetAndSOSPage({
                 </Button>
               </div>
 
-              <div style={{ marginBottom: 12 }}>
+              <div className="jsx-5beb8fbe">
                 <Progress
                   value={percent(activeShieldsCount, ENV_CHECKLIST.length)}
                 />
@@ -651,7 +644,7 @@ function ResetAndSOSPage({
               </span>
             </div>
 
-            <div className="category-pills" style={{ marginBottom: 14 }}>
+            <div className="category-pills jsx-a0d4a037" >
               {Object.entries(BREATH_PATTERNS).map(([key, obj]) => (
                 <button
                   type="button"
@@ -664,37 +657,14 @@ function ResetAndSOSPage({
               ))}
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "24px 12px",
-                background: "var(--canvas)",
-                borderRadius: 16,
-                marginBottom: 14,
-              }}
-            >
+            <div className="breathing-guide-stage">
               <div
-                style={{
-                  width: 148,
-                  height: 148,
-                  borderRadius: "50%",
-                  border: `4px solid ${currentPhase.color}`,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transform: `scale(${
-                    breathRunning ? currentPhase.scale : 1
-                  })`,
-                  transition: "transform 0.9s ease, border-color 0.4s ease",
-                  background: "var(--paper)",
-                }}
+                className={`breathing-guide-orb ${breathRunning ? "is-running" : ""} ${currentPhase.scale > 1 ? "phase-expand" : "phase-contract"}`}
+                data-mode={breathMode}
+                data-phase={phaseIdx}
               >
-                <strong style={{ fontSize: "2rem" }}>{phaseSecLeft}s</strong>
-                <small className="muted-text" style={{ textAlign: "center" }}>
+                <strong className="breathing-guide-time">{phaseSecLeft}s</strong>
+                <small className="muted-text jsx-65f9d5a3" >
                   {breathRunning ? currentPhase.name : "Tap Start below"}
                 </small>
               </div>
@@ -723,7 +693,7 @@ function ResetAndSOSPage({
           <Card>
             <div className="eyebrow">10-MINUTE URGE SURFING WAVE</div>
             <h2>Outlast the peak &amp; log your victory</h2>
-            <p style={{ marginBottom: 12 }}>
+            <p className="jsx-5beb8fbe">
               Every urge wave peaks and drops within 10 minutes if you do not
               feed it with screen stimulation.
             </p>
@@ -737,12 +707,8 @@ function ResetAndSOSPage({
             />
 
             <div
-              className="form-grid"
-              style={{
-                marginTop: 16,
-                paddingTop: 14,
-                borderTop: "1px solid var(--line)",
-              }}
+              className="form-grid jsx-655d124c"
+              
             >
               <Field label="What triggered the wave?">
                 <select
@@ -806,8 +772,8 @@ function ResetAndSOSPage({
             </div>
 
             <div
-              className="row-between"
-              style={{ marginTop: 12, flexWrap: "wrap", gap: 10 }}
+              className="row-between jsx-b08e79e1"
+              
             >
               <label className="archive-toggle">
                 <input
@@ -847,7 +813,7 @@ function ResetAndSOSPage({
                 <Button onClick={() => setDoneSteps({})}>Reset Steps</Button>
               </div>
 
-              <div className="habit-list" style={{ marginTop: 12 }}>
+              <div className="habit-list jsx-4bb90035" >
                 {URGE_STEPS.map((s) => {
                   const checked = Boolean(doneSteps[s.step]);
                   return (
@@ -883,7 +849,7 @@ function ResetAndSOSPage({
               <Card>
                 <div className="eyebrow">5-4-3-2-1 SENSORY GROUNDING</div>
                 <h2>Pull your mind back into the room</h2>
-                <div className="stack-col" style={{ marginTop: 12 }}>
+                <div className="stack-col jsx-4bb90035" >
                   <Field label="👀 5 Things you can SEE right now">
                     <input
                       type="text"

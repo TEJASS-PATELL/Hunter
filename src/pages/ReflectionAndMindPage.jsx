@@ -397,7 +397,7 @@ function ReflectionAndMindPage({
           ===================================================================== */}
       {subTab === "insights" && (
         <>
-          <div className="stats-grid" style={{ marginBottom: 16 }}>
+          <div className="stats-grid jsx-29b7980a" >
             <Stat
               icon="♡"
               label={`Avg Mood (${range}d)`}
@@ -595,11 +595,11 @@ function ReflectionAndMindPage({
               </span>
             </div>
 
-            <div style={{ marginTop: 10, marginBottom: 16 }}>
+            <div className="jsx-f2a85743">
               <Progress value={percent(completedLadderCount, 10)} />
             </div>
 
-            <div className="habit-list" style={{ marginTop: 14 }}>
+            <div className="habit-list jsx-dffc4db2" >
               {EXPOSURE_LADDER.map((item) => {
                 const stepObj = ladder[item.id] || {};
                 const done = Boolean(stepObj.done);
@@ -607,9 +607,9 @@ function ReflectionAndMindPage({
 
                 return (
                   <div
-                    className={`habit-row ${done ? "checked" : ""}`}
+                    className={`jsx-714f3452 ${`habit-row ${done ? "checked" : ""}`}`}
                     key={item.id}
-                    style={{ alignItems: "flex-start" }}
+                    
                   >
                     <button
                       type="button"
@@ -619,15 +619,15 @@ function ReflectionAndMindPage({
                       {done ? "✓" : ""}
                     </button>
 
-                    <div className="habit-info" style={{ flex: 1 }}>
+                    <div className="habit-info jsx-634a28be" >
                       <strong>
                         Step {item.step}: {item.title}
                       </strong>
                       <small>{item.desc}</small>
                       <input
                         type="text"
-                        className="clean-input"
-                        style={{ marginTop: 8, fontSize: "0.85rem" }}
+                        className="clean-input jsx-03c8200c"
+                        
                         placeholder="Quick note: How did it feel when you tried this?"
                         value={stepObj.note || ""}
                         onChange={(e) =>
@@ -671,7 +671,7 @@ function ReflectionAndMindPage({
           <Card>
             <div className="eyebrow">COGNITIVE RESTRUCTURING</div>
             <h2>Reframe automatic negative thoughts</h2>
-            <div className="stack-col" style={{ marginTop: 14 }}>
+            <div className="stack-col jsx-dffc4db2" >
               <Field label="1. Situation (What happened?)">
                 <input
                   type="text"
@@ -790,7 +790,7 @@ function ReflectionAndMindPage({
                 description="Write down anxious thoughts to separate facts from fear."
               />
             ) : (
-              <div className="stack-col" style={{ marginTop: 12 }}>
+              <div className="stack-col jsx-4bb90035" >
                 {(data.thoughts || []).map((t) => {
                   const distLabel =
                     COGNITIVE_DISTORTIONS.find((d) => d.id === t.distortion)
@@ -876,8 +876,8 @@ function ReflectionAndMindPage({
 
             {/* Live Score Preview Bar */}
             <div
-              className="mini-stat-row"
-              style={{ marginTop: 12, marginBottom: 16 }}
+              className="mini-stat-row jsx-156c83db"
+              
             >
               <div>
                 <span className="mini-stat-number">
@@ -899,7 +899,7 @@ function ReflectionAndMindPage({
 
             {/* Crisis Safety Callout if PHQ-9 Question 9 > 0 */}
             {activeScreen === "phq9" && phqAnswers[8] > 0 && (
-              <div className="intro-callout" style={{ marginBottom: 16 }}>
+              <div className="intro-callout jsx-29b7980a" >
                 <div className="callout-icon">♡</div>
                 <div>
                   <strong>You matter, and confidential support is available right now</strong>
@@ -921,7 +921,7 @@ function ReflectionAndMindPage({
                   return (
                     <div key={idx} className="audit-q-box">
                       <strong>{q}</strong>
-                      <div className="category-pills" style={{ marginTop: 8 }}>
+                      <div className="category-pills jsx-0d69e4b1" >
                         {[
                           [0, "Not at all (0)"],
                           [1, "Several days (1)"],
@@ -981,7 +981,7 @@ function ReflectionAndMindPage({
                 description="Save a biweekly PHQ-9 or GAD-7 check above to track your progress over the 90 days."
               />
             ) : (
-              <div className="habit-list" style={{ marginTop: 12 }}>
+              <div className="habit-list jsx-4bb90035" >
                 {(data.mentalCheckins || []).map((mc) => (
                   <div className="habit-row checked" key={mc.id}>
                     <span className="status-pill complete">{mc.type}</span>
