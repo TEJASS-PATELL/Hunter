@@ -1749,6 +1749,7 @@ const NAV = [
   ["Today", "⌂", "Daily overview, 90-day score & modern charts"],
   ["Habits", "◉", "Custom habits + full Comeback 90 daily tracker"],
   ["Quest", "✦", "Gamified real-life XP missions & level"],
+  ["Rank", "⚔", "Long-term levels, hunter classes & milestone rewards"],
   ["Lifestyle", "✳", "Workouts, TDEE calculator, Indian diet & care routines"],
   ["Yoga", "✾", "Anterior Pelvic Tilt (APT) fix, daily yoga flow & hold timer"],
   ["Looks", "◌", "Face & posture routine, audit, hair, skin & wardrobe"],

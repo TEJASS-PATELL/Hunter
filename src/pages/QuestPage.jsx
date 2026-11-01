@@ -1,105 +1,19 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useRef } from "react";
 import {
-  STORAGE_KEY,
-  QUEST_KEY,
-  SCHEMA_VERSION,
-  WEEKDAY_KEYS,
-  todayISO,
-  uid,
-  parseLocalISO,
   addDaysISO,
-  dayDiff,
   getDayIndex,
   getWeekdayShort,
-  fmtDate,
-  percent,
-  safeNum,
-  discreetText,
-  DISCLAIMER_TEXT,
-  QUOTES,
-  MINIMUM_DAY_IDS,
-  SCORED_CHECKS,
-  LIFE_BASICS,
-  CONTROL_LOOPS,
-  FACE_HABITS,
-  DEFAULT_SCHEDULE,
-  MOOD_ACTIVITIES,
-  URGE_STEPS,
-  URGE_TRIGGERS,
-  URGE_LOCATIONS,
-  SOS_TEXT_TEMPLATES,
-  ENV_CHECKLIST,
-  HOME_WORKOUT_PLAN,
-  YOGA_POSES,
-  AVOID_IN_APT,
-  GYM_WORKOUT_PLAN,
-  GYM_DARR_TIPS,
-  FRAME_BONE_CONTENT,
-  CALCIUM_TABLE,
-  PROTEIN_TABLE,
-  DIET_PLANS,
-  WEIGHT_GAIN_TIPS,
-  FACE_SACH_CARD,
-  FACE_AUDIT_QUESTIONS,
-  FACE_ROUTINE_STEPS,
-  FACE_SHAPES_GUIDE,
-  SKIN_ROUTINES,
-  WARDROBE_CAPSULE,
-  WEEK1_QUICK_WINS,
-  WEEKLY_GROOM_CHECKS,
-  EXPOSURE_LADDER,
-  PHQ9_QUESTIONS,
-  GAD7_QUESTIONS,
-  ROADMAP_PHASES,
   QUESTS,
-  HEALTH_TESTS,
-  SUPPLEMENT_TIERS,
-  createEmptyDay,
-  createInitialData,
-  readUnifiedStore,
-  calcDailyScoreBreakdown,
-  calcDailyScore,
-  calcStreaks,
-  calcBodyMetrics,
-  buildSmoothSvgPath,
-  ModernAreaChart,
-  ModernDonutChart,
-  ModernRadarChart,
-  Icon,
   Button,
   Card,
   Heading,
-  Empty,
   Progress,
-  Field,
-  Modal,
   Stat,
-  Accordion,
-  CountdownTimer,
-  Heatmap90,
-  NAV,
-  DAILY_HOME_WORKOUTS,
-  QUICK_PROTEIN_FOODS,
 } from "../shared";
+import { getClassForLevel, getLevelProgress } from "../progression.js";
 
-function QuestPage({ data, today, onNavigate, notify }) {
-  const [game, setGame] = useState(() => {
-    try {
-      const saved = JSON.parse(window.localStorage.getItem(QUEST_KEY) || "{}");
-      return { xp: 0, completed: {}, days: {}, sideCompleted: {}, ...saved };
-    } catch {
-      return { xp: 0, completed: {}, days: {}, sideCompleted: {} };
-    }
-  });
+function QuestPage({ data, game, setGame, today, notify, onResetProgress }) {
   const claimLockRef = useRef(new Set());
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(QUEST_KEY, JSON.stringify(game));
-    } catch {
-      /* ignore quota errors */
-    }
-  }, [game]);
 
   const startDate = (data.profile && data.profile.startDate) || today;
   const dayNumber = getDayIndex(startDate, today);
@@ -109,20 +23,11 @@ function QuestPage({ data, today, onNavigate, notify }) {
     ? game.sideCompleted[today]
     : [];
   const xp = Number(game.xp) || 0;
-  const level = Math.floor(xp / 100) + 1;
-  const levelProgress = xp % 100;
+  const levelProgress = getLevelProgress(xp);
+  const currentClass = getClassForLevel(levelProgress.level);
   const completedDays = Object.keys(game.days || {}).filter(
     (d) => game.days[d]
   ).length;
-
-  const rankTitle =
-    level < 3
-      ? "Rookie Builder"
-      : level < 6
-      ? "Rising Comeback"
-      : level < 10
-      ? "Elite Architect"
-      : "Legendary Master";
 
   const recentDays = Array.from({ length: 7 }, (_, index) => {
     const iso = addDaysISO(today, -(6 - index));
@@ -185,13 +90,20 @@ function QuestPage({ data, today, onNavigate, notify }) {
         action={
           <Button
             onClick={() => {
-              if (window.confirm("Reset Quest XP and mission history?")) {
+              if (
+                window.confirm(
+                  "Reset Quest XP, class progress, and reward history?"
+                )
+              ) {
                 setGame({
                   xp: 0,
                   completed: {},
                   days: {},
                   sideCompleted: {},
+                  dailyWinRewards: {},
+                  levelRewards: {},
                 });
+                onResetProgress?.();
                 notify("Quest progress reset");
               }
             }}
@@ -204,7 +116,8 @@ function QuestPage({ data, today, onNavigate, notify }) {
       <div className="lifestyle-banner">
         <div>
           <span className="eyebrow">
-            LEVEL {level} · {rankTitle.toUpperCase()}
+            CLASS {currentClass.rank} · {currentClass.title.toUpperCase()} ·
+            LEVEL {levelProgress.level}
           </span>
           <h2>
             Stack small wins until they
@@ -212,14 +125,17 @@ function QuestPage({ data, today, onNavigate, notify }) {
             <em>become your default.</em>
           </h2>
           <p>
-            {100 - levelProgress} XP needed to unlock Level {level + 1}.
+            {(
+              levelProgress.levelRequirementXP - levelProgress.levelProgressXP
+            ).toLocaleString()}{" "}
+            XP needed to unlock Level {levelProgress.level + 1}.
           </p>
           <div className="jsx-07db415b">
-            <Progress value={levelProgress} />
+            <Progress value={levelProgress.progressPercent} />
           </div>
         </div>
         <div className="lifestyle-orbit">
-          <span>LVL {level}</span>
+          <span>CLASS {currentClass.rank}</span>
           <i>✦</i>
           <b>{xp} TOTAL XP</b>
         </div>
@@ -230,7 +146,7 @@ function QuestPage({ data, today, onNavigate, notify }) {
           icon="✦"
           label="Total experience"
           value={`${xp} XP`}
-          detail={`${levelProgress}/100 XP in Level ${level}`}
+          detail={`${levelProgress.levelProgressXP}/${levelProgress.levelRequirementXP} XP in Level ${levelProgress.level}`}
           color="sage"
         />
         <Stat
@@ -243,7 +159,7 @@ function QuestPage({ data, today, onNavigate, notify }) {
         <Stat
           icon="⚑"
           label="Current rank"
-          value={rankTitle}
+          value={`${currentClass.rank}-Class`}
           detail="Earned in the real world"
           color="blue"
         />

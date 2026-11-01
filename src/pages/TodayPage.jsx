@@ -95,10 +95,13 @@ function TodayPage({
   todayDayObj,
   todayBreakdown,
   streaks,
+  dailyWinXP,
+  dailyWinXPCap,
   dm,
   updateDay,
   onHabit,
   onTask,
+  onScoredCheck,
   onAddTask,
   onAddHabit,
   onMood,
@@ -287,6 +290,7 @@ function TodayPage({
   }, [data.settings?.activeLoops]);
 
   const toggleScoredCheck = (id, checked) => {
+    if (checked) onScoredCheck(id);
     updateDay(today, (prev) => ({
       ...prev,
       slip: id === "noPorn" && checked ? false : prev.slip,
@@ -994,6 +998,25 @@ function TodayPage({
                   ＋
                 </button>
               </div>
+            </div>
+
+            <div className="daily-win-meter" aria-live="polite">
+              <div className="row-between">
+                <strong>✦ Today&apos;s win bonus</strong>
+                <span>
+                  {dailyWinXP}/{dailyWinXPCap} XP
+                </span>
+              </div>
+              <Progress
+                value={Math.round((dailyWinXP / dailyWinXPCap) * 100)}
+              />
+              <small>
+                {dailyWinXP >= dailyWinXPCap
+                  ? "Bonus earned. Keep going at your own pace."
+                  : dailyWinXP > 0
+                  ? "Nice momentum — one small win at a time."
+                  : "Complete a task, habit, or check-in to earn +10 XP."}
+              </small>
             </div>
 
             {/* Inline Quick Task Input */}

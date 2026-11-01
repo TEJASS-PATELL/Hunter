@@ -64,6 +64,7 @@ import {
   calcStreaks,
   calcBodyMetrics,
   buildSmoothSvgPath,
+  triggerCompletionFeedback,
   ModernAreaChart,
   ModernDonutChart,
   ModernRadarChart,
@@ -88,6 +89,7 @@ import { useSwipeNav } from "./hooks/useSwipeNav.js";
 import { TodayPage } from "./pages/TodayPage.jsx";
 import { HabitsAndTrackPage } from "./pages/HabitsAndTrackPage.jsx";
 import { QuestPage } from "./pages/QuestPage.jsx";
+import { HunterRankPage } from "./pages/HunterRankPage.jsx";
 import { LifestyleAndBodyPage } from "./pages/LifestyleAndBodyPage.jsx";
 import { LooksPage } from "./pages/LooksPage.jsx";
 import { ResetAndSOSPage } from "./pages/ResetAndSOSPage.jsx";
@@ -104,12 +106,48 @@ import {
 } from "./components/Modals";
 
 const THEME_STORAGE_KEY = "day-by-day-comeback90-theme-dark";
+const DAILY_WIN_XP = 10;
+const DAILY_WIN_XP_CAP = 50;
+
+function readDailyWinXP(date) {
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(QUEST_KEY) || "{}");
+    const rewards = saved.dailyWinRewards?.[date];
+    return Math.min(
+      DAILY_WIN_XP_CAP,
+      (Array.isArray(rewards) ? rewards.length : 0) * DAILY_WIN_XP
+    );
+  } catch {
+    return 0;
+  }
+}
+
+function readQuestData() {
+  const defaults = {
+    xp: 0,
+    completed: {},
+    days: {},
+    sideCompleted: {},
+    dailyWinRewards: {},
+    levelRewards: {},
+  };
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(QUEST_KEY) || "{}");
+    if (!saved || typeof saved !== "object" || Array.isArray(saved)) {
+      return defaults;
+    }
+    return { ...defaults, ...saved };
+  } catch {
+    return defaults;
+  }
+}
 
 /* Every page the app can show. Swipe order = NAV order first, then any extra page. */
 const ALL_PAGES = [
   "Today",
   "Habits",
   "Quest",
+  "Rank",
   "Lifestyle",
   "Looks",
   "Reset",
@@ -125,6 +163,7 @@ const PAGES = [...NAV.map(([name]) => name), ...ALL_PAGES].filter(
 
 export default function App() {
   const [data, setData] = useState(readUnifiedStore);
+  const [questData, setQuestData] = useState(readQuestData);
   const [modal, setModal] = useState(null);
   const [sosOpen, setSosOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -140,6 +179,14 @@ export default function App() {
     }
   });
   const [today, setToday] = useState(todayISO);
+  const [dailyWinProgress, setDailyWinProgress] = useState(() => {
+    const date = todayISO();
+    return { date, xp: readDailyWinXP(date) };
+  });
+  const dailyWinXP =
+    dailyWinProgress.date === today
+      ? dailyWinProgress.xp
+      : readDailyWinXP(today);
   const [selectedISO, setSelectedISO] = useState(todayISO);
   const mobileNavRef = useRef(null);
 
@@ -180,6 +227,14 @@ export default function App() {
       /* ignore quota errors */
     }
   }, [data]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(QUEST_KEY, JSON.stringify(questData));
+    } catch {
+      /* ignore quota errors */
+    }
+  }, [questData]);
 
   /* Persist dark theme preference */
   useEffect(() => {
@@ -237,6 +292,69 @@ export default function App() {
   }, [toast]);
 
   const notify = useCallback((msg) => setToast(msg), []);
+
+  const rewardDailyWin = useCallback(
+    (source, label) => {
+      try {
+        const saved = questData;
+        const rewardHistory =
+          saved.dailyWinRewards &&
+          typeof saved.dailyWinRewards === "object" &&
+          !Array.isArray(saved.dailyWinRewards)
+            ? saved.dailyWinRewards
+            : {};
+        const todayRewards = Array.isArray(rewardHistory[today])
+          ? rewardHistory[today]
+          : [];
+
+        if (todayRewards.includes(source)) {
+          triggerCompletionFeedback("tick");
+          notify(`${label} complete — XP for this win is already claimed.`);
+          return;
+        }
+
+        if (todayRewards.length * DAILY_WIN_XP >= DAILY_WIN_XP_CAP) {
+          triggerCompletionFeedback("tick");
+          notify(
+            `${label} complete — today's bonus XP is earned. Keep going at your own pace.`
+          );
+          return;
+        }
+
+        const previousXP = Math.max(0, Number(saved.xp) || 0);
+        const nextXP = previousXP + DAILY_WIN_XP;
+        const nextRewards = [...todayRewards, source];
+        const nextQuestData = {
+          ...saved,
+          xp: nextXP,
+          dailyWinRewards: {
+            ...rewardHistory,
+            [today]: nextRewards,
+          },
+        };
+        window.localStorage.setItem(QUEST_KEY, JSON.stringify(nextQuestData));
+        setQuestData(nextQuestData);
+        setDailyWinProgress({
+          date: today,
+          xp: Math.min(DAILY_WIN_XP_CAP, nextRewards.length * DAILY_WIN_XP),
+        });
+
+        const leveledUp = Math.floor(nextXP / 100) > Math.floor(previousXP / 100);
+        triggerCompletionFeedback(leveledUp ? "levelUp" : "success");
+        notify(
+          leveledUp
+            ? `Level ${Math.floor(nextXP / 100) + 1} unlocked! +${DAILY_WIN_XP} XP · ${label}`
+            : `+${DAILY_WIN_XP} XP earned · ${label}`
+        );
+      } catch {
+        triggerCompletionFeedback("tick");
+        notify(
+          `${label} complete, but XP could not be saved. Check your browser storage.`
+        );
+      }
+    },
+    [notify, today]
+  );
 
   const update = useCallback((key, fn) => {
     setData((old) => ({
@@ -313,6 +431,7 @@ export default function App() {
   };
 
   const setDoneHabit = (habit) => {
+    const completing = habit.doneDate !== today;
     update("habits", (arr) =>
       arr.map((h) =>
         h.id === habit.id
@@ -340,9 +459,11 @@ export default function App() {
         ...arr,
       ];
     });
-    notify(
-      habit.doneDate === today ? "Check-in undone" : "Habit checked in"
-    );
+    if (completing) {
+      rewardDailyWin(`habit:${habit.id}`, "Habit checked in");
+    } else {
+      notify("Check-in undone");
+    }
   };
 
   const startModal = (type, item = null) => setModal({ type, item });
@@ -405,6 +526,15 @@ export default function App() {
       window.localStorage.removeItem(STORAGE_KEY);
       window.localStorage.removeItem(QUEST_KEY);
       setData(createInitialData());
+      setQuestData({
+        xp: 0,
+        completed: {},
+        days: {},
+        sideCompleted: {},
+        dailyWinRewards: {},
+        levelRewards: {},
+      });
+      setDailyWinProgress({ date: today, xp: 0 });
       setPage("Today");
       notify("Local data cleared");
     }
@@ -1057,14 +1187,26 @@ export default function App() {
             todayDayObj={todayDayObj}
             todayBreakdown={todayBreakdown}
             streaks={streaks}
+            dailyWinXP={dailyWinXP}
+            dailyWinXPCap={DAILY_WIN_XP_CAP}
             dm={dm}
             updateDay={updateDay}
             onHabit={setDoneHabit}
-            onTask={(id) =>
-              update("tasks", (a) =>
-                a.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
-              )
-            }
+            onTask={(id) => {
+              const task = activeTasks.find((item) => item.id === id);
+              if (!task) return;
+              update("tasks", (items) =>
+                items.map((item) =>
+                  item.id === id ? { ...item, done: !item.done } : item
+                )
+              );
+              if (task.done) {
+                notify("Task reopened");
+              } else {
+                rewardDailyWin(`task:${id}`, "Task completed");
+              }
+            }}
+            onScoredCheck={(id) => rewardDailyWin(`check:${id}`, "Check-in complete")}
             onAddTask={() => startModal("task")}
             onAddHabit={() => startModal("habit")}
             onMood={() => startModal("mood", todayMood || null)}
@@ -1109,8 +1251,20 @@ export default function App() {
         return (
           <QuestPage
             data={data}
+            game={questData}
+            setGame={setQuestData}
             today={today}
             onNavigate={setPage}
+            notify={notify}
+            onResetProgress={() => setDailyWinProgress({ date: today, xp: 0 })}
+          />
+        );
+      case "Rank":
+        return (
+          <HunterRankPage
+            game={questData}
+            setGame={setQuestData}
+            today={today}
             notify={notify}
           />
         );
