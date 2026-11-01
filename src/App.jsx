@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { Moon, Sun } from "lucide-react";
 import "./App.css";
 import {
   STORAGE_KEY,
@@ -187,6 +188,15 @@ export default function App() {
     } catch {
       /* ignore */
     }
+  }, [dark]);
+
+  useEffect(() => {
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", dark ? "#0f1117" : "#ffffff");
+    document
+      .querySelector('meta[name="color-scheme"]')
+      ?.setAttribute("content", dark ? "dark" : "light");
   }, [dark]);
 
   /* Auto-detect midnight rollover so 'today' stays accurate */
@@ -1225,6 +1235,7 @@ export default function App() {
           type="button"
           className="logo"
           onClick={() => setPage("Today")}
+          aria-label="Comeback 90 — go to Today"
         >
           <svg
             className="logo-icon"
@@ -1270,6 +1281,7 @@ export default function App() {
               type="button"
               key={name}
               className={`site-link ${page === name ? "active" : ""}`}
+              aria-current={page === name ? "page" : undefined}
               onClick={() => {
                 setPage(name);
                 setQuery("");
@@ -1314,12 +1326,17 @@ export default function App() {
 
           <button
             type="button"
-            className="icon-button"
-            onClick={() => setDark(!dark)}
-            aria-label="Toggle theme"
-            title="Toggle Dark / Light Mode"
+            className="icon-button theme-toggle"
+            onClick={() => setDark((current) => !current)}
+            aria-label={`Switch to ${dark ? "light" : "dark"} mode`}
+            aria-pressed={dark}
+            title={`Switch to ${dark ? "light" : "dark"} mode`}
           >
-            {dark ? "☼" : "◐"}
+            {dark ? (
+              <Sun size={19} strokeWidth={1.9} aria-hidden="true" />
+            ) : (
+              <Moon size={18} strokeWidth={1.9} aria-hidden="true" />
+            )}
           </button>
         </div>
       </header>

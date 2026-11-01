@@ -302,7 +302,6 @@ function ResetAndSOSPage({
   return (
     <>
       <Heading
-        eyebrow="NOTICE · PAUSE · CHOOSE"
         title={dm("Reset & Urge SOS")}
         description="A discreet, shame-free space to ride out urges, practice 4-7-8 breathing, set up 12 digital blockers, and understand your triggers."
         action={

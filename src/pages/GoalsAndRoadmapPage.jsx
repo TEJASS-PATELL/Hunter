@@ -164,7 +164,6 @@ function GoalsAndRoadmapPage({
   return (
     <>
       <Heading
-        eyebrow="DIRECTION, NOT PRESSURE"
         title="Goals & 90-day roadmap"
         description="Turn what matters to you into milestones, phased 90-day checkpoints with interactive task tracking, and Sunday weekly reviews."
         action={

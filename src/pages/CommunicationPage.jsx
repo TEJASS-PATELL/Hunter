@@ -325,15 +325,21 @@ function CommunicationPage({ data, setData, today, notify }) {
   return (
     <div className="speaking-page stack-col">
       <Heading
-        eyebrow="A small daily rep is enough to start"
         title="Speak with more confidence"
         description="A practical English + communication routine. Progress comes from saying things out loud, not waiting until you feel perfect."
       />
 
       <section className="speaking-hero">
         <div>
-          <span className="speaking-tag">TODAY'S 12-MINUTE PLAN</span>
-          <h2>{WEEKLY_FOCUS[focusIndex]}</h2>
+          <h2>
+            {WEEKLY_FOCUS[focusIndex] === "Ask & follow up" ? (
+              <>
+                Ask & <em>follow up</em>
+              </>
+            ) : (
+              WEEKLY_FOCUS[focusIndex]
+            )}
+          </h2>
           <p>
             Short recall, clear speaking, and one manageable speaking rep.
             Keep your own accent; aim to be understood.
@@ -407,7 +413,6 @@ function CommunicationPage({ data, setData, today, notify }) {
         <div className="speaking-side stack-col">
           <Card>
             <div>
-              <span className="speaking-tag">OPTIONAL FOCUS TIMER</span>
               <h2 className="speaking-card-title">Start a 12-minute session</h2>
               <p className="muted-text">
                 Use the timer for today's four practice goals. Pause or stop
@@ -419,7 +424,6 @@ function CommunicationPage({ data, setData, today, notify }) {
 
           <Card className="speaking-reflection">
             <div>
-              <span className="speaking-tag">NOTICE, DON'T JUDGE</span>
               <h2 className="speaking-card-title">Confidence check-in</h2>
               <p className="muted-text">
                 A quick self-rating helps you notice change over time. It is
@@ -475,7 +479,6 @@ function CommunicationPage({ data, setData, today, notify }) {
       <Card className="speech-recorder-card">
         <div className="section-head">
           <div>
-            <span className="speaking-tag">PRIVATE VOICE PRACTICE</span>
             <h2 className="speaking-card-title">Record a 60-second answer</h2>
             <p className="muted-text">
               Answer today&apos;s prompt, listen once, and notice one strength.
@@ -518,7 +521,6 @@ function CommunicationPage({ data, setData, today, notify }) {
       <Card className="speaking-ladder-card">
         <div className="section-head">
           <div>
-            <span className="speaking-tag">BUILD COURAGE GRADUALLY</span>
             <h2>Speaking comfort ladder</h2>
             <p>
               Start at a manageable step, repeat it, and move up only when it
@@ -583,7 +585,6 @@ function CommunicationPage({ data, setData, today, notify }) {
       <Card className="speaking-science-card">
         <div className="section-head">
           <div>
-            <span className="speaking-tag">WHY THIS ROUTINE?</span>
             <h2>Evidence-informed, not a magic fix</h2>
             <p>
               These studies support the practice ingredients; they do not

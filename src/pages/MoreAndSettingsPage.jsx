@@ -342,7 +342,6 @@ function MoreAndSettingsPage({
   return (
     <>
       <Heading
-        eyebrow="SYSTEM TOOLKIT & HEALTH"
         title="Sleep, Pomodoro, health & settings"
         description="Circadian sleep anchors, multi-block focus timer with analytics, blood biomarker tracker, crisis support, and data backup."
       />

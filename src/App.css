@@ -323,12 +323,15 @@ button {
   display: inline-flex;
   align-items: center;
   flex: none;
-  gap: 10px;
+  gap: 9px;
   border: 0;
   background: none;
   padding: 0;
   color: var(--tx);
   min-width: 0;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .logo-icon {
@@ -507,6 +510,21 @@ button {
 
 .icon-button:active {
   transform: scale(.94);
+}
+
+.theme-toggle {
+  border-radius: 14px;
+  color: var(--mu);
+  cursor: pointer;
+}
+
+.theme-toggle svg {
+  color: var(--ac);
+  transition: transform .28s var(--ease), color .2s var(--ease);
+}
+
+.theme-toggle:hover svg {
+  transform: rotate(18deg) scale(1.08);
 }
 
 .danger-text {
@@ -909,7 +927,8 @@ button {
 
 .hero-copy em,
 .lifestyle-banner em,
-.reset-banner em {
+.reset-banner em,
+.speaking-hero em {
   color: transparent;
   font-style: normal;
   background: linear-gradient(
@@ -1008,7 +1027,8 @@ button {
 }
 
 .lifestyle-banner h2,
-.reset-banner h2 {
+.reset-banner h2,
+.speaking-hero h2 {
   font-size: clamp(1.65rem, 3.6vw, 2.95rem);
   font-weight: 430;
   font-variation-settings: "opsz" 90, "wght" 430;
@@ -3950,6 +3970,11 @@ input[type="checkbox"] {
     gap: 7px;
   }
 
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+  }
+
   .logo-mark {
     width: 30px;
     height: 30px;
@@ -4148,7 +4173,8 @@ input[type="checkbox"] {
   }
 
   .lifestyle-banner h2,
-  .reset-banner h2 {
+  .reset-banner h2,
+  .speaking-hero h2 {
     font-size: clamp(1.45rem, 6.8vw, 1.9rem);
     letter-spacing: -.035em;
   }
@@ -4923,11 +4949,11 @@ input[type="checkbox"] {
 }
 
 .speaking-hero h2 {
-  margin: 8px 0;
-  font-size: clamp(1.7rem, 3.4vw, 2.5rem);
-  font-weight: 470;
-  letter-spacing: -.05em;
-  line-height: 1.12;
+  margin: 0;
+}
+
+.speaking-hero h2 + p {
+  margin-top: 10px;
 }
 
 .speaking-hero p {

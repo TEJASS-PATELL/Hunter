@@ -355,7 +355,6 @@ function ReflectionAndMindPage({
   return (
     <>
       <Heading
-        eyebrow="LOOK BACK WITH KINDNESS"
         title="Reflection, mood & social confidence"
         description="Mood & energy analytics, searchable private journal, 10-step social exposure ladder, CBT cognitive restructuring, and PHQ-9/GAD-7 tracking."
         action={
