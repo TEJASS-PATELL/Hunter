@@ -347,7 +347,6 @@ function HunterRankPage({ game, setGame, today, notify }) {
       <Card className="hunter-activity-card">
         <div className="section-head">
           <div>
-            <span className="hr-eyebrow">DAILY CONSISTENCY</span>
             <h2>Your progress, not just a level</h2>
             <p>XP earned each day from check-ins and completed quests.</p>
           </div>
@@ -411,7 +410,6 @@ function HunterRankPage({ game, setGame, today, notify }) {
       <Card className="hunter-class-card">
         <div className="section-head">
           <div>
-            <span className="hr-eyebrow">YOUR LONG-TERM PROGRESSION</span>
             <h2>Hunter rank ladder</h2>
             <p>
               Every rank is earned over time. Click any rank card to preview its

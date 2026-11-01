@@ -4137,17 +4137,17 @@ input[type="checkbox"] {
     overflow-wrap: anywhere;
   }
 
-  .section-head {
+  .hunter-rank-page .section-head {
     align-items: flex-start;
     gap: 8px;
   }
 
-  .section-head h2 {
+  .hunter-rank-page .section-head h2 {
     font-size: 1.22rem;
     letter-spacing: -.03em;
   }
 
-  .section-head p {
+  .hunter-rank-page .section-head p {
     font-size: .84rem;
     margin-top: 4px;
   }
@@ -6673,28 +6673,6 @@ body {
   border-radius: var(--r);
 }
 
-.section-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.section-head h2 {
-  margin: 4px 0 6px;
-  font-size: 1.35rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--tx);
-}
-
-.section-head p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--mu);
-}
-
 .hunter-rank-page .status-pill,
 .hunter-rank-page .hunter-ladder-count {
   display: inline-flex;
@@ -6888,13 +6866,12 @@ body {
 
 .hunter-class-step.active {
   border-color: color-mix(in srgb, var(--ac) 58%, var(--line));
-  box-shadow: 0 10px 24px -20px color-mix(in srgb, var(--ac) 75%, transparent);
+  background: color-mix(in srgb, var(--ac) 6%, var(--card));
 }
 
 .hunter-class-step.inspected {
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--ac) 48%, transparent),
-    0 0 0 2px color-mix(in srgb, var(--ac) 12%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--ac) 50%, transparent);
+  outline-offset: -2px;
 }
 
 .hunter-class-step:focus-visible {
@@ -7178,6 +7155,76 @@ body {
   .hr-inspector-content h3 span,
   .hr-inspector-content p {
     font-size: .78rem;
+  }
+
+  .hr-spotlight-card {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    align-items: center;
+    min-height: 104px;
+  }
+
+  .hr-spotlight-image-box {
+    width: 92px;
+    height: 104px;
+    min-height: 0;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+  }
+
+  .hr-spotlight-image-box .hr-rank-art {
+    gap: 2px;
+    padding: 5px;
+  }
+
+  .hr-spotlight-image-box .hr-art-rank,
+  .hr-spotlight-image-box .hr-art-title,
+  .hr-spotlight-image-box .hr-rank-art > small {
+    display: none;
+  }
+
+  .hr-spotlight-image-box .hr-art-sigil {
+    width: 46px;
+    border-radius: 16px;
+  }
+
+  .hr-spotlight-image-box .hr-art-sigil svg {
+    top: 6px;
+    width: 17px;
+    height: 17px;
+  }
+
+  .hr-spotlight-image-box .hr-art-sigil strong {
+    bottom: 4px;
+    font-size: .88rem;
+  }
+
+  .hr-spotlight-image-box .hunter-rank-seal {
+    right: 3px;
+    bottom: 3px;
+    gap: 0;
+    padding: 3px;
+    font-size: 0;
+    box-shadow: none;
+  }
+
+  .hr-spotlight-image-box .hunter-rank-seal svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .hr-spotlight-meta {
+    gap: 3px;
+    padding: 10px 12px;
+  }
+
+  .hr-spotlight-meta strong {
+    font-size: .92rem;
+  }
+
+  .hr-spotlight-meta small {
+    font-size: .7rem;
+    line-height: 1.35;
   }
 
   .hunter-class-ladder {
