@@ -401,8 +401,7 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
     APT_WALL_TEST_LEVELS[1];
 
   return (
-    <main className="main-area">
-      <div className="content-wrap">
+    <>
         {/* PAGE HEADING */}
         <header className="page-heading">
           <div>
@@ -416,7 +415,7 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
             </p>
           </div>
 
-          <div className="heading-btn-group">
+          <div className="heading-btn-group yoga-heading-actions">
             <button
               type="button"
               className="btn primary"
@@ -469,7 +468,7 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
         </section>
 
         {/* LIVE STATS */}
-        <section className="stats-grid jsx-640705be" >
+        <section className="stats-grid yoga-stats-grid jsx-640705be" >
           <div className="card stat-card blue">
             <div className="stat-top">
               <span className="stat-icon" aria-hidden="true">
@@ -1131,8 +1130,7 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
             </div>
           )}
         </section>
-      </div>
-    </main>
+    </>
   );
 }
 

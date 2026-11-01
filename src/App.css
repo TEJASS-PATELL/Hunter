@@ -3904,6 +3904,42 @@ input[type="checkbox"] {
     line-height: 1.54;
   }
 
+  .yoga-heading-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
+  }
+
+  .yoga-heading-actions > button:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .yoga-heading-actions .btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 10px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.25;
+  }
+
+  .yoga-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .yoga-stats-grid > .stat-card {
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .yoga-stats-grid .stat-label,
+  .yoga-stats-grid .stat-detail {
+    overflow-wrap: anywhere;
+  }
+
   .site-header {
     padding-left: max(12px, env(safe-area-inset-left, 0px));
     padding-right: max(12px, env(safe-area-inset-right, 0px));
@@ -3978,6 +4014,68 @@ input[type="checkbox"] {
   .page-heading .heading-btn-group > :only-child,
   .page-heading .heading-btn-group > .btn.primary:last-child {
     grid-column: 1 / -1;
+  }
+
+  .page-view .page-heading .yoga-heading-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .page-view .page-heading .yoga-heading-actions > button:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .page-view .page-heading .yoga-heading-actions .btn {
+    width: 100%;
+    min-width: 0;
+    flex: none;
+    padding-inline: 10px;
+    white-space: normal;
+    text-align: center;
+  }
+
+  .page-view .stats-grid.yoga-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .page-view .prescription-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .page-view .prescription-bar > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 3px;
+    min-width: 0;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .page-view .prescription-bar > div:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .page-view .prescription-bar > div > span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    color: var(--mu);
+    font-size: .76rem;
+    line-height: 1.35;
+  }
+
+  .page-view .prescription-bar > div > strong {
+    display: block;
+    min-width: 0;
+    font-size: .84rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
   }
 
   .section-head {
@@ -5914,6 +6012,19 @@ body {
   .trigger-row {
     grid-template-columns: 84px minmax(0, 1fr) 25px;
     gap: 6px;
+  }
+
+  .page-view .page-heading .yoga-heading-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .page-view .stats-grid.yoga-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .page-view .stats-grid.yoga-stats-grid > .stat-card {
+    padding: 10px;
   }
 }
 
