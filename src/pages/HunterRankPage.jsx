@@ -7,7 +7,6 @@ import {
   Flame,
   Gem,
   Gift,
-  LockKeyhole,
   Shield,
   ShieldCheck,
   Sparkles,
@@ -91,35 +90,17 @@ const RANK_ARCHETYPES = {
   },
 };
 
-function RankPortrait({ rank, className = "", locked = false }) {
-  const tier = CLASS_TIERS.find((item) => item.rank === rank) || CLASS_TIERS[0];
-  const archetype = RANK_ARCHETYPES[rank] || RANK_ARCHETYPES.E;
-  const RankIcon = CLASS_ICONS[rank] || Sprout;
-
-  return (
-    <div
-      className={`hr-rank-art rank-${rank.toLowerCase()} ${
-        locked ? "is-locked" : ""
-      } ${className}`}
-      aria-hidden="true"
-    >
-      <span className="hr-art-orbit hr-art-orbit-one" />
-      <span className="hr-art-orbit hr-art-orbit-two" />
-      <div className="hr-art-sigil">
-        <RankIcon size={34} strokeWidth={1.5} />
-        <strong>{rank}</strong>
-      </div>
-      <span className="hr-art-rank">{rank}-RANK</span>
-      <span className="hr-art-title">{tier.title}</span>
-      <small>{archetype.label}</small>
-      {locked && (
-        <span className="hr-lock-badge">
-          <LockKeyhole size={15} />
-        </span>
-      )}
-    </div>
-  );
-}
+const RANK_CARS = {
+  E: { name: "Vauxhall Corsa" },
+  D: { name: "BMW Sedan" },
+  C: { name: "Ford Mustang" },
+  B: { name: "Porsche 911" },
+  A: { name: "Aston Martin" },
+  S: { name: "Ferrari" },
+  SS: { name: "Lamborghini Huracan" },
+  SSS: { name: "McLaren" },
+  X: { name: "Bugatti Veyron" },
+};
 
 const dateFromOffset = (today, offset) => {
   const date = new Date(`${today}T12:00:00`);
@@ -291,16 +272,9 @@ function HunterRankPage({ game, setGame, today, notify }) {
         {/* CURRENT RANK SPOTLIGHT */}
         <div className="hunter-rank-emblem">
           <div className="hr-spotlight-card">
-            <div className="hr-spotlight-image-box">
-              <RankPortrait rank={currentClass.rank} />
-              <div className="hunter-rank-seal" aria-hidden="true">
-                <CurrentClassIcon className="hunter-rank-seal-icon" size={17} />
-                <span>{currentClass.rank}-RANK</span>
-              </div>
-            </div>
             <div className="hr-spotlight-meta">
               <span className="hr-eyebrow">CURRENT CLASS</span>
-              <strong>{currentArchetype.label}</strong>
+              <strong>{currentClass.rank}-Rank · {RANK_CARS[currentClass.rank].name}</strong>
               <small>{currentArchetype.focus}</small>
             </div>
           </div>
@@ -424,17 +398,9 @@ function HunterRankPage({ game, setGame, today, notify }) {
 
         {/* SELECTED RANK INSPECTOR ROW */}
         <div className="hr-inspector-row">
-          <div className="hr-inspector-thumb">
-            <RankPortrait
-              rank={inspectedTier.rank}
-              locked={!isInspectedUnlocked}
-            />
-          </div>
           <div className="hr-inspector-content">
             <div className="hr-inspector-tags">
-              <span className="hr-chip tint-blue">
-                {inspectedTier.rank}-RANK · {inspectedTier.title}
-              </span>
+              <span className="hr-mono-tag">{inspectedTier.rank}-RANK</span>
               <span
                 className={`hr-chip ${
                   isInspectedUnlocked ? "tint-green" : "tint-lavender"
@@ -444,13 +410,9 @@ function HunterRankPage({ game, setGame, today, notify }) {
                   ? "UNLOCKED"
                   : `UNLOCKS AT LEVEL ${inspectedTier.minLevel}`}
               </span>
-              <span className="hr-mono-tag">
-                {inspectedArchetype.label}
-              </span>
             </div>
             <h3>
-              {inspectedTier.title} Hunter{" "}
-              <span>— {inspectedArchetype.label}</span>
+              {inspectedTier.title} Hunter <span>· {RANK_CARS[inspectedTier.rank].name}</span>
             </h3>
             <p>{inspectedArchetype.focus}</p>
           </div>
@@ -461,9 +423,6 @@ function HunterRankPage({ game, setGame, today, notify }) {
             const unlocked = progress.level >= tier.minLevel;
             const active = tier.rank === currentClass.rank;
             const inspected = tier.rank === inspectedRankKey;
-            const TierIcon = CLASS_ICONS[tier.rank] || Shield;
-            const archetype =
-              RANK_ARCHETYPES[tier.rank] || RANK_ARCHETYPES.E;
 
             return (
               <button
@@ -488,51 +447,14 @@ function HunterRankPage({ game, setGame, today, notify }) {
                 aria-pressed={inspected}
                 aria-current={active ? "step" : undefined}
               >
-                <div className="hunter-class-step-top">
-                  <div className="hunter-class-sigil">
-                    <TierIcon size={18} strokeWidth={1.9} aria-hidden="true" />
-                    <strong>{tier.rank}</strong>
-                  </div>
-                  <span
-                    className={`hunter-class-state ${
-                      active
-                        ? "is-current"
-                        : unlocked
-                        ? "is-unlocked"
-                        : "is-locked"
-                    }`}
-                  >
-                    {active ? (
-                      <>
-                        <Sparkles size={11} aria-hidden="true" /> CURRENT
-                      </>
-                    ) : unlocked ? (
-                      <>
-                        <Check size={11} aria-hidden="true" /> UNLOCKED
-                      </>
-                    ) : (
-                      <>
-                        <LockKeyhole size={11} aria-hidden="true" /> LVL{" "}
-                        {tier.minLevel}
-                      </>
-                    )}
-                  </span>
-                </div>
-
-                <RankPortrait
-                  rank={tier.rank}
-                  locked={!unlocked}
-                  className="hr-step-portrait"
-                />
-
                 <div className="hunter-class-info">
                   <div className="hr-step-title-line">
-                    <strong>{tier.rank}-Rank</strong>
+                    <strong>{tier.rank}-Rank · {tier.title}</strong>
                     <small>LVL {tier.minLevel}</small>
                   </div>
-                  <span className="hr-step-class-title">{tier.title}</span>
-                  <small className="hr-step-archetype">
-                    {archetype.label}
+                  <span className="hr-step-class-title">{RANK_CARS[tier.rank].name}</span>
+                  <small className={`hr-step-archetype ${active ? "is-current" : ""}`}>
+                    {active ? "CURRENT RANK" : unlocked ? "UNLOCKED" : "LOCKED"}
                   </small>
                 </div>
               </button>
