@@ -2,8 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Moon, Sun } from "lucide-react";
 import "./App.css";
 import {
-  STORAGE_KEY,
-  QUEST_KEY,
   SCHEMA_VERSION,
   WEEKDAY_KEYS,
   todayISO,
@@ -58,7 +56,6 @@ import {
   SUPPLEMENT_TIERS,
   createEmptyDay,
   createInitialData,
-  readUnifiedStore,
   calcDailyScoreBreakdown,
   calcDailyScore,
   calcStreaks,
@@ -104,26 +101,18 @@ import {
   LifestyleLogModal,
   RecordForm,
 } from "./components/Modals";
+import {
+  clearLegacyState,
+  loadCloudState,
+  readLegacyState,
+  saveCloudState,
+} from "./api.js";
 
-const THEME_STORAGE_KEY = "day-by-day-comeback90-theme-dark";
 const DAILY_WIN_XP = 10;
 const DAILY_WIN_XP_CAP = 50;
 
-function readDailyWinXP(date) {
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(QUEST_KEY) || "{}");
-    const rewards = saved.dailyWinRewards?.[date];
-    return Math.min(
-      DAILY_WIN_XP_CAP,
-      (Array.isArray(rewards) ? rewards.length : 0) * DAILY_WIN_XP
-    );
-  } catch {
-    return 0;
-  }
-}
-
-function readQuestData() {
-  const defaults = {
+function createInitialQuestData() {
+  return {
     xp: 0,
     completed: {},
     days: {},
@@ -131,15 +120,38 @@ function readQuestData() {
     dailyWinRewards: {},
     levelRewards: {},
   };
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(QUEST_KEY) || "{}");
-    if (!saved || typeof saved !== "object" || Array.isArray(saved)) {
-      return defaults;
-    }
-    return { ...defaults, ...saved };
-  } catch {
-    return defaults;
-  }
+}
+
+function mergeSavedData(saved) {
+  const defaults = createInitialData();
+  return {
+    ...defaults,
+    ...saved,
+    version: SCHEMA_VERSION,
+    profile: {
+      ...defaults.profile,
+      ...(saved.profile || {}),
+      targets: {
+        ...defaults.profile.targets,
+        ...(saved.profile?.targets || {}),
+      },
+    },
+    days: { ...defaults.days, ...(saved.days || {}) },
+    groom: { ...defaults.groom, ...(saved.groom || {}) },
+    settings: { ...defaults.settings, ...(saved.settings || {}) },
+  };
+}
+
+function mergeQuestData(saved) {
+  return { ...createInitialQuestData(), ...saved };
+}
+
+function getDailyWinXP(questData, date) {
+  const rewards = questData.dailyWinRewards?.[date];
+  return Math.min(
+    DAILY_WIN_XP_CAP,
+    (Array.isArray(rewards) ? rewards.length : 0) * DAILY_WIN_XP
+  );
 }
 
 /* Every page the app can show. Swipe order = NAV order first, then any extra page. */
@@ -162,8 +174,12 @@ const PAGES = [...NAV.map(([name]) => name), ...ALL_PAGES].filter(
 );
 
 export default function App() {
-  const [data, setData] = useState(readUnifiedStore);
-  const [questData, setQuestData] = useState(readQuestData);
+  const [data, setData] = useState(createInitialData);
+  const [questData, setQuestData] = useState(createInitialQuestData);
+  const [cloudReady, setCloudReady] = useState(false);
+  const [cloudSyncEnabled, setCloudSyncEnabled] = useState(false);
+  const [cloudStatus, setCloudStatus] = useState("connecting");
+  const [connectionError, setConnectionError] = useState("");
   const [modal, setModal] = useState(null);
   const [sosOpen, setSosOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
@@ -171,24 +187,12 @@ export default function App() {
   const [toast, setToast] = useState("");
   const [query, setQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
-  const [dark, setDark] = useState(() => {
-    try {
-      return window.localStorage.getItem(THEME_STORAGE_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
+  const dark = Boolean(data.settings?.darkTheme);
   const [today, setToday] = useState(todayISO);
-  const [dailyWinProgress, setDailyWinProgress] = useState(() => {
-    const date = todayISO();
-    return { date, xp: readDailyWinXP(date) };
-  });
-  const dailyWinXP =
-    dailyWinProgress.date === today
-      ? dailyWinProgress.xp
-      : readDailyWinXP(today);
+  const dailyWinXP = getDailyWinXP(questData, today);
   const [selectedISO, setSelectedISO] = useState(todayISO);
   const mobileNavRef = useRef(null);
+  const cloudSaveQueue = useRef(Promise.resolve());
 
   const p = data.profile || {};
   const dm = useCallback(
@@ -219,31 +223,68 @@ export default function App() {
     });
   }, [page]);
 
-  /* Persist unified store */
-  useEffect(() => {
+  const connectToCloud = useCallback(async () => {
+    setCloudReady(false);
+    setCloudSyncEnabled(false);
+    setCloudStatus("connecting");
+    setConnectionError("");
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {
-      /* ignore quota errors */
+      const savedState = await loadCloudState();
+      const state = savedState || readLegacyState(createInitialQuestData());
+      if (state) {
+        setData(mergeSavedData(state.data));
+        setQuestData(mergeQuestData(state.questData));
+      } else {
+        setData(createInitialData());
+        setQuestData(createInitialQuestData());
+      }
+      setCloudSyncEnabled(true);
+      setCloudStatus(savedState ? "saved" : "saving");
+      setCloudReady(true);
+    } catch (error) {
+      console.error("Could not load saved data from the cloud:", error);
+      setConnectionError(
+        "The API or database is unavailable. Check your connection settings, then try again."
+      );
+      setCloudStatus("error");
     }
-  }, [data]);
+  }, []);
 
   useEffect(() => {
-    try {
-      window.localStorage.setItem(QUEST_KEY, JSON.stringify(questData));
-    } catch {
-      /* ignore quota errors */
-    }
-  }, [questData]);
+    const timeoutId = window.setTimeout(connectToCloud, 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [connectToCloud]);
 
-  /* Persist dark theme preference */
   useEffect(() => {
-    try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, dark ? "1" : "0");
-    } catch {
-      /* ignore */
-    }
-  }, [dark]);
+    if (!cloudReady || !cloudSyncEnabled) return undefined;
+    let cancelled = false;
+    const timeoutId = window.setTimeout(async () => {
+      setCloudStatus("saving");
+      const save = cloudSaveQueue.current.then(() =>
+        saveCloudState({ data, questData })
+      );
+      const saveResult = save.then(
+        () => true,
+        (error) => {
+          if (!cancelled) {
+            console.error("Could not save data to the cloud:", error);
+            setCloudStatus("error");
+          }
+          return false;
+        }
+      );
+      cloudSaveQueue.current = saveResult.then(() => undefined);
+      if (await saveResult && !cancelled) {
+        clearLegacyState();
+        setCloudStatus("saved");
+      }
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [cloudReady, cloudSyncEnabled, data, questData]);
 
   useEffect(() => {
     document
@@ -295,65 +336,52 @@ export default function App() {
 
   const rewardDailyWin = useCallback(
     (source, label) => {
-      try {
-        const saved = questData;
-        const rewardHistory =
-          saved.dailyWinRewards &&
-          typeof saved.dailyWinRewards === "object" &&
-          !Array.isArray(saved.dailyWinRewards)
-            ? saved.dailyWinRewards
-            : {};
-        const todayRewards = Array.isArray(rewardHistory[today])
-          ? rewardHistory[today]
-          : [];
+      const saved = questData;
+      const rewardHistory =
+        saved.dailyWinRewards &&
+        typeof saved.dailyWinRewards === "object" &&
+        !Array.isArray(saved.dailyWinRewards)
+          ? saved.dailyWinRewards
+          : {};
+      const todayRewards = Array.isArray(rewardHistory[today])
+        ? rewardHistory[today]
+        : [];
 
-        if (todayRewards.includes(source)) {
-          triggerCompletionFeedback("tick");
-          notify(`${label} complete — XP for this win is already claimed.`);
-          return;
-        }
+      if (todayRewards.includes(source)) {
+        triggerCompletionFeedback("tick");
+        notify(`${label} complete — XP for this win is already claimed.`);
+        return;
+      }
 
-        if (todayRewards.length * DAILY_WIN_XP >= DAILY_WIN_XP_CAP) {
-          triggerCompletionFeedback("tick");
-          notify(
-            `${label} complete — today's bonus XP is earned. Keep going at your own pace.`
-          );
-          return;
-        }
-
-        const previousXP = Math.max(0, Number(saved.xp) || 0);
-        const nextXP = previousXP + DAILY_WIN_XP;
-        const nextRewards = [...todayRewards, source];
-        const nextQuestData = {
-          ...saved,
-          xp: nextXP,
-          dailyWinRewards: {
-            ...rewardHistory,
-            [today]: nextRewards,
-          },
-        };
-        window.localStorage.setItem(QUEST_KEY, JSON.stringify(nextQuestData));
-        setQuestData(nextQuestData);
-        setDailyWinProgress({
-          date: today,
-          xp: Math.min(DAILY_WIN_XP_CAP, nextRewards.length * DAILY_WIN_XP),
-        });
-
-        const leveledUp = Math.floor(nextXP / 100) > Math.floor(previousXP / 100);
-        triggerCompletionFeedback(leveledUp ? "levelUp" : "success");
-        notify(
-          leveledUp
-            ? `Level ${Math.floor(nextXP / 100) + 1} unlocked! +${DAILY_WIN_XP} XP · ${label}`
-            : `+${DAILY_WIN_XP} XP earned · ${label}`
-        );
-      } catch {
+      if (todayRewards.length * DAILY_WIN_XP >= DAILY_WIN_XP_CAP) {
         triggerCompletionFeedback("tick");
         notify(
-          `${label} complete, but XP could not be saved. Check your browser storage.`
+          `${label} complete — today's bonus XP is earned. Keep going at your own pace.`
         );
+        return;
       }
+
+      const previousXP = Math.max(0, Number(saved.xp) || 0);
+      const nextXP = previousXP + DAILY_WIN_XP;
+      const nextRewards = [...todayRewards, source];
+      setQuestData({
+        ...saved,
+        xp: nextXP,
+        dailyWinRewards: {
+          ...rewardHistory,
+          [today]: nextRewards,
+        },
+      });
+
+      const leveledUp = Math.floor(nextXP / 100) > Math.floor(previousXP / 100);
+      triggerCompletionFeedback(leveledUp ? "levelUp" : "success");
+      notify(
+        leveledUp
+          ? `Level ${Math.floor(nextXP / 100) + 1} unlocked! +${DAILY_WIN_XP} XP · ${label}`
+          : `+${DAILY_WIN_XP} XP earned · ${label}`
+      );
     },
-    [notify, today]
+    [notify, questData, today]
   );
 
   const update = useCallback((key, fn) => {
@@ -420,7 +448,7 @@ export default function App() {
         : [{ id: uid(), createdAt: Date.now(), ...record }, ...arr]
     );
     setModal(null);
-    notify(id ? "Changes saved" : "Saved to this device");
+    notify(id ? "Changes queued for cloud sync" : "Added · syncing to cloud");
   };
 
   const removeRecord = (key, id) => {
@@ -469,7 +497,7 @@ export default function App() {
   const startModal = (type, item = null) => setModal({ type, item });
 
   const exportData = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
+    const blob = new Blob([JSON.stringify({ data, questData }, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -490,25 +518,32 @@ export default function App() {
         if (!parsed || typeof parsed !== "object") {
           throw new Error("Invalid JSON");
         }
+        const importedData =
+          parsed.data && typeof parsed.data === "object"
+            ? parsed.data
+            : parsed;
         const def = createInitialData();
         setData((old) => ({
           ...def,
           ...old,
-          ...parsed,
+          ...importedData,
           profile: {
             ...def.profile,
             ...(old.profile || {}),
-            ...(parsed.profile || {}),
+            ...(importedData.profile || {}),
             targets: {
               ...def.profile.targets,
               ...(old.profile?.targets || {}),
-              ...(parsed.profile?.targets || {}),
+              ...(importedData.profile?.targets || {}),
             },
           },
-          days: { ...(old.days || {}), ...(parsed.days || {}) },
-          groom: { ...(old.groom || {}), ...(parsed.groom || {}) },
-          settings: { ...(old.settings || {}), ...(parsed.settings || {}) },
+          days: { ...(old.days || {}), ...(importedData.days || {}) },
+          groom: { ...(old.groom || {}), ...(importedData.groom || {}) },
+          settings: { ...(old.settings || {}), ...(importedData.settings || {}) },
         }));
+        if (parsed.questData && typeof parsed.questData === "object") {
+          setQuestData(mergeQuestData(parsed.questData));
+        }
         notify("Backup restored safely");
       } catch {
         notify("That backup file is not valid");
@@ -520,23 +555,13 @@ export default function App() {
   const resetAll = () => {
     if (
       window.confirm(
-        "Delete all saved data from this browser? Export a backup first if you may need it."
+        "Delete all saved data from the cloud? Export a backup first if you may need it."
       )
     ) {
-      window.localStorage.removeItem(STORAGE_KEY);
-      window.localStorage.removeItem(QUEST_KEY);
       setData(createInitialData());
-      setQuestData({
-        xp: 0,
-        completed: {},
-        days: {},
-        sideCompleted: {},
-        dailyWinRewards: {},
-        levelRewards: {},
-      });
-      setDailyWinProgress({ date: today, xp: 0 });
+      setQuestData(createInitialQuestData());
       setPage("Today");
-      notify("Local data cleared");
+      notify("Cloud data cleared");
     }
   };
 
@@ -1256,7 +1281,6 @@ export default function App() {
             today={today}
             onNavigate={setPage}
             notify={notify}
-            onResetProgress={() => setDailyWinProgress({ date: today, xp: 0 })}
           />
         );
       case "Rank":
@@ -1381,6 +1405,31 @@ export default function App() {
   const resetCount = (data.resetLogs || []).length + (data.urges || []).length;
   const currentDayNum = Math.min(getDayIndex(p.startDate, today), 90);
 
+  if (!cloudReady) {
+    return (
+      <main className="main-area cloud-loading">
+        <div className="content-wrap">
+          <h1>{connectionError ? "Can't connect to the database" : "Loading your saved data…"}</h1>
+          {connectionError && (
+            <>
+              <p>{connectionError}</p>
+              <Button kind="primary" onClick={connectToCloud}>
+                Retry connection
+              </Button>
+            </>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  const cloudStatusText = {
+    connecting: "Connecting to cloud…",
+    saving: "Saving to cloud…",
+    saved: "Saved to cloud",
+    error: "Cloud save failed · changes not synced",
+  }[cloudStatus];
+
   return (
     <div className={`app-shell ${dark ? "theme-dark" : ""}`}>
       <header className="site-header">
@@ -1481,7 +1530,15 @@ export default function App() {
           <button
             type="button"
             className="icon-button theme-toggle"
-            onClick={() => setDark((current) => !current)}
+            onClick={() =>
+              setData((current) => ({
+                ...current,
+                settings: {
+                  ...current.settings,
+                  darkTheme: !current.settings?.darkTheme,
+                },
+              }))
+            }
             aria-label={`Switch to ${dark ? "light" : "dark"} mode`}
             aria-pressed={dark}
             title={`Switch to ${dark ? "light" : "dark"} mode`}
@@ -1524,6 +1581,12 @@ export default function App() {
             <span>
               General info, not medical advice · Tele-MANAS 14416 · Emergency
               112
+            </span>
+            <span
+              className={`cloud-status${cloudStatus === "error" ? " cloud-status-error" : ""}`}
+              role="status"
+            >
+              {cloudStatusText}
             </span>
             <div>
               <button

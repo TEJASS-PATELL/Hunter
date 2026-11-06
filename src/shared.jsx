@@ -2334,7 +2334,9 @@ function createInitialData() {
     settings: {
       activeLoops: ["junk", "lateCaff", "doomscroll"],
       activePlan: "home",
+      darkTheme: false,
     },
+    yogaSets: { _date: today },
   };
 }
 
@@ -2367,22 +2369,12 @@ function readUnifiedStore() {
   }
 }
 
-function writeUnifiedStore(nextData) {
-  try {
-    if (typeof window === "undefined" || !window.localStorage) return false;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function exportStoreBackup(dataObj) {
   const payload = {
     app: "day-by-day-comeback90",
     exportedAt: new Date().toISOString(),
     schemaVersion: SCHEMA_VERSION,
-    data: dataObj || readUnifiedStore(),
+    data: dataObj || createInitialData(),
   };
   return JSON.stringify(payload, null, 2);
 }
@@ -2401,7 +2393,6 @@ function importStoreBackup(jsonString) {
       profile: { ...def.profile, ...(rawData.profile || {}) },
       days: { ...def.days, ...(rawData.days || {}) },
     };
-    writeUnifiedStore(merged);
     return { ok: true, data: merged };
   } catch (err) {
     return { ok: false, error: err?.message || "Failed to parse JSON." };
@@ -4215,11 +4206,11 @@ function DataBackupCard({ storeData, onRestore }) {
 
   return (
     <Card>
-      <div className="eyebrow">LOCAL DATA VAULT</div>
-      <h3 className="jsx-0d966aa3">Offline JSON Backup & Restore</h3>
+      <div className="eyebrow">CLOUD DATA VAULT</div>
+      <h3 className="jsx-0d966aa3">JSON Backup & Restore</h3>
       <p className="jsx-6f020693">
-        Your data stays 100% private in your browser. Export a snapshot weekly so
-        clearing browser cache never erases your 90-day streak.
+        Your app data is saved to the connected database. Keep a JSON backup in
+        case you need to restore it later.
       </p>
       <div className="jsx-49f60068">
         <Button kind="primary" onClick={handleDownload}>
@@ -4242,44 +4233,6 @@ function DataBackupCard({ storeData, onRestore }) {
       )}
     </Card>
   );
-}
-
-/**
- * Custom React Hook with multi-tab synchronization & quick action helpers.
- */
-function useComebackStore() {
-  const [store, setStore] = useState(() => readUnifiedStore());
-
-  useEffect(() => {
-    writeUnifiedStore(store);
-  }, [store]);
-
-  useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key === STORAGE_KEY) {
-        setStore(readUnifiedStore());
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
-  const updateDay = useCallback((dateISO, updater) => {
-    setStore((prev) => {
-      const existing = prev.days[dateISO] || createEmptyDay();
-      const updated =
-        typeof updater === "function" ? updater(existing) : { ...existing, ...updater };
-      return {
-        ...prev,
-        days: {
-          ...prev.days,
-          [dateISO]: updated,
-        },
-      };
-    });
-  }, []);
-
-  return { store, setStore, updateDay };
 }
 
 export {
@@ -4343,7 +4296,6 @@ export {
   createEmptyDay,
   createInitialData,
   readUnifiedStore,
-  writeUnifiedStore,
   exportStoreBackup,
   importStoreBackup,
   calcDailyScoreBreakdown,
@@ -4374,7 +4326,6 @@ export {
   PomodoroFocusStudio,
   CommandPalette,
   DataBackupCard,
-  useComebackStore,
   NAV,
   DAILY_HOME_WORKOUTS,
   QUICK_PROTEIN_FOODS,

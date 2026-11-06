@@ -12,7 +12,7 @@ import {
 } from "../shared";
 import { getClassForLevel, getLevelProgress } from "../progression.js";
 
-function QuestPage({ data, game, setGame, today, notify, onResetProgress }) {
+function QuestPage({ data, game, setGame, today, notify }) {
   const claimLockRef = useRef(new Set());
 
   const startDate = (data.profile && data.profile.startDate) || today;
@@ -103,7 +103,6 @@ function QuestPage({ data, game, setGame, today, notify, onResetProgress }) {
                   dailyWinRewards: {},
                   levelRewards: {},
                 });
-                onResetProgress?.();
                 notify("Quest progress reset");
               }
             }}

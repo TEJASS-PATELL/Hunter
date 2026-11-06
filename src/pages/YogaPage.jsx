@@ -131,20 +131,15 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
   const today = propToday || todayISO();
 
   const [filter, setFilter] = useState("all"); // all | apt | daily
-  const [completedSets, setCompletedSets] = useState(() => {
-    try {
-      const saved = localStorage.getItem("cb90_yoga_sets");
-      if (!saved) return {};
-      const parsed = JSON.parse(saved);
-      // Reset automatically on a new calendar date while preserving structure
-      if (parsed._date && parsed._date !== todayISO()) {
-        return { _date: todayISO() };
-      }
-      return parsed;
-    } catch {
-      return { _date: todayISO() };
-    }
-  });
+  const completedSets =
+    data?.yogaSets?._date === today ? data.yogaSets : { _date: today };
+  const setCompletedSets = (next) => {
+    const nextSets = typeof next === "function" ? next(completedSets) : next;
+    setData((previous) => ({
+      ...previous,
+      yogaSets: { ...nextSets, _date: today },
+    }));
+  };
 
   // Timer & Guided Flow states
   const [activePoseId, setActivePoseId] = useState(YOGA_POSES[0].id);
@@ -162,7 +157,7 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
   const deskBreaksToday = safeNum(todayDayObj.yogaLog?.deskBreaks, 0);
   const currentWallTest = data?.aptWallTest || "mild";
 
-  // Sync completedSets to localStorage & unified store
+  // Keep the daily summary in the unified app state.
   const syncYogaToGlobalStore = useCallback(
     (setsMap) => {
       const cleanKeys = Object.keys(setsMap).filter(
@@ -197,17 +192,6 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
     },
     [today, updateDay]
   );
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        "cb90_yoga_sets",
-        JSON.stringify({ ...completedSets, _date: today })
-      );
-    } catch {
-      /* ignore storage errors */
-    }
-  }, [completedSets, today]);
 
   // Countdown Timer Effect with Auto-Set Check & Chime
   useEffect(() => {
@@ -259,22 +243,18 @@ function YogaPage({ data, setData, today: propToday, updateDay, notify }) {
 
   const toggleSet = (poseId, setIdx) => {
     const key = `${poseId}-set-${setIdx}`;
-    setCompletedSets((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      syncYogaToGlobalStore(next);
-      return next;
-    });
+    const next = { ...completedSets, [key]: !completedSets[key] };
+    setCompletedSets(next);
+    syncYogaToGlobalStore(next);
   };
 
   const completeAllPoseSets = (pose) => {
-    setCompletedSets((prev) => {
-      const next = { ...prev };
-      for (let i = 0; i < pose.sets; i += 1) {
-        next[`${pose.id}-set-${i}`] = true;
-      }
-      syncYogaToGlobalStore(next);
-      return next;
-    });
+    const next = { ...completedSets };
+    for (let i = 0; i < pose.sets; i += 1) {
+      next[`${pose.id}-set-${i}`] = true;
+    }
+    setCompletedSets(next);
+    syncYogaToGlobalStore(next);
     if (typeof notify === "function") {
       notify(`All ${pose.sets} sets of ${pose.title} logged!`);
     }

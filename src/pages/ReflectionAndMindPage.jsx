@@ -422,7 +422,7 @@ function ReflectionAndMindPage({
               icon="▤"
               label="Total Reflections"
               value={(data.journals || []).length}
-              detail="Saved privately on device"
+              detail="Saved to your database"
               color="sage"
             />
           </div>

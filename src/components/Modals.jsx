@@ -327,7 +327,7 @@ function ProfileModal({ profile, onClose, onSave }) {
           Enable Discreet Mode (Hides sensitive words across the app)
         </label>
         <p className="form-note">
-          Stored 100% locally in this browser. No account or external server is used.
+          Saved to the connected database for this browser session.
         </p>
         <div className="form-actions">
           <Button onClick={onClose}>Cancel</Button>
@@ -475,7 +475,7 @@ function RecordForm({ title, fields, initial, submitLabel, onCancel, onSubmit })
         </div>
         {error && <p className="form-error">{error}</p>}
         <p className="form-note">
-          Saved locally on this device. No account or server is used.
+          Saved to the connected database for this browser session.
         </p>
         <div className="form-actions">
           <Button onClick={onCancel}>Cancel</Button>

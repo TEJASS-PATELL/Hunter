@@ -902,11 +902,11 @@ function MoreAndSettingsPage({
             </Card>
 
             <Card>
-              <div className="eyebrow">100% OFFLINE LOCAL DATA VAULT</div>
+              <div className="eyebrow">CLOUD DATA VAULT</div>
               <h2>Backup, restore or reset your data</h2>
               <p className="jsx-0d69e4b1">
-                All your habits, logs, journals, and metrics stay privately in
-                your browser&apos;s local storage. Export a JSON backup anytime.
+                Your habits, logs, journals, Quest progress, and settings are
+                saved to the connected database. Export a JSON backup anytime.
               </p>
 
               <div className="record-actions jsx-4c0544d5" >
@@ -924,7 +924,7 @@ function MoreAndSettingsPage({
                   />
                 </label>
 
-                <Button onClick={resetAll}>Reset All Local Data</Button>
+                <Button onClick={resetAll}>Reset All Cloud Data</Button>
               </div>
 
               <small
