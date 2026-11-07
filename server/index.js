@@ -91,7 +91,7 @@ app.put("/api/state", async (request, response, next) => {
 const distPath = path.join(__dirname, "../dist");
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
-  app.get("*", (request, response, next) => {
+  app.get("*splat", (request, response, next) => {
     if (request.path.startsWith("/api/")) return next();
     response.sendFile(path.join(distPath, "index.html"));
   });
